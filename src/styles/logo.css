@@ -1,0 +1,50 @@
+/* The rusting wordmark (RustLogo.astro, src/scripts/logo-rust.ts). */
+.rl {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.rl-steel,
+.rl-afs {
+  background: linear-gradient(100deg, #8f959d 0%, #e6e9ed 18%, #9aa0a8 30%, #b9bec5 60%, #7f858d 100%) 100% 0 / 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.rl-steel { animation: rl-sheen 7s ease-in-out infinite; }
+@keyframes rl-sheen {
+  0%, 100% { background-position: 100% 0; }
+  50% { background-position: 0% 0; }
+}
+.rl-light :is(.rl-steel, .rl-afs) {
+  background-image: linear-gradient(100deg, #2b2f35 0%, #6d737c 18%, #3a3f46 30%, #50565e 60%, #24272c 100%);
+}
+/* theme="auto" (the 404 page, #follow): the visitor's theme until the script resolves it to rl-light or rl-dark */
+@media (prefers-color-scheme: light) {
+  .rl-auto :is(.rl-steel, .rl-afs) {
+    background-image: linear-gradient(100deg, #2b2f35 0%, #6d737c 18%, #3a3f46 30%, #50565e 60%, #24272c 100%);
+  }
+}
+/* without JavaScript the canvas never comes: AFS is the finished rust */
+@media (scripting: none) {
+  .rl .rl-afs { background-image: linear-gradient(180deg, #c8571f, #7c2c0f); }
+}
+.rl-cell {
+  width: 0.78em;
+  height: 0.78em;
+  margin: 0 0.015em;
+  align-self: baseline;
+  transform: translateY(0.115em);
+  overflow: visible;
+  flex: none;
+}
+/* the core breathes: logo-rust.ts writes --pulse (0..1) on the svg */
+.rl-core { filter: drop-shadow(0 0 calc(3px + var(--pulse, 0.3) * 4px) #ff7a20) drop-shadow(0 0 calc(8px + var(--pulse, 0.3) * 10px) #ff4a08); }
+.rl-canvas { display: inline-block; }
+@media (prefers-reduced-motion: reduce) {
+  .rl-steel { animation: none; }
+}

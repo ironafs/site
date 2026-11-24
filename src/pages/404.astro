@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import { notFound } from '../content/site';
+import RustLogo from '../components/RustLogo.astro';
+---
+<Base title={notFound.pageTitle} canonical={false} jsonLd={false}>
+  <main id="main" class="not-found">
+    <div class="container">
+      <p class="sign-off"><RustLogo id="not-found" class="logo-large" theme="auto" /></p>
+      <p class="eyebrow"><span class="slash" aria-hidden="true">/</span>404</p>
+      <h1>{notFound.title}</h1>
+      <p class="lead">{notFound.body}</p>
+      <p><a class="button" href="/">{notFound.home}</a></p>
+    </div>
+  </main>
+</Base>

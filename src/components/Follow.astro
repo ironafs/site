@@ -1,0 +1,20 @@
+---
+import { follow } from '../content/site';
+---
+<section id="follow" class="section" aria-labelledby="follow-h">
+  <div class="container">
+    <div class="section-intro">
+      <div class="section-title">
+        <p class="eyebrow"><span class="slash" aria-hidden="true">/</span>{follow.eyebrow}</p>
+        <h2 id="follow-h" tabindex="-1">{follow.heading}</h2>
+      </div>
+      <div class="section-body">
+        <p class="lead">{follow.intro}</p>
+        <ul class="buttons">
+          {follow.buttons.map(b => <li><a class="button" href={b.href}>{b.label}</a></li>)}
+        </ul>
+        <p>{follow.licence}</p>
+      </div>
+    </div>
+  </div>
+</section>

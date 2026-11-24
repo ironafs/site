@@ -1,0 +1,16 @@
+---
+// Honest about speed (#speed): plain text in normal flow, one reading column under the head, on the container's edge
+// as #built and #follow. No motion: the change of pace after #rust-cards is the point.
+import '../../styles/story/status.css';
+import Section from './Section.astro';
+import { story } from '../../content/story';
+
+const { speed } = story;
+const { study } = speed;
+---
+<Section id="speed" eyebrow={speed.eyebrow} heading={speed.heading}>
+  <div class="speed-body">
+    <p>{study.before}<a class="source" href={study.source.href}>{study.source.label}</a>{study.after}</p>
+    {speed.body.map(text => <p>{text}</p>)}
+  </div>
+</Section>

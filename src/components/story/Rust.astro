@@ -1,0 +1,87 @@
+---
+// Rust (#rust): the word, the claim, and two phases (bars, density), each its text and its panel.
+// Base (phones, reduced motion, no scroll-driven animation, html.static): word, claim, then each phase's text above
+// its panel, everything at its final state. Enhancement (rust.css): pinned for 440vh, the word, claim and phase text
+// on the left, one panel on the right; the bars rise and the readout flips through the real values, then the density
+// phase replaces them. The DOM order (text, panel, text, panel) is the reading order in both layers. A window too
+// short for both phases pinned (fit.ts) gets the base layer instead (.story--flow).
+//
+// The word: `.rust-word[data-3d-host]` is where the 3D word (src/scripts/rustword) mounts its canvas, adding .has-3d. Inside it, the text "Rust" for assistive
+// technology (.sr-only) and the CSS word (aria-hidden): the steel gradient, a sheen, and rust spreading through a
+// radial mask over rust-only's WebP (its URL set through the CSSOM by rust-fill.ts: no style= attribute).
+import { getImage } from 'astro:assets';
+import Section from './Section.astro';
+import Art from './Art.astro';
+import Text from './Text.astro';
+import '../../styles/story/rust.css';
+import rustArt from '../../assets/story/rust.png';
+import rustOnly from '../../assets/story/rust-only.png';
+import { story } from '../../content/story';
+
+const { rust } = story;
+const { share, density, chips } = rust;
+const fill = await getImage({ src: rustOnly, format: 'webp', width: 800, quality: 70 });
+---
+<Section id="rust" pinned height={440} eyebrow={rust.eyebrow} labelledby="rust-h">
+  <div class="rustart" aria-hidden="true">
+    <Art src={rustArt} widths={[640, 1280, 1920]} sizes="100vw" />
+  </div>
+  <div class="panel" aria-hidden="true"></div>
+
+  <div class="rust-word" data-3d-host data-fill={fill.src}>
+    <span class="sr-only">{rust.word}</span>
+    <span class="rw-css" aria-hidden="true">{rust.word}</span>
+  </div>
+  <div class="rw-intro">
+    <p class="rwname">{rust.name}</p>
+    <p class="rwclaim">{rust.claim.before}<b>{rust.claim.highlight}</b><Text text={rust.claim.after} /></p>
+  </div>
+
+  <div class="rphase t1">
+    <h2 id="rust-h" tabindex="-1">{rust.heading}</h2>
+    <p class="lede">{share.lede}</p>
+  </div>
+  <div class="ph ph1" data-stat={share.id}>
+    <div class="readout" aria-hidden="true">
+      <span class="num">{share.bars.map((bar, i) => <span class={`rv rv${i + 1}`}>{bar.value}</span>)}</span>
+      <span class="yr">{share.bars.map((bar, i) => <span class={`y${i + 1}`}>{bar.year}</span>)}</span>
+    </div>
+    <ol class="chart">
+      {share.bars.map(bar => (
+        <li class="col"><span class="track"><span class:list={['b', `h-${bar.height}`, { threshold: bar.threshold }]}><em class="bv">{bar.value}</em></span></span><span class="yr">{bar.year}</span></li>
+      ))}
+    </ol>
+    <p class="cap">{share.what} · {share.sourcesLead}{share.sources.map((link, i) => <>{i > 0 ? ',' : ''} <a class="source" href={link.href}>{link.label}</a></>)}</p>
+  </div>
+
+  <div class="rphase t2">
+    <h3 class="phase-h">{density.heading}</h3>
+    <p class="lede"><Text text={density.lede} /></p>
+  </div>
+  <div class="ph ph2">
+    <div class="dblock" data-stat={density.id}>
+      <p class="lbl">{density.what}</p>
+      <figure class="dens" data-illustrative="dots">
+        <div class="side"><span class="who">{density.cLabel}</span><div class="field" aria-hidden="true"></div><span class="val cval">{density.cValue}</span></div>
+        <div class="side"><span class="who">{density.rustLabel}</span><div class="onedot" aria-hidden="true"><i></i></div><span class="val rustval">{density.value}</span></div>
+        <figcaption class="cap dkey">{density.illustration}</figcaption>
+      </figure>
+      <p class="cap">{density.sourceLead} · <a class="source" href={density.source.href}>{density.source.label}</a> · {density.note}</p>
+    </div>
+    <ul class="chips">
+      {chips.map(chip => <li data-stat={chip.id}>{chip.what} · <a class="source" href={chip.source.href}>{chip.source.label}</a></li>)}
+    </ul>
+  </div>
+</Section>
+
+<script>
+  import { initRustFill } from '../../scripts/story/rust-fill';
+  import { startRustWordWhenNear } from '../../scripts/rustword/loader';
+  import { guardFit, rustFits } from '../../scripts/story/fit';
+  initRustFill();
+  // pinned only while the word, the claim and both phases fit the stage (fit.ts), set snug if they need it; otherwise
+  // the base layer, where the CSS word stands at its final state: the 3D word runs only while pinned
+  const section = document.getElementById('rust');
+  const guard = section ? guardFit(section, rustFits, undefined, true) : undefined;
+  for (const host of document.querySelectorAll<HTMLElement>('#rust .rust-word[data-3d-host]')) startRustWordWhenNear(host, guard);
+</script>

@@ -1,0 +1,345 @@
+/* How it works (#design).
+   Base first (normal flow, every element at its final state): each OS's text, then its diagram as one
+   top-to-bottom column. Then the enhancement under motion.css's selector, verbatim.
+   Animations are written as longhands: the minifier folds an `animation` shorthand and its `animation-timeline`
+   into one shorthand, where a timeline is not allowed, and the browser then drops the whole declaration
+   (see src/styles/story/crash.css). Phases (`--r`) are set per element by src/scripts/story/connectors.ts.
+   Every enhanced rule skips #design.story--flow (fit.ts: the window is too short for it pinned): the base layer. */
+
+/* ---------- base ---------- */
+#design .tabs { display: none; }
+#design .how-os {
+  position: relative; margin-top: 1.75rem; padding: 1.25rem 1rem 1.5rem;
+  border: 1px solid var(--story-card-border); border-radius: 22px; background: var(--story-card-panel);
+}
+#design .osname { margin: 0 0 0.75rem; font: 600 0.9375rem/1.3 var(--font-display); color: var(--story-peach); }
+#design .osp h2 { font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem); line-height: 1.08; margin: 0 0 0.75rem; }
+#design .osp h2 code { font-size: 0.85em; }
+/* a long option list in code breaks anywhere rather than widen its line past a narrow (or 200% zoomed) phone */
+#design .osp code { overflow-wrap: anywhere; }
+#design .osp .lede { margin: 0; }
+#design .osp ul { list-style: none; padding: 0; gap: 0.6rem; }
+#design .osp li { position: relative; padding-left: 18px; line-height: 1.5; }
+#design .osp li::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 7px; height: 7px; border-radius: 2px; background: var(--rust); }
+#design details.more { margin-top: 1rem; }
+#design details.more summary { list-style: none; }
+#design details.more summary::-webkit-details-marker { display: none; }
+#design details.more summary::before { content: '+ ' / ''; color: var(--rust); }
+#design details.more[open] summary::before { content: '− ' / ''; }
+#design details.more ul { margin-top: 0.6rem; }
+#design details.more li { font-size: 0.9375rem; color: #aeb2b8; }
+#design .osp .cite { margin: 1rem 0 0; }
+/* The plan closes the cite line. Green is kept for the line to the cells: peach. */
+#design .cite span, #design .ostat { color: var(--story-peach); }
+
+/* The diagram: one column, a short rust line between successive boxes. */
+#design .scene {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 30px;
+  max-width: 34rem; margin-top: 1.5rem;
+}
+#design .uband { display: none; }
+/* The markup is in the request's order (OsDiagram.astro), so the column needs no reordering. */
+#design .ostat { margin: 0; font: 0.75rem/1.5 var(--font-mono); }
+#design .kband {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 14px;
+  margin: 0 -1rem; padding: 12px 1rem 22px;
+  background: repeating-linear-gradient(135deg, #ffffff05 0 10px, #0000 10px 20px);
+  border-top: 2px dashed #d8662a88;
+}
+#design .kernel-labels { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+#design .kl { font: 0.75rem var(--font-mono); letter-spacing: 0.08em; color: #c2c5c9; }
+#design .kr { font: 0.75rem/1.4 var(--font-mono); color: var(--story-amber); }
+#design .g-prog::after, #design .g-layer::before, #design .g-daemon::before, #design .g-cells::before {
+  content: ''; position: absolute; left: 50%; width: 2px; background: #ec8a4f; opacity: 0.6;
+}
+#design .g-prog::after { top: 100%; height: 30px; }
+#design .g-layer::before, #design .g-daemon::before, #design .g-cells::before { bottom: 100%; height: 30px; }
+#design .g-cells::before { background: var(--story-green); }
+
+#design .nd {
+  position: relative; z-index: 2; border-radius: 14px; border: 1px solid #ffffff1a; background: var(--story-card);
+  padding: 11px 13px; font: 0.8rem/1.35 var(--font-body); color: #d9d6d0;
+}
+#design .nd b { display: block; font: 600 0.875rem var(--font-display); color: #fff; margin-bottom: 3px; }
+#design .nd small { display: block; font: 0.75rem/1.4 var(--font-mono); color: #c2c5c9; }
+#design .nd .chip { display: inline-block; margin: 6px 4px 0 0; font: 0.75rem var(--font-mono); padding: 2px 5px; border-radius: 99px; background: #d8662a1f; color: var(--story-amber); }
+#design .nd.proc { border-color: #8a4422; background: radial-gradient(120% 140% at 0 0, #2a140a, var(--story-card) 60%); box-shadow: 0 0 40px #d8662a22; }
+#design .nd .tagp { position: absolute; top: -10px; right: 12px; font: 0.75rem var(--font-mono); color: #111; background: var(--rust); padding: 1px 8px; border-radius: 99px; white-space: nowrap; }
+#design .nd.inner { margin-top: 8px; background: #ffffff08; box-shadow: none; }
+#design .nd.os { background: #121318; }
+#design .nd.cells { border-color: #2e3a2f; background: #0f1a12; text-align: center; }
+#design .nd.cells b { color: #d8f5dc; }
+
+/* Drawn only under the enhancement (connectors.ts); shared look. */
+/* Above the boxes: lines only meet box edges, except Linux's /dev/fuse, which crosses ironafsd's padding into the FUSE layer. */
+#design .wires { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: visible; }
+#design .wires .connector { fill: none; stroke: #ec8a4f; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+#design .wires .connector.net { stroke: var(--story-green); }
+#design .wires .head { fill: #ec8a4f; }
+#design .wires .head.net { fill: var(--story-green); }
+#design .request-dot {
+  position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; z-index: 4; pointer-events: none;
+  background: #fff4d8; box-shadow: 0 0 4px 2px #ffae59, 0 0 12px 4px #b84c2388;
+}
+#design .request-dot::before { content: ''; position: absolute; inset: 2px 5px 2px -11px; border-radius: 50%; background: linear-gradient(90deg, transparent, #e87939aa); }
+#design .wl {
+  position: absolute; z-index: 5; transform: translate(-50%, -50%); font: 0.75rem/1.25 var(--font-mono); white-space: nowrap;
+  color: var(--story-peach); background: #1a120d; border: 1px solid #d8662a66; border-radius: 99px; padding: 2px 8px;
+}
+#design .wl.net { color: var(--story-green-soft); background: #0f1a12; border-color: #2e3a2f; }
+/* A wrapped label breaks between words only; the gaps are sized so its longest word fits (connectors.ts sets max-width). */
+#design .wl.hz { transform: translate(-50%, calc(-100% - 10px)); white-space: normal; overflow-wrap: normal; word-break: normal; text-align: center; border-radius: 10px; }
+
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+    /* view-timeline-inset: 0: the default (auto) takes in html's scroll-padding-top and would start the contain
+       range 72px before the stage pins (crash.css). The tabs and the connector phases use the same thirds. */
+    html:not(.static) #design:not(.story--flow) { view-timeline: --how block; view-timeline-inset: 0; }
+    html:not(.static) #design:not(.story--flow) > .stage {
+      /* Top-anchored so the first headline stays in the top 40% of the viewport. */
+      max-width: none; display: grid; column-gap: 4vw; align-content: start;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.35fr);
+      grid-template-rows: auto auto auto;
+      grid-template-areas: "eb tabs" "text dia" "note dia";
+      padding: calc(var(--header-h) + 2vh) 4vw 2vh 7vw;
+    }
+    html:not(.static) #design:not(.story--flow) .eyebrow { grid-area: eb; align-self: end; margin: 0 0 14px; }
+    html:not(.static) #design:not(.story--flow) .note { grid-area: note; margin: 2vh 0 0; color: var(--story-cite); }
+    html:not(.static) #design:not(.story--flow) .tabs { grid-area: tabs; display: flex; gap: 8px; margin-bottom: 14px; }
+    html:not(.static) #design:not(.story--flow) .tabs[hidden] { display: none; }
+    html:not(.static) #design:not(.story--flow) .tab {
+      font: 0.8125rem var(--font-mono); padding: 7px 14px; border-radius: 99px; border: 1px solid #2e3036;
+      color: var(--story-muted); background: transparent; cursor: pointer;
+    }
+    html:not(.static) #design:not(.story--flow) .tab[aria-selected="true"] { background: #d8662a22; color: var(--story-peach); border-color: var(--rust); }
+    html:not(.static) #design:not(.story--flow) .how-oses, html:not(.static) #design:not(.story--flow) .how-os { display: contents; }
+    html:not(.static) #design:not(.story--flow) .osname { display: none; }
+    /* The text column scrolls within the stage when it outgrows it (an open disclosure):
+       a keyboard-reachable scroll area (tabs.ts gives each panel tabindex 0), never content clipped by the pin.
+       Above 1250 px it may take the stage's height less the header, the tabs row and the note. */
+    html:not(.static) #design:not(.story--flow) .osp {
+      grid-area: text; align-self: start; min-height: 0;
+      max-height: calc(100vh - var(--header-h) - 4vh - 7rem); overflow-y: auto; padding-right: 0.75rem;
+      scrollbar-width: thin; scrollbar-color: #d8662a88 transparent;
+      /* a fade at the bottom says "more below" while it can scroll; inactive (no effect) when it cannot */
+      animation-name: moreBelow; animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
+      animation-timeline: scroll(self block);
+    }
+    html:not(.static) #design:not(.story--flow) .osp:focus-visible { outline: 2px solid var(--focus, var(--rust)); outline-offset: 4px; border-radius: 6px; }
+    html:not(.static) #design:not(.story--flow) .osp[aria-hidden="true"], html:not(.static) #design:not(.story--flow) .scene[aria-hidden="true"] { visibility: hidden; pointer-events: none; }
+    /* before tabs.ts runs: Linux only */
+    html:not(.static) #design:not(.story--flow):not([data-tabs]) .how-os:not([data-os="linux"]) > * { visibility: hidden; }
+    html:not(.static) #design:not(.story--flow) .osp h2 { font-size: clamp(28px, min(2.7vw, 4vh), 44px); margin-bottom: 1.6vh; max-width: none; }
+    html:not(.static) #design:not(.story--flow) .osp .lede { font-size: clamp(15px, 1.15vw, 18px); max-width: 44ch; }
+    html:not(.static) #design:not(.story--flow) .osp h3 { margin: 1.2vh 0 0.6vh; }
+    html:not(.static) #design:not(.story--flow) .osp ul { gap: 0.6vh; }
+    html:not(.static) #design:not(.story--flow) .osp li { font-size: clamp(15px, 1.05vw, 16px); max-width: 52ch; }
+    html:not(.static) #design:not(.story--flow) details.more { margin-top: 1.4vh; }
+    html:not(.static) #design:not(.story--flow) details.more li { font-size: 15px; }
+    html:not(.static) #design:not(.story--flow) .osp .cite { margin-top: 1.4vh; }
+    /* snug (fit.ts: an OS's text wraps to more lines than its panel holds): the same text, closer set */
+    html:not(.static) #design.story--snug:not(.story--flow) .osp h2 { margin-bottom: 0.8vh; }
+    html:not(.static) #design.story--snug:not(.story--flow) .osp h3 { margin: 0.6vh 0 0.3vh; }
+    html:not(.static) #design.story--snug:not(.story--flow) .osp ul { gap: 0.3vh; }
+    html:not(.static) #design.story--snug:not(.story--flow) .osp li { line-height: 1.4; }
+    html:not(.static) #design.story--snug:not(.story--flow) :is(details.more, .osp .cite) { margin-top: 0.6vh; }
+    html:not(.static) #design.story--snug:not(.story--flow) .osp .lede { line-height: 1.45; }
+    /* side by side, the panel also takes half the note's margin */
+    @media (min-width: 1251px) {
+      html:not(.static) #design.story--snug:not(.story--flow) .osp { max-height: calc(100vh - var(--header-h) - 2vh - 7rem); }
+      html:not(.static) #design.story--snug:not(.story--flow) .note { margin-top: 1vh; }
+    }
+
+    /* The diagram: user space above, the kernel band below a dashed boundary. */
+    html:not(.static) #design:not(.story--flow) .scene {
+      /* Keep the diagram within the visible stage; fit.ts checks its boxes and labels. */
+      grid-area: dia; position: relative; max-width: none; margin: 0; overflow: clip;
+      height: min(540px, calc(100vh - var(--header-h) - 4vh - 4rem));
+      padding: 36px 14px 34px; row-gap: 0; border-radius: 26px; border: 1px solid #ffffff12; background: var(--story-card-panel);
+      grid-template-columns: 1fr minmax(28px, 0.3fr) 1fr minmax(124px, 0.62fr) 1.15fr minmax(104px, 0.62fr) 0.8fr;
+      grid-template-rows: 1fr auto;
+      --r: contain 0% contain 1%;
+    }
+    html:not(.static) #design:not(.story--flow) .uband {
+      display: block; position: absolute; left: 18px; top: 14px; font: 0.75rem var(--font-mono); color: #c2c5c9; letter-spacing: 0.08em;
+    }
+    html:not(.static) #design:not(.story--flow) .g-prog, html:not(.static) #design:not(.story--flow) .g-layer, html:not(.static) #design:not(.story--flow) .g-daemon, html:not(.static) #design:not(.story--flow) .g-cells { grid-row: 1; align-self: center; }
+    html:not(.static) #design:not(.story--flow) .g-prog { grid-column: 1; }
+    html:not(.static) #design:not(.story--flow) .g-layer { grid-column: 3; }
+    html:not(.static) #design:not(.story--flow) .g-daemon { grid-column: 5; }
+    html:not(.static) #design:not(.story--flow) .g-daemon.wide { grid-column: 3 / 6; }
+    html:not(.static) #design:not(.story--flow) .g-cells { grid-column: 7; }
+    html:not(.static) #design:not(.story--flow) .g-prog::after, html:not(.static) #design:not(.story--flow) .g-layer::before, html:not(.static) #design:not(.story--flow) .g-daemon::before,
+    html:not(.static) #design:not(.story--flow) .g-cells::before { display: none; }
+    html:not(.static) #design:not(.story--flow) .kband {
+      grid-row: 2; grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; row-gap: 0;
+      margin: 0 -14px -34px; padding: 32px 14px 38px;
+    }
+    html:not(.static) #design:not(.story--flow) .kernel-labels { position: absolute; inset: 12px 18px auto; }
+    html:not(.static) #design:not(.story--flow) .kr { color: var(--rust); }
+    html:not(.static) #design:not(.story--flow) .g-os { grid-column: 1 / 4; align-self: center; }
+    html:not(.static) #design:not(.story--flow) .ostat { position: absolute; left: 18px; right: 18px; bottom: 12px; z-index: 3; max-width: none; }
+    html:not(.static) #design:not(.story--flow) .nd { padding: 9px 10px; }
+    html:not(.static) #design:not(.story--flow) .nd.inner { margin-top: 6px; }
+    /* a chip keeps its words together in the diagram's boxes; in the base layer it wraps (200% zoom) */
+    html:not(.static) #design:not(.story--flow) .nd .chip { white-space: nowrap; }
+
+    /* The current request step changes borders and connectors without fading text. */
+    html:not(.static) #design:not(.story--flow)[data-tabs] .nd {
+      border-color: #45464b; background: #15161a; box-shadow: none;
+      transition: border-color 350ms ease, background 350ms ease, box-shadow 350ms ease;
+    }
+    html:not(.static) #design:not(.story--flow)[data-tabs] .nd.inner { background: #1a1b1f; }
+    html:not(.static) #design:not(.story--flow)[data-tabs] .wires .connector { stroke: #74777b; }
+    html:not(.static) #design:not(.story--flow)[data-tabs] .wires .head { fill: #ec8a4f; }
+    html:not(.static) #design:not(.story--flow)[data-tabs] .wl { color: #e0e1e2; background: #1b1c20; border-color: #55575b; }
+    html:not(.static) #design:not(.story--flow)[data-tabs] .request-dot {
+      animation-duration: 1ms, 1ms; animation-timing-function: linear, linear;
+      animation-fill-mode: both, both; animation-timeline: --how, --how;
+      animation-range: var(--ember-range), var(--ember-range);
+    }
+    html:not(.static) #design:not(.story--flow)[data-step="1"] :is(.g-prog, .g-os),
+    html:not(.static) #design:not(.story--flow)[data-step="2"] :is(.g-layer, .g-daemon.wide, .g-daemon.wide .inner:last-child),
+    html:not(.static) #design:not(.story--flow)[data-step="3"] .g-daemon,
+    html:not(.static) #design:not(.story--flow)[data-step="3"] .g-daemon .inner:first-of-type,
+    html:not(.static) #design:not(.story--flow)[data-step="4"] .g-cells {
+      border-color: #ec8a4f; box-shadow: 0 0 24px #d8662a55; background: #261a16;
+    }
+    html:not(.static) #design:not(.story--flow)[data-step="3"] .g-daemon .chip:nth-of-type(3) { background: #85401f; color: #fff2e9; }
+    html:not(.static) #design:not(.story--flow)[data-step="1"] [data-step="1"].connector,
+    html:not(.static) #design:not(.story--flow)[data-step="2"] [data-step="2"].connector,
+    html:not(.static) #design:not(.story--flow)[data-step="3"] [data-step="3"].connector,
+    html:not(.static) #design:not(.story--flow)[data-step="4"] [data-step="4"].connector {
+      stroke: #ec8a4f; stroke-dasharray: 1; animation-name: wireDraw; animation-duration: 500ms;
+      animation-timing-function: ease-out; animation-fill-mode: both;
+    }
+    html:not(.static) #design:not(.story--flow)[data-step="1"] .wl[data-step="1"],
+    html:not(.static) #design:not(.story--flow)[data-step="2"] .wl[data-step="2"],
+    html:not(.static) #design:not(.story--flow)[data-step="3"] .wl[data-step="3"],
+    html:not(.static) #design:not(.story--flow)[data-step="4"] .wl[data-step="4"] { color: #ffd1b2; border-color: #b75a2d; background: #291a14; }
+    html:not(.static) #design:not(.story--flow) .short > li { color: #c2c5c9; transition: color 350ms ease; }
+    html:not(.static) #design:not(.story--flow) .short > li::before { background: #77797d; transition: background-color 350ms ease, box-shadow 350ms ease; }
+    html:not(.static) #design:not(.story--flow) .short > li.is-current { color: #fff; }
+    html:not(.static) #design:not(.story--flow) .short > li.is-current::before { background: #ec8a4f; box-shadow: 0 0 10px #ec8a4f; }
+    html:not(.static) #design:not(.story--flow) .scene, html:not(.static) #design:not(.story--flow) .osp {
+      /* the incoming panel is visible (and clickable) at once; the outgoing one stays visible while it fades */
+      transition: opacity 300ms ease, translate 300ms ease, visibility 0s;
+    }
+    html:not(.static) #design:not(.story--flow) :is(.scene, .osp)[aria-hidden="true"] {
+      opacity: 0; translate: 0 12px; transition: opacity 300ms ease, translate 300ms ease, visibility 0s 300ms;
+    }
+    html:not(.static) #design:not(.story--flow) .tabs { position: relative; isolation: isolate; }
+    html:not(.static) #design:not(.story--flow) .tabs::before {
+      content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: var(--tab-left, 0); width: var(--tab-width, 0);
+      border: 1px solid var(--rust); border-radius: 99px; background: #d8662a22;
+      transition: left 300ms ease, width 300ms ease;
+    }
+    html:not(.static) #design:not(.story--flow) .tab[aria-selected="true"] { background: transparent; border-color: transparent; }
+
+  }
+}
+
+/* 1251 to 1400 px: side by side, the diagram's column is narrower than its boxes at full size (the macOS and Windows
+   kernel bands overflowed a 684 px frame at 1280): smaller type, padding and gaps, so a 1280x720 window keeps the pin. */
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+    @media (min-width: 1251px) {
+      html:not(.static) #design:not(.story--flow) .scene:is([data-os="macos"], [data-os="windows"]) {
+        grid-template-columns: minmax(84px, 0.72fr) minmax(14px, 0.16fr) minmax(174px, 1.2fr) minmax(58px, 0.55fr)
+          minmax(170px, 1.2fr) minmax(82px, 0.6fr) minmax(70px, 0.65fr);
+      }
+    }
+    @media (min-width: 1251px) and (max-width: 1400px) {
+      /* the stage's left padding as its right: the programs column keeps its words whole and its wire's label inside the frame */
+      html:not(.static) #design:not(.story--flow) > .stage { padding-left: 4vw; }
+      html:not(.static) #design:not(.story--flow) .scene {
+        padding: 40px 14px 36px;
+        grid-template-columns: 1fr minmax(16px, 0.2fr) 1fr minmax(112px, 0.55fr) 1.1fr minmax(84px, 0.45fr) 0.9fr;
+      }
+      html:not(.static) #design:not(.story--flow) .kband { margin: 0 -14px -36px; padding: 36px 14px 40px; }
+      html:not(.static) #design:not(.story--flow) .nd { padding: 9px 10px; }
+      html:not(.static) #design:not(.story--flow) .nd b { font-size: 13px; }
+      html:not(.static) #design:not(.story--flow) .nd small, html:not(.static) #design:not(.story--flow) .nd .chip,
+      html:not(.static) #design:not(.story--flow) .nd .tagp, html:not(.static) #design:not(.story--flow) .wl { font-size: 12px; }
+      /* Give wrapped wire labels a little more room inside their pills. */
+      html:not(.static) #design:not(.story--flow) .wl.hz { padding-inline: 5px; }
+    }
+    @media (min-width: 1251px) and (max-width: 1365px) {
+      html:not(.static) #design:not(.story--flow) .kband { min-width: 0; margin-inline: 0; padding-inline: 0; }
+      html:not(.static) #design:not(.story--flow) .kband > .nd { min-width: 0; }
+      html:not(.static) #design:not(.story--flow) .osp h3 { margin-block: 0.8vh 0.4vh; }
+      html:not(.static) #design:not(.story--flow) .osp ul { gap: 0.4vh; }
+    }
+  }
+}
+
+/* 761 to 1250 px: the text above the diagram (the enhancement selector verbatim, then the width). */
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+    @media (max-width: 1250px) {
+      html:not(.static) #design:not(.story--flow) > .stage {
+        grid-template-columns: auto minmax(0, 1fr); column-gap: 3vw; row-gap: 1.2vh;
+        grid-template-areas: "eb note" "text text" "tabs tabs" "dia dia";
+        /* the text row takes what the diagram leaves, up to its content: an open disclosure scrolls inside it */
+        grid-template-rows: auto minmax(0, max-content) auto auto; align-content: start;
+        padding: calc(var(--header-h) + 1.5vh) 4vw 1.5vh;
+      }
+      html:not(.static) #design:not(.story--flow) .osp { max-height: none; align-self: stretch; }
+      html:not(.static) #design:not(.story--flow) .eyebrow, html:not(.static) #design:not(.story--flow) .note { align-self: baseline; margin: 0; }
+      html:not(.static) #design:not(.story--flow) .tabs { margin: 0; }
+      html:not(.static) #design:not(.story--flow) .osp h2 { font-size: clamp(24px, 2.8vw, 34px); margin-bottom: 0.8vh; }
+      html:not(.static) #design:not(.story--flow) .osp .lede { font-size: 15px; max-width: none; }
+      html:not(.static) #design:not(.story--flow) .osp h3 { margin: 1.2vh 0 0.6vh; }
+      html:not(.static) #design:not(.story--flow) .osp ul.short { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 3vw; row-gap: 0.6vh; }
+      html:not(.static) #design:not(.story--flow) .osp li { line-height: 1.4; font-size: 15px; max-width: none; }
+      html:not(.static) #design:not(.story--flow) details.more { margin-top: 0.8vh; }
+      html:not(.static) #design:not(.story--flow) .osp .cite { margin-top: 0.8vh; }
+      /* the note and the source line take the stage's width: at the prose measure each wrapped a line more */
+      html:not(.static) #design:not(.story--flow) :is(.note, .osp .cite) { max-width: none; }
+      /* The diagram is shorter and narrower here: smaller type and padding, and the gaps sized to their labels. */
+      html:not(.static) #design:not(.story--flow) .scene {
+        height: min(46vh, 440px); padding: 34px 14px 34px;
+        grid-template-columns: 1fr minmax(16px, 0.2fr) 1fr minmax(120px, 0.55fr) 1.1fr minmax(80px, 0.45fr) 0.9fr;
+      }
+      html:not(.static) #design:not(.story--flow) .kband { margin: 0 -14px -34px; padding: 30px 14px 34px; }
+      html:not(.static) #design:not(.story--flow) .uband, html:not(.static) #design:not(.story--flow) .kl, html:not(.static) #design:not(.story--flow) .kr, html:not(.static) #design:not(.story--flow) .ostat { font-size: 12px; }
+      html:not(.static) #design:not(.story--flow) .uband { top: 10px; }
+      html:not(.static) #design:not(.story--flow) .kernel-labels { top: 9px; }
+      html:not(.static) #design:not(.story--flow) .ostat { bottom: 9px; }
+      html:not(.static) #design:not(.story--flow) .nd { padding: 8px 9px; border-radius: 12px; }
+      html:not(.static) #design:not(.story--flow) .nd b { font-size: 12.5px; }
+      html:not(.static) #design:not(.story--flow) .nd small, html:not(.static) #design:not(.story--flow) .nd .chip, html:not(.static) #design:not(.story--flow) .nd .tagp, html:not(.static) #design:not(.story--flow) .wl { font-size: 12px; }
+      html:not(.static) #design:not(.story--flow) .nd .chip { margin-top: 4px; padding: 1px 6px; }
+      html:not(.static) #design:not(.story--flow) .nd.inner { margin-top: 6px; }
+    }
+  }
+}
+
+@keyframes moreBelow {
+  0%, 92% { -webkit-mask-image: linear-gradient(#000 calc(100% - 2.5rem), #0000); mask-image: linear-gradient(#000 calc(100% - 2.5rem), #0000); }
+  100% { -webkit-mask-image: none; mask-image: none; }
+}
+@keyframes requestLight { from { opacity: 1; } to { opacity: 1; } }
+@keyframes requestTravel {
+  0% { offset-distance: 0%; opacity: 0; }
+  2% { opacity: 1; }
+  98% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+#design .tabs-cue { align-self: center; color: #c2c5c9; font: 0.75rem var(--font-mono); }
+#design .tab { min-height: 44px; }
+#design .nd { font-size: 0.9375rem; }
+#design .note, #design .osp .cite { font-size: .9375rem; color: #c2c5c9; }
+
+@keyframes wireDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes emberVisibility { 0%, 100% { opacity: 0; } 5%, 95% { opacity: 1; } }
+#design .step-progress { color: #e2e3e5; white-space: nowrap; }
+
+/* the step counter belongs to the pinned tabs (tabs.ts sets data-tabs): with every platform in flow there is no step */
+#design .step-progress { display: none; margin: .5rem 0; font: .875rem/1.4 var(--font-mono); color: var(--story-peach); }
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+    html:not(.static) #design[data-tabs]:not(.story--flow) .step-progress { display: block; grid-area: dia; align-self: start; justify-self: end; z-index: 2; margin: 12px 18px; }
+  }
+}

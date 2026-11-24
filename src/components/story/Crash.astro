@@ -1,0 +1,25 @@
+---
+// The crash (#why): a restart screen followed by the consequence of a kernel fault.
+// Base: the screen at 100% and its consequence, in normal flow. Enhancement (crash.css): pinned full screen,
+// the percentage counts from 0 to 100, then the screen switches off and the consequence takes its place.
+// The "100" in the markup is what the base layer and screen
+// readers get; the counting digits are generated content with empty alternative text. The section has no heading:
+// the restart message names it and is the menu's /why focus target (#why-h, as a heading is elsewhere).
+import Section from './Section.astro';
+import '../../styles/story/crash.css';
+import { story } from '../../content/story';
+
+const { crash } = story;
+---
+<Section id="why" pinned height={160} eyebrow={crash.eyebrow} heading={crash.heading} labelledby="why-h">
+  <div class="crash">
+    <div class="bsod">
+      <p class="msg" id="why-h" tabindex="-1">{crash.message}</p>
+      <p class="pct"><span class="pct-n"><span class="pct-v">100</span></span>{crash.progressSuffix}</p>
+      <p class="code">{crash.labels.stopCode} <span>{crash.stopCode}</span></p>
+      <div class="scan" aria-hidden="true"></div>
+    </div>
+    <div class="crt-line" aria-hidden="true"></div>
+  </div>
+  <p class="crash-point">{crash.note}</p>
+</Section>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-60 -760 3920 935" role="img" aria-label="IronAFS">
+  <title>IronAFS</title>
+  <defs>
+    <linearGradient id="steel" gradientUnits="userSpaceOnUse" x1="0" y1="-700" x2="2046" y2="0">
+      <stop offset="0" stop-color="#8f959d"/><stop offset=".3" stop-color="#e6e9ed"/><stop offset=".5" stop-color="#9aa0a8"/><stop offset=".78" stop-color="#b9bec5"/><stop offset="1" stop-color="#7f858d"/>
+    </linearGradient>
+    <linearGradient id="rust" gradientUnits="userSpaceOnUse" x1="0" y1="-700" x2="0" y2="0">
+      <stop offset="0" stop-color="#c8571f"/><stop offset=".55" stop-color="#a8431a"/><stop offset="1" stop-color="#7c2c0f"/>
+    </linearGradient>
+    <!-- rust texture: dark pits and bright flecks from noise, kept inside the letters -->
+    <filter id="rusty" x="0" y="0" width="1" height="1" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".007 .011" numOctaves="4" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 .36  0 0 0 0 .12  0 0 0 0 .04  0 0 0 -2.6 1.45" result="pits"/>
+      <feComposite in="pits" in2="SourceGraphic" operator="in" result="pitsIn"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".016" numOctaves="3" seed="19" result="n2"/>
+      <feColorMatrix in="n2" type="matrix" values="0 0 0 0 .9  0 0 0 0 .45  0 0 0 0 .16  0 0 0 -3 1.6" result="flecks"/>
+      <feComposite in="flecks" in2="SourceGraphic" operator="in" result="flecksIn"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="pitsIn"/><feMergeNode in="flecksIn"/></feMerge>
+    </filter>
+    <radialGradient id="cfe" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#e2e5e9"/><stop offset=".45" stop-color="#868c94"/><stop offset="1" stop-color="#2c2f34"/></radialGradient>
+    <radialGradient id="ccore" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff0c8"/><stop offset=".4" stop-color="#ff9a40"/><stop offset="1" stop-color="#b8400e"/></radialGradient>
+    <filter id="cglow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur in="SourceAlpha" stdDeviation="3"/><feFlood flood-color="#ff7a20" flood-opacity=".85"/><feComposite operator="in" in2="SourceAlpha"/><feGaussianBlur stdDeviation="4" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <path fill="url(#steel)" d="M66.0 0.0V-700.0H198.0V0.0Z M324.0 0.0V-496.0H448.0V-440.0H466.0Q477.0 -470.0 502.5 -484.0Q528.0 -498.0 562.0 -498.0H622.0V-386.0H560.0Q512.0 -386.0 481.0 -360.5Q450.0 -335.0 450.0 -282.0V0.0Z M1510.0 0.0V-496.0H1634.0V-431.0H1652.0Q1664.0 -457.0 1697.0 -480.5Q1730.0 -504.0 1797.0 -504.0Q1855.0 -504.0 1898.5 -477.5Q1942.0 -451.0 1966.0 -404.5Q1990.0 -358.0 1990.0 -296.0V0.0H1864.0V-286.0Q1864.0 -342.0 1836.5 -370.0Q1809.0 -398.0 1758.0 -398.0Q1700.0 -398.0 1668.0 -359.5Q1636.0 -321.0 1636.0 -252.0V0.0Z"/>
+  <g transform="translate(655.0 -665.0) scale(7.8000)">
+    <line x1="50" y1="50" x2="15.71" y2="70.83" stroke="#d8662a" stroke-opacity="0.27" stroke-width="1.8"/>
+    <line x1="50" y1="50" x2="33.21" y2="85.93" stroke="#d8662a" stroke-opacity="0.39" stroke-width="1.8"/>
+    <line x1="50" y1="50" x2="15.71" y2="19.24" stroke="#d8662a" stroke-opacity="0.31" stroke-width="1.8"/>
+    <line x1="50" y1="50" x2="33.21" y2="34.34" stroke="#d8662a" stroke-opacity="0.43" stroke-width="1.8"/>
+    <line x1="50" y1="50" x2="66.79" y2="65.66" stroke="#d8662a" stroke-opacity="0.23" stroke-width="1.8"/>
+    <line x1="50" y1="50" x2="84.29" y2="80.76" stroke="#d8662a" stroke-opacity="0.35" stroke-width="1.8"/>
+    <line x1="50" y1="50" x2="66.79" y2="14.07" stroke="#d8662a" stroke-opacity="0.27" stroke-width="1.8"/>
+    <line x1="50" y1="50" x2="84.29" y2="29.17" stroke="#d8662a" stroke-opacity="0.39" stroke-width="1.8"/>
+    <line x1="15.71" y1="70.83" x2="33.21" y2="85.93" stroke="#9097a0" stroke-opacity="0.73" stroke-width="4" stroke-linecap="round"/>
+    <line x1="15.71" y1="70.83" x2="15.71" y2="19.24" stroke="#9097a0" stroke-opacity="0.63" stroke-width="4" stroke-linecap="round"/>
+    <line x1="15.71" y1="70.83" x2="66.79" y2="65.66" stroke="#9097a0" stroke-opacity="0.54" stroke-width="4" stroke-linecap="round"/>
+    <line x1="33.21" y1="85.93" x2="33.21" y2="34.34" stroke="#9097a0" stroke-opacity="0.92" stroke-width="4" stroke-linecap="round"/>
+    <line x1="33.21" y1="85.93" x2="84.29" y2="80.76" stroke="#9097a0" stroke-opacity="0.82" stroke-width="4" stroke-linecap="round"/>
+    <line x1="15.71" y1="19.24" x2="33.21" y2="34.34" stroke="#9097a0" stroke-opacity="0.82" stroke-width="4" stroke-linecap="round"/>
+    <line x1="15.71" y1="19.24" x2="66.79" y2="14.07" stroke="#9097a0" stroke-opacity="0.63" stroke-width="4" stroke-linecap="round"/>
+    <line x1="33.21" y1="34.34" x2="84.29" y2="29.17" stroke="#9097a0" stroke-opacity="0.91" stroke-width="4" stroke-linecap="round"/>
+    <line x1="66.79" y1="65.66" x2="84.29" y2="80.76" stroke="#9097a0" stroke-opacity="0.63" stroke-width="4" stroke-linecap="round"/>
+    <line x1="66.79" y1="65.66" x2="66.79" y2="14.07" stroke="#9097a0" stroke-opacity="0.53" stroke-width="4" stroke-linecap="round"/>
+    <line x1="84.29" y1="80.76" x2="84.29" y2="29.17" stroke="#9097a0" stroke-opacity="0.82" stroke-width="4" stroke-linecap="round"/>
+    <line x1="66.79" y1="14.07" x2="84.29" y2="29.17" stroke="#9097a0" stroke-opacity="0.72" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="66.79" cy="65.66" r="5.70" fill="url(#cfe)"/>
+    <circle cx="66.79" cy="14.07" r="6.05" fill="url(#cfe)"/>
+    <circle cx="15.71" cy="70.83" r="6.07" fill="url(#cfe)"/>
+    <circle cx="15.71" cy="19.24" r="6.42" fill="url(#cfe)"/>
+    <circle cx="50.00" cy="50.00" r="11.50" fill="url(#ccore)" filter="url(#cglow)"/>
+    <circle cx="84.29" cy="80.76" r="6.78" fill="url(#cfe)"/>
+    <circle cx="84.29" cy="29.17" r="7.13" fill="url(#cfe)"/>
+    <circle cx="33.21" cy="85.93" r="7.15" fill="url(#cfe)"/>
+    <circle cx="33.21" cy="34.34" r="7.50" fill="url(#cfe)"/>
+  </g>
+  <path fill="url(#rust)" filter="url(#rusty)" d="M2064.0 0.0 2248.0 -700.0H2478.0L2662.0 0.0H2526.0L2488.0 -154.0H2238.0L2200.0 0.0ZM2269.0 -276.0H2457.0L2372.0 -617.0H2354.0Z M2736.0 0.0V-700.0H3176.0V-580.0H2868.0V-411.0H3152.0V-291.0H2868.0V0.0Z M3503.0 14.0Q3422.0 14.0 3360.0 -15.0Q3298.0 -44.0 3263.0 -98.0Q3228.0 -152.0 3228.0 -228.0V-256.0H3358.0V-228.0Q3358.0 -165.0 3397.0 -133.5Q3436.0 -102.0 3503.0 -102.0Q3571.0 -102.0 3604.5 -129.0Q3638.0 -156.0 3638.0 -198.0Q3638.0 -227.0 3621.5 -245.0Q3605.0 -263.0 3573.5 -274.5Q3542.0 -286.0 3497.0 -296.0L3474.0 -301.0Q3402.0 -317.0 3350.5 -341.5Q3299.0 -366.0 3271.5 -406.0Q3244.0 -446.0 3244.0 -510.0Q3244.0 -574.0 3274.5 -619.5Q3305.0 -665.0 3360.5 -689.5Q3416.0 -714.0 3491.0 -714.0Q3566.0 -714.0 3624.5 -688.5Q3683.0 -663.0 3716.5 -612.5Q3750.0 -562.0 3750.0 -486.0V-456.0H3620.0V-486.0Q3620.0 -526.0 3604.5 -550.5Q3589.0 -575.0 3560.0 -586.5Q3531.0 -598.0 3491.0 -598.0Q3431.0 -598.0 3402.5 -575.5Q3374.0 -553.0 3374.0 -514.0Q3374.0 -488.0 3387.5 -470.0Q3401.0 -452.0 3428.0 -440.0Q3455.0 -428.0 3497.0 -419.0L3520.0 -414.0Q3595.0 -398.0 3650.5 -373.0Q3706.0 -348.0 3737.0 -307.0Q3768.0 -266.0 3768.0 -202.0Q3768.0 -138.0 3735.5 -89.5Q3703.0 -41.0 3643.5 -13.5Q3584.0 14.0 3503.0 14.0Z"/>
+</svg>

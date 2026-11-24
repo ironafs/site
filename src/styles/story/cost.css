@@ -1,0 +1,192 @@
+/* The cost of shipping kernel code (#cost). Base first (normal
+   flow, every picture at its final state), then the enhancement under motion.css's selector, verbatim: the sticky
+   stack. Animations are written as longhands: the minifier folds an `animation` shorthand and its
+   `animation-timeline` into one shorthand, where a timeline is not allowed, and the browser then drops the whole
+   declaration (see crash.css). Each beat's range is `var(--r)`, set by src/scripts/story/stack.ts from the layout.
+   The status output uses a subdued accent against the scrim. */
+
+/* --r and --d are set on every element that reads them (stack.ts), so a card's --r never reaches a beat. They are not
+   registered with @property: how.css relies on --r inheriting (its stage sets a default for the scene below it). */
+
+/* ---------- base: the cards in a column, each text then picture (side by side from 761 px) ---------- */
+#cost .stack { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; margin-top: 2rem; }
+#cost .scard {
+  position: relative; min-width: 0; overflow: clip; border-radius: 28px; padding: clamp(22px, 4vw, 40px) clamp(18px, 4vw, 48px);
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-items: center;
+  background: linear-gradient(160deg, oklch(0.24 0.006 270), oklch(0.19 0.005 270));
+  border: 1px solid var(--story-card-border); box-shadow: 0 -30px 80px #0009, inset 0 1px 0 #ffffff12;
+}
+#cost .copy { min-width: 0; }
+#cost .scard .os { font: 0.8125rem/1.4 var(--font-mono); letter-spacing: 0.04em; color: var(--story-muted); margin: 0; }
+#cost .scard h3 {
+  font: 700 clamp(1.75rem, 1rem + 2.2vw, 3.125rem)/1.05 var(--font-display); letter-spacing: -0.025em;
+  text-transform: none; color: var(--story-fg); margin: 10px 0 18px; overflow-wrap: break-word;
+}
+#cost .scard .lede { font-size: clamp(1rem, 0.9rem + 0.35vw, 1.1875rem); line-height: 1.55; color: var(--story-text); max-width: 40ch; margin: 0; }
+#cost .scard .foot { font: 0.75rem/1.5 var(--font-mono); color: var(--story-cite); margin: 22px 0 0; }
+
+/* the picture panel */
+#cost .vis {
+  min-width: 0; border-radius: 18px; border: 1px solid #ffffff12; background: #0b0c0f; padding: clamp(16px, 2vw, 26px);
+  display: flex; flex-direction: column; justify-content: center; gap: 14px; font: 0.875rem/1.6 var(--font-mono);
+}
+#cost .vis ol { list-style: none; margin: 0; padding: 0; }
+#cost .vis li { max-width: none; }
+
+/* Windows: the signing steps */
+#cost .pipe { display: flex; flex-direction: column; gap: 8px; }
+#cost .pipe li {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid #2b2e34; border-radius: 12px;
+  background: #121318; color: #d7d3cd;
+}
+#cost .pipe b { font-weight: 500; color: var(--story-amber); min-width: 1.6em; }
+#cost .pipe li.warn { border-color: #8a4422; background: #2a140a; box-shadow: 0 0 30px #d8662a33; }
+#cost .branch { position: relative; margin-inline-start: 1.5em; }
+#cost .branch::before {
+  content: ''; position: absolute; inset: -0.5em 100% 50% auto; width: 1em;
+  border-inline-start: 1px solid var(--story-cite); border-block-end: 1px solid var(--story-cite);
+}
+#cost .term .branch { padding-inline-start: 0.5em; }
+
+/* macOS: the security-policy schematic, at its final state (Reduced, ticked), then the steps */
+#cost .mac {
+  background: #16171b; border-radius: 14px; border: 1px solid #2e3036; padding: 20px 22px;
+  font: 0.9375rem/1.4 var(--font-body); color: #d9d6d0;
+}
+#cost .mac p { color: inherit; max-width: none; margin: 10px 0; }
+#cost .mac .t { font-weight: 600; margin: 0 0 14px; }
+#cost .mac .opt { display: flex; gap: 10px; align-items: flex-start; }
+#cost .mac .r { position: relative; flex: none; width: 15px; height: 15px; margin-top: 2px; border-radius: 50%; border: 1.5px solid #666; }
+#cost .mac .dot { position: absolute; inset: 2px; border-radius: 50%; background: var(--rust); }
+#cost .mac .doff { opacity: 0; }
+#cost .mac .c {
+  flex: none; width: 15px; height: 15px; margin-top: 2px; border-radius: 4px; border: 1.5px solid var(--rust);
+  display: grid; place-items: center; font-size: 11px; line-height: 1; color: #000; background: var(--rust);
+}
+#cost .mac .sub { color: #8b8f96; font-size: 0.8125rem; margin-left: 25px; }
+#cost .mac .btns { display: flex; justify-content: flex-end; gap: 10px; margin: 16px 0 0; }
+#cost .mac .btns span { padding: 5px 14px; border-radius: 7px; background: #2a2c31; font-size: 0.8125rem; }
+#cost .mac .btns .ok { background: var(--rust); color: #111; }
+#cost .steps { display: flex; flex-wrap: wrap; gap: 8px; }
+#cost .steps li { font: 0.75rem var(--font-mono); padding: 5px 10px; border-radius: 99px; border: 1px solid #2e3036; color: var(--story-muted); }
+
+/* Linux: the Debian workflow example (wrapping on narrow screens) */
+#cost .term { margin: 0; font: clamp(0.8125rem, 0.75rem + 0.3vw, 0.96875rem)/1.9 var(--font-mono); color: #b9b5af; white-space: pre-wrap; overflow-wrap: anywhere; }
+#cost .term .ln { display: block; }
+#cost .term .p { color: var(--story-amber); }
+#cost .term .e { color: #ff5b4a; }
+/* #6f747b would be under 4.5:1 on the panel: the citation grey */
+#cost .term .d { color: var(--story-cite); }
+
+/* IronAFS: the drops picture behind the text, under a scrim that keeps the text at AA contrast */
+#cost .scard.iron { grid-template-columns: minmax(0, 1fr); align-content: center; background: oklch(0.17 0.005 270); }
+/* phones: a band across the card's top, fading into the card before the text starts */
+#cost .scard.iron { padding-top: clamp(9rem, 40vw, 12rem); }
+#cost .iron-art { position: absolute; inset: 0 0 auto; height: clamp(12rem, 52vw, 16rem); z-index: 0; pointer-events: none; }
+#cost .iron-art picture, #cost .iron-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 64% 60%; }
+#cost .iron-art::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, #0000 30%, oklch(0.17 0.005 270 / 0.7) 62%, oklch(0.17 0.005 270) 92%);
+}
+#cost .iron-copy { position: relative; z-index: 1; }
+#cost .scard.iron h3 { font-size: clamp(2.25rem, 1rem + 5vw, 6rem); }
+#cost .scard.iron .lede { font-size: clamp(1.0625rem, 0.9rem + 0.7vw, 1.4375rem); max-width: 46ch; }
+#cost .afs { margin-top: 1.25rem; }
+#cost .afs p { max-width: none; margin: 0; }
+#cost .bigcmd { font: 500 clamp(1.375rem, 0.9rem + 2vw, 2.625rem)/1.3 var(--font-mono); color: var(--story-fg); }
+#cost .bigcmd .p { color: var(--rust); }
+#cost .bigcmd .typed { display: inline-block; white-space: nowrap; vertical-align: bottom; }
+#cost .bigcmd .cur { display: inline-block; width: 0.55em; height: 1em; margin-left: 4px; vertical-align: -0.12em; background: var(--story-amber); }
+/* phones: each output line wraps, so its lines are set closer (1.8 from 761 px, one line each) */
+#cost .bigout { font: clamp(0.875rem, 0.7rem + 0.6vw, 1.125rem)/1.5 var(--font-mono); color: var(--story-cite); margin-top: 1.5vh; }
+#cost .bigout span { display: block; }
+#cost .bigout .ok { color: #c9bba8; }
+
+@media (min-width: 761px) {
+  #cost .scard { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 4vw; }
+  #cost .scard.iron { grid-template-columns: minmax(0, 1fr); }
+  #cost .vis { min-height: 22rem; }
+  /* the picture fills the card's right 62%, its glowing drop past the text; a scrim fades it in from the left */
+  #cost .scard.iron { padding-top: clamp(22px, 4vw, 40px); }
+  #cost .iron-art { inset: 0 0 0 38%; height: auto; }
+  #cost .iron-art img { object-position: 70% 60%; }
+  #cost .iron-art::after { background: linear-gradient(90deg, oklch(0.17 0.005 270) 40%, oklch(0.17 0.005 270 / 0.8) 48%, oklch(0.17 0.005 270 / 0.3) 57%, #0000 68%); }
+  /* the text column takes at most 62% of the card, all of it on the solid scrim */
+  #cost .iron-copy { max-width: min(62%, 44rem); }
+  #cost .afs { margin-top: 4vh; }
+  #cost .bigout { line-height: 1.8; }
+}
+
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+    html:not(.static) #cost > .stage { max-width: calc(1360px + 2 * var(--gutter)); padding: 14vh var(--gutter) 10vh; }
+    html:not(.static) #cost h2 { font: 700 clamp(32px, 4.4vw, 68px)/1.04 var(--font-display); letter-spacing: -0.03em; max-width: none; margin: 0 0 8vh; }
+
+    /* the stack: a 75vh scroll between cards, which is each card's pinned window; the ::after is the room after the
+       last card. view-timeline-inset: 0, as in crash.css: otherwise html's scroll-padding-top shifts the ranges. */
+    html:not(.static) #cost .stack { gap: 75vh; margin: 0; view-timeline: --stack block; view-timeline-inset: 0; }
+    html:not(.static) #cost .stack::after { content: ""; }
+    html:not(.static) #cost .scard {
+      --i: 0;
+      position: sticky; top: calc(12vh + var(--i) * 22px); min-height: 72vh; padding: 5vh 4vw;
+      animation-name: cs-sinkBack; animation-duration: auto; animation-timing-function: linear;
+      animation-fill-mode: both; animation-timeline: --stack;
+      animation-range: var(--r, cover 100% cover 100%);
+    }
+    html:not(.static) #cost .scard:nth-child(2) { --i: 1; }
+    html:not(.static) #cost .scard:nth-child(3) { --i: 2; }
+    html:not(.static) #cost .scard:nth-child(4) { --i: 3; animation-name: none; }
+    /* stack.ts measures the natural positions with the cards unstuck, for one synchronous layout */
+    html:not(.static) #cost .stack.is-measuring > .scard { position: relative; top: 0; }
+    /* snug cards (stack.ts: the text wraps to more lines than a card holds): less room above and below the text */
+    html:not(.static) #cost .stack--snug > .scard { padding-block: 2.5vh; }
+    html:not(.static) #cost .stack--snug .scard h3 { margin-block: 6px 12px; }
+    html:not(.static) #cost .stack--snug .afs { margin-top: 1.5vh; }
+    html:not(.static) #cost .vis { height: 52vh; min-height: 0; padding: 26px; }
+    html:not(.static) #cost .scard h3 { font-size: clamp(28px, 3.2vw, 50px); }
+    html:not(.static) #cost .scard .lede { font-size: clamp(16px, 1.3vw, 19px); }
+    html:not(.static) #cost .scard.iron h3 { font-size: clamp(44px, min(6vw, 6.5vh), 96px); }
+    html:not(.static) #cost .scard.iron .lede { font-size: clamp(18px, 1.6vw, 23px); max-width: 55ch; }
+
+    /* the schematic's switch and tick and the typed command: each in its own range of the stack's timeline (stack.ts) */
+    html:not(.static) #cost :is(.mac .doff, .mac .don, .mac .c, .typed) {
+      animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
+      animation-timeline: --stack; animation-range: var(--r, normal);
+    }
+    /* a step is dim (0.15) from the stack's arrival until its turn (--d), then lights up (--r) and stays lit. Neither
+       animation fills backwards: before the stack reaches the viewport (the page's top, where nothing of it is on
+       screen) every step is at its final state, as in the base layer. */
+    html:not(.static) #cost .on {
+      animation-name: cs-dim, cs-lightUp; animation-duration: auto, auto; animation-timing-function: linear, linear;
+      animation-fill-mode: none, forwards; animation-timeline: --stack, --stack;
+      animation-range: var(--d, cover 0% cover 0%), var(--r, normal);
+    }
+    html:not(.static) #cost .mac .doff { opacity: 1; animation-name: cs-dotOff; }
+    html:not(.static) #cost .mac .don { animation-name: cs-dotOn; }
+    html:not(.static) #cost .mac .c { animation-name: cs-tick; }
+    html:not(.static) #cost .bigcmd .typed { overflow: hidden; width: 0; animation-name: cs-type; animation-timing-function: steps(10); }
+    /* five blinks, then a steady cursor (WCAG 2.2.2); stack.ts restarts them each time the cursor comes into view */
+    html:not(.static) #cost .bigcmd .cur {
+      animation-name: cs-blink; animation-duration: 1s; animation-timing-function: steps(1); animation-iteration-count: 5; animation-fill-mode: forwards;
+    }
+
+    /* A window too short for a card under its sticky top (stack.ts adds .stack--flow): the cards in normal flow, every
+       picture at its final state, as in the base layer. */
+    html:not(.static) #cost .stack.stack--flow { gap: 22px; perspective: none; }
+    html:not(.static) #cost .stack--flow > .scard { position: relative; top: 0; min-height: 0; animation-name: none; }
+    html:not(.static) #cost .stack--flow .vis { height: auto; }
+    html:not(.static) #cost .stack--flow :is(.on, .mac .doff, .mac .don, .mac .c, .typed, .cur) { animation-name: none; }
+    html:not(.static) #cost .stack--flow .mac .doff { opacity: 0; }
+    html:not(.static) #cost .stack--flow .bigcmd .typed { width: auto; overflow: visible; }
+  }
+}
+
+@keyframes cs-sinkBack { to { filter: brightness(0.45); } }
+@keyframes cs-dim { from, to { opacity: 0.15; translate: 0 8px; } }
+@keyframes cs-lightUp { from { opacity: 0.15; translate: 0 8px; } }
+@keyframes cs-dotOff { to { opacity: 0; } }
+@keyframes cs-dotOn { from { opacity: 0; } }
+@keyframes cs-tick { from { background-color: #0000; border-color: #666; color: #0000; } }
+/* 10 characters: story.cost.ironafs.command, "afs status" (and steps(10) above) */
+@keyframes cs-type { to { width: 10ch; } }
+@keyframes cs-blink { 50% { opacity: 0; } }

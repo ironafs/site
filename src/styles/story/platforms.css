@@ -1,0 +1,197 @@
+/* Where the platforms are going (#platforms). Base first: a
+   vertical list grouped by lane, each lane a dashed rule with its events' markers on it. Then the enhancement under
+   motion.css's selector, verbatim: the lanes become rows of one sideways track that slides with scroll, the lane names
+   in a column that stays put. Every marker, card and year tick sits at its --x (the xFor(date) fraction, set by
+   src/scripts/story/platforms.ts from data-x), never at a hand-set position. Animations are written as longhands:
+   the minifier folds an `animation` shorthand and its `animation-timeline` into one shorthand, where a timeline is not
+   allowed, and the browser then drops the whole declaration (see crash.css).
+   Every enhanced rule skips #platforms.story--flow (fit guard, platforms.ts): the base layer. */
+
+/* The slide's distance, registered so platforms.ts can read it in px (the keyboard scrolls to an event with it). */
+@property --pf-d {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* ---------- base: a vertical list grouped by lane ---------- */
+#platforms .tl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; margin-top: 2rem; }
+#platforms .lane { min-width: 0; }
+#platforms .lane > h3 { color: var(--story-muted); margin: 0 0 1rem; }
+#platforms .evs {
+  list-style: none; margin: 0 0 0 6px; padding: 0 0 0 22px; border-left: 1px dashed #3a3e45;
+  display: grid; gap: 14px;
+}
+#platforms .ev { position: relative; max-width: 36rem; }
+#platforms .mk {
+  position: absolute; left: -28px; top: 20px; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--rust); box-shadow: 0 0 12px var(--rust);
+}
+#platforms .card {
+  min-width: 0; overflow-wrap: anywhere; padding: 14px 16px; border-radius: 16px; border: 1px solid var(--story-card-border);
+  background: linear-gradient(160deg, oklch(0.24 0.006 270), oklch(0.2 0.005 270));
+}
+#platforms .card p { margin: 0; max-width: none; }
+#platforms .card .y { font: 500 0.75rem/1.4 var(--font-mono); color: var(--story-amber); }
+#platforms .card :is(h3, h4) {
+  font: 700 1.0625rem/1.25 var(--font-display); letter-spacing: normal; text-transform: none;
+  color: var(--story-fg); margin: 4px 0;
+}
+#platforms .card a { color: inherit; text-decoration: underline; text-decoration-color: #ffffff40; text-underline-offset: 3px; }
+#platforms .card a:hover { color: var(--story-peach); text-decoration-color: currentColor; }
+#platforms .card .t { font-size: 0.9375rem; line-height: 1.45; color: #b9b5af; }
+/* a card that states two facts: the second fact's source */
+#platforms .card .src { font: 0.75rem/1.5 var(--font-mono); margin-top: 6px; }
+#platforms .card .src a { color: var(--story-cite); }
+#platforms .card .src a:hover { color: var(--story-peach); }
+/* phones: the titles and source links are 44 px tap targets without moving their lines (story/base.css) */
+@media (max-width: 760px) {
+  #platforms .card a { padding-block: 14px; }
+  /* a one-word title (FUSE, FSKit) is 44 px wide too, whatever its font's advances: an inline block at least 44 px
+     wide, its text where it was (start-aligned), its padding taken back by an equal negative margin (as #rust's year links) */
+  #platforms .card :is(h3, h4) a { display: inline-block; min-width: 44px; margin-block: -14px; }
+}
+/* IronAFS: the destination, in rust */
+#platforms .fin-lane .evs { border-left-color: #0000; }
+#platforms .fin .card { border-color: #8a4422; background: radial-gradient(90% 100% at 0 0, #3a1a0c, oklch(0.2 0.005 270)); }
+/* the year axis belongs to the sideways track only */
+#platforms .axis { display: none; }
+
+/* ---------- enhancement: the sideways track ---------- */
+@keyframes pf-slide { to { translate: calc(-1 * var(--pf-d)) 0; } }
+@keyframes pf-grow { from { scale: 0 1; } }
+
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+    /* inset 0: the page's scroll-padding must not shift the timeline (crash.css) */
+    html:not(.static) #platforms:not(.story--flow) { view-timeline: --platforms block; view-timeline-inset: 0; }
+    html:not(.static) #platforms:not(.story--flow) > .stage {
+      max-width: none; display: flex; flex-direction: column; padding-inline: 8vw 0; padding-bottom: 1vh;
+    }
+    html:not(.static) #platforms:not(.story--flow) > .stage > h2 {
+      max-width: none; font-size: clamp(28px, 2.9vw, 46px); margin-bottom: 2.5vh; padding-right: 8vw;
+    }
+
+    html:not(.static) #platforms:not(.story--flow) .tl {
+      /* the lane names' column; the room before 2005; the track (the date axis, 0 to 1) */
+      --names: 7.5rem;
+      --pad: 48px;
+      --tl-w: max(190vw, 2750px);
+      --fin-w: clamp(260px, 21vw, 340px);
+      --axis-h: 2.25rem;
+      /* how far the open analytics notice lifts the axis (below): 0 when it is closed */
+      --axis-lift: 0px;
+      /* to the end: the IronAFS card (at --end of the track, past every lane card) whole in the window, 4vw from its
+         right edge. The window is the viewport less the stage's 8vw and the names' column. */
+      --pf-d: calc(var(--tl-w) * var(--end, 1) + var(--pad) + var(--fin-w) + 4vw - (92vw - var(--names)));
+      flex: 1; min-height: 0; margin: 0; position: relative;
+      display: grid; gap: 0; grid-template-rows: repeat(3, minmax(0, 1fr)) var(--axis-h);
+    }
+    html:not(.static) #platforms:not(.story--flow) .lane {
+      display: grid; grid-template-columns: var(--names) minmax(0, 1fr); min-height: 0;
+    }
+    /* the name on its lane's rule, left of the window */
+    html:not(.static) #platforms:not(.story--flow) .lane > h3 {
+      align-self: start; margin: 0; padding-top: 4px; min-width: 0; overflow: hidden; white-space: nowrap;
+    }
+    /* the window: clipped at its sides (not a scroll container, so focus never scrolls it), the track fading in at
+       its left edge as it passes under the names */
+    html:not(.static) #platforms:not(.story--flow) .win {
+      position: relative; min-width: 0; padding-top: 9px; overflow-x: clip; overflow-y: visible;
+      mask-image: linear-gradient(90deg, #0000, #000 var(--pad));
+    }
+    html:not(.static) #platforms:not(.story--flow) .evs {
+      display: block; position: relative; margin: 0 0 0 var(--pad); padding: 0; width: var(--tl-w); height: 100%;
+      border-left: 0; border-top: 1px dashed #3a3e45;
+    }
+    html:not(.static) #platforms:not(.story--flow) :is(.evs, .ticks) {
+      animation-name: pf-slide;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --platforms;
+      animation-range: contain 4% contain 96%;
+    }
+    /* an event: its marker on the lane's rule at --x, its card hanging below, as wide as the room to the next event */
+    html:not(.static) #platforms:not(.story--flow) .ev {
+      position: absolute; top: 0; left: calc(var(--x, 0) * 100%); margin-left: -21px;
+      width: min(var(--card-w, 340px), calc(var(--gap, 0.1) * var(--tl-w) - 18px)); max-width: none;
+    }
+    html:not(.static) #platforms:not(.story--flow) .mk { left: 16px; top: -6px; }
+    html:not(.static) #platforms:not(.story--flow) .ev:not(.fin)::before {
+      content: ''; position: absolute; left: 20.5px; top: 4px; width: 1px; height: 6px; background: #8a4422;
+    }
+    html:not(.static) #platforms:not(.story--flow) .ev:not(.fin) .card { margin-top: 10px; }
+    /* a short window: lanes are short, so cards may be wider and their 15 px descriptions take fewer lines */
+    @media (max-height: 820px) { html:not(.static) #platforms:not(.story--flow) .tl { --card-w: 400px; } }
+    /* a little tighter than the list, so the longest card fits its lane in a 720 px window */
+    html:not(.static) #platforms:not(.story--flow) .ev:not(.fin) .card { padding: 10px 14px; }
+    html:not(.static) #platforms:not(.story--flow) .ev:not(.fin) .card h4 { font-size: 1rem; }
+    html:not(.static) #platforms:not(.story--flow) .ev:not(.fin) .card .t { font-size: 0.9375rem; line-height: 1.3; }
+    html:not(.static) #platforms:not(.story--flow) .ev:not(.fin) .card .src { margin-top: 0; line-height: 1.4; }
+
+    /* IronAFS: over the lanes, its marker on the axis at its date, its card at --end, after every lane card */
+    html:not(.static) #platforms:not(.story--flow) .fin-lane {
+      display: block; position: absolute; inset: 0 0 0 var(--names); pointer-events: none;
+    }
+    html:not(.static) #platforms:not(.story--flow) .fin-lane .win { height: 100%; padding-top: 0; }
+    html:not(.static) #platforms:not(.story--flow) .fin-lane .evs { border-top: 0; }
+    html:not(.static) #platforms:not(.story--flow) .ev.fin { top: 0; bottom: 0; width: 0; margin-left: 0; }
+    html:not(.static) #platforms:not(.story--flow) .fin .mk { left: -5px; top: calc(100% - var(--axis-h) - 5px - var(--axis-lift)); }
+    /* the line from the marker along the axis, then up to the card: its bottom sits --lift above the axis, so that a
+       card of about 120 px is centred on the lanes */
+    html:not(.static) #platforms:not(.story--flow) .ev.fin {
+      --lift: calc((100% - var(--axis-h)) / 2 - 60px);
+      --to: calc((var(--end, 1) - var(--x, 0)) * var(--tl-w) + 28px);
+    }
+    html:not(.static) #platforms:not(.story--flow) .ev.fin::before {
+      content: ''; position: absolute; left: 0; bottom: calc(var(--axis-h) - 1px + var(--axis-lift)); width: var(--to); border-top: 2px solid var(--rust);
+    }
+    html:not(.static) #platforms:not(.story--flow) .ev.fin::after {
+      content: ''; position: absolute; left: var(--to); bottom: calc(var(--axis-h) - 1px + var(--axis-lift)); height: max(0px, var(--lift) - var(--axis-lift)); border-left: 2px solid var(--rust);
+    }
+    html:not(.static) #platforms:not(.story--flow) .fin .card {
+      position: absolute; left: calc((var(--end, 1) - var(--x, 0)) * var(--tl-w)); bottom: calc(var(--axis-h) + var(--lift));
+      width: var(--fin-w); pointer-events: auto;
+    }
+    html:not(.static) #platforms:not(.story--flow) .fin .card :is(h3) { font-size: 1.375rem; }
+
+    /* the year axis: a tick at each year's --x, and the rust line that grows along it with the slide */
+    html:not(.static) #platforms:not(.story--flow) .axis {
+      display: grid; grid-template-columns: var(--names) minmax(0, 1fr); min-height: 0; translate: 0 calc(-1 * var(--axis-lift));
+    }
+    /* reaching above the axis line, so the mask does not cut the break marks centred on it */
+    html:not(.static) #platforms:not(.story--flow) .axis .win { grid-column: 2; padding-top: 16px; margin-top: -16px; }
+    html:not(.static) #platforms:not(.story--flow) .ticks {
+      position: relative; margin-left: var(--pad); width: var(--tl-w); height: 100%; border-top: 1px solid #ffffff24;
+    }
+    html:not(.static) #platforms:not(.story--flow) .tick {
+      position: absolute; top: 10px; left: calc(var(--x, 0) * 100%); translate: -50% 0;
+      font: 0.75rem/1 var(--font-mono); color: var(--story-cite);
+    }
+    /* a scale break: the axis line is cut and marked "≈" where the scale compresses (timeline.ts, breaks) */
+    html:not(.static) #platforms:not(.story--flow) .brk {
+      position: absolute; z-index: 1; top: 0; left: calc(var(--x, 0) * 100%); translate: -50% -50%; padding: 0 8px;
+      font: 700 1.25rem/1 var(--font-mono); color: var(--story-text); background: var(--story-bg);
+    }
+    html:not(.static) #platforms:not(.story--flow) .tick::before {
+      content: ''; position: absolute; left: 50%; top: -10px; width: 1px; height: 6px; background: #ffffff40;
+    }
+    html:not(.static) #platforms:not(.story--flow) .prog {
+      position: absolute; left: 0; top: -1px; width: 100%; height: 2px; background: var(--rust); box-shadow: 0 0 12px var(--rust);
+      transform-origin: left; scale: 1 1;
+      animation-name: pf-grow;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --platforms;
+      animation-range: contain 4% contain 96%;
+    }
+  }
+}
+
+/* The open notice covers the stage's bottom: the whole axis rises above it, its line, progress, ticks and scale breaks
+   together, and IronAFS's marker and line with it, so the breaks stay on the scale they break. */
+html.analytics-notice-visible #platforms:not(.story--flow) .tl { --axis-lift: var(--analytics-clearance, 0px); }
+/* lifted over the lowest lane, the axis (labels only) never takes a card's clicks */
+html.analytics-notice-visible #platforms:not(.story--flow) .axis { pointer-events: none; }

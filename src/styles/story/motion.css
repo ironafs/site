@@ -1,0 +1,45 @@
+/* The story's enhancement layer: pins and section heights now; each section task adds its
+   animations here or in its own sheet, always under this selector, verbatim.
+   mode.ts's storyEnhanced() is the same predicate for modules. Base rules live in base.css.
+   A section too big for its pinned stage in this window gets .story--flow (src/scripts/story/fit.ts): every
+   enhanced rule for it skips that class, so it is the base layer, in normal flow. */
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+    /* A pinned stage starts at the viewport top; cancel the page's anchor offset only for pinned sections. */
+    html:not(.static) .story.pin:not(.story--flow) { scroll-margin-top: calc(-1 * (var(--header-live, var(--header-h)) + 8px)); }
+    html:not(.static) .story.pin:not(.story--flow) > .stage {
+      position: sticky;
+      top: 0;
+      /* over the section's 1 px top border: the stage starts where the section does, so a jump to the section
+         lands with the stage already stuck */
+      margin-top: -1px;
+      height: 100vh;
+      overflow: hidden;
+      padding-top: calc(var(--header-h) + 3vh);
+    }
+    /* the pinned sections' scroll lengths */
+    html:not(.static) .story.h-160:not(.story--flow) { height: 160vh; }
+    html:not(.static) .story.h-190:not(.story--flow) { height: 190vh; }
+    html:not(.static) .story.h-300:not(.story--flow) { height: 300vh; }
+    html:not(.static) .story.h-440:not(.story--flow) { height: 440vh; }
+    html:not(.static) .story.h-560:not(.story--flow) { height: 560vh; }
+    /* The hero: 220vh, pinned under the header (not at the viewport's top as the story's
+       stages are: the hero's scene and copy are laid out below the header, hero.css), its timeline starting where it
+       pins. Only the desktop hero has the hand-off layout; a narrower or too short one keeps the plain layout (fit.ts heroFits).
+       The choreography is in hero.css. */
+    @media (min-width: 900px) {
+      html:not(.static) .hero-pin:not(.story--flow) {
+        --hero-top: var(--header-live, var(--header-h));
+        height: 220vh;
+        view-timeline: --hero block;
+        view-timeline-inset: var(--hero-top) 0;
+      }
+      html:not(.static) .hero-pin:not(.story--flow) > .hero {
+        position: sticky;
+        top: var(--hero-top);
+        height: calc(100vh - var(--hero-top));
+        min-height: 0;
+      }
+    }
+  }
+}

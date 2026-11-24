@@ -1,0 +1,49 @@
+---
+import { built } from '../content/site';
+
+const tables = [
+  { ...built.families, label: 'built-h', heading: '', lead: '' },
+  { ...built.classes, label: 'built-classes-h' },
+];
+---
+<section id="built" class="section" aria-labelledby="built-h">
+  <div class="container">
+    <div class="section-intro">
+      <div class="section-title">
+        <p class="eyebrow"><span class="slash" aria-hidden="true">/</span>{built.eyebrow}</p>
+        <h2 id="built-h" tabindex="-1">{built.heading}</h2>
+      </div>
+      <p class="lead">{built.intro}</p>
+    </div>
+    {tables.map(({ head, rows, label, heading, lead }) => (
+      <>
+        {heading && <h3 id={label} class="built-class-heading">{heading}</h3>}
+        {lead && <p class="lead">{lead}</p>}
+        <div class="table-wrap">
+          <table class="built-table" role="table" aria-labelledby={label}>
+            <thead role="rowgroup">
+              <tr role="row">{head.map(cell => <th scope="col" role="columnheader">{cell}</th>)}</tr>
+            </thead>
+            <tbody role="rowgroup">
+              {rows.map(([name, ...cells]) => (
+                <tr role="row">
+                  <th scope="row" role="rowheader">{name}</th>
+                  {cells.map((cell, i) => <td role="cell" data-label={head[i + 1]}>{cell}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    ))}
+    <p class="lead">{built.waits}</p>
+    <p class="lead">{built.provenance}</p>
+    <div class="built-human">
+      <h3>{built.human}</h3>
+      <p class="lead">{built.humanBody}</p>
+    </div>
+    <ul class="built-links" role="list">
+      {built.links.map(({ label, href }) => <li><a href={href}>{label}</a></li>)}
+    </ul>
+  </div>
+</section>

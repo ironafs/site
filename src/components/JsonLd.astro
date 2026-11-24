@@ -1,0 +1,19 @@
+---
+import { links, repo } from '../data/links';
+import { site } from '../content/site';
+
+const data = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: site.name,
+  description: site.tagline,
+  url: site.url,
+  codeRepository: repo,
+  programmingLanguage: 'Rust',
+  license: site.ironafsLicence,
+  author: { '@type': 'Person', name: site.author, url: links.author },
+};
+// "<" is escaped so the data block can never close its own script element.
+const json = JSON.stringify(data).replace(/</g, '\\u003c');
+---
+<script is:inline type="application/ld+json" set:html={json} />

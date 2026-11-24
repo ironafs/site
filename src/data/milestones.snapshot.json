@@ -1,0 +1,77 @@
+{
+  "fetchedAt": "2026-11-21",
+  "milestones": [
+    {
+      "number": 1,
+      "title": "M0: public foundation",
+      "state": "closed",
+      "open_issues": 0,
+      "closed_issues": 14,
+      "html_url": "https://github.com/ironafs/ironafs/milestone/1"
+    },
+    {
+      "number": 2,
+      "title": "M1: architecture",
+      "state": "closed",
+      "open_issues": 0,
+      "closed_issues": 19,
+      "html_url": "https://github.com/ironafs/ironafs/milestone/2"
+    },
+    {
+      "number": 3,
+      "title": "M2a: core and Linux, read-only",
+      "state": "open",
+      "open_issues": 84,
+      "closed_issues": 22,
+      "html_url": "https://github.com/ironafs/ironafs/milestone/3"
+    },
+    {
+      "number": 4,
+      "title": "M2b: rxkad and tokens",
+      "state": "open",
+      "open_issues": 0,
+      "closed_issues": 0,
+      "html_url": "https://github.com/ironafs/ironafs/milestone/4"
+    },
+    {
+      "number": 5,
+      "title": "M3: Linux writes and locks",
+      "state": "open",
+      "open_issues": 0,
+      "closed_issues": 0,
+      "html_url": "https://github.com/ironafs/ironafs/milestone/5"
+    },
+    {
+      "number": 6,
+      "title": "M4: macOS",
+      "state": "open",
+      "open_issues": 0,
+      "closed_issues": 0,
+      "html_url": "https://github.com/ironafs/ironafs/milestone/6"
+    },
+    {
+      "number": 7,
+      "title": "M5: Windows",
+      "state": "open",
+      "open_issues": 0,
+      "closed_issues": 0,
+      "html_url": "https://github.com/ironafs/ironafs/milestone/7"
+    },
+    {
+      "number": 8,
+      "title": "M6: rxgk and other security work",
+      "state": "open",
+      "open_issues": 0,
+      "closed_issues": 0,
+      "html_url": "https://github.com/ironafs/ironafs/milestone/8"
+    },
+    {
+      "number": 9,
+      "title": "M7: proposed later work",
+      "state": "open",
+      "open_issues": 0,
+      "closed_issues": 0,
+      "html_url": "https://github.com/ironafs/ironafs/milestone/9"
+    }
+  ]
+}

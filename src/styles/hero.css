@@ -1,0 +1,380 @@
+/* Hero: the dark forge. The poster is the finished scene; the console types over it. */
+/* the hand-off's tall scroll (below): dark like the hero, as it is what the translucent header shows above the
+   pinned stage (the page behind it follows the theme) */
+.hero-pin { background: oklch(0.165 0.004 270); }
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: oklch(0.165 0.004 270);
+  color: oklch(0.92 0.006 255);
+  min-height: min(calc(100svh - var(--header-h)), 60rem);
+  display: flex;
+}
+.hero-poster,
+.hero-poster img,
+.hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 60%;
+  z-index: -2;
+}
+/* The finished state is the default (no JS, return visits, reduced motion). On a first visit the head gate
+   sets html[data-intro]: the poster waits for the console to finish and the typed layer is hidden until
+   typing starts, so the headline is the first paint and the full text never flashes. */
+.hero-poster { transition: opacity 1.2s ease; }
+html[data-intro='play'] .hero-poster { opacity: 0; animation: introFallback 0s 5s forwards; }
+html[data-intro='typing'] .hero:not([data-phase='cooled']) .hero-poster { opacity: 0; }
+html[data-intro='play'] .console-typed { visibility: hidden; animation: introFallback 0s 5s forwards; }
+/* If the module never starts (network error, extension), reveal the finished state after 5 s. Once it
+   starts, data-intro becomes 'typing', these rules stop matching and the animation is dropped. */
+@keyframes introFallback { to { opacity: 1; visibility: visible; } }
+@media (prefers-reduced-motion: reduce) { .hero-poster { transition: none; } }
+/* The 3D scene: while live it owns the stage, the poster is hidden and the canvas fades in. It is the same
+   box as the poster, so the two line up with the copy. */
+.hero-canvas { display: block; opacity: 0; transition: opacity 1.2s ease; }
+.hero[data-scene='live'] .hero-canvas { opacity: 1; }
+.hero[data-hover] { cursor: pointer; } /* the pointer is over a letter (set by the scene) */
+.hero[data-scene='live'] .hero-poster { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .hero-canvas { transition: none; } }
+/* A scrim keeps the text readable wherever the poster is bright. */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, oklch(0.165 0.004 270 / 0.55), oklch(0.165 0.004 270 / 0.1) 40%, oklch(0.165 0.004 270 / 0.75));
+}
+.hero-inner {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1.25rem var(--gutter) max(2.5rem, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+/* Scoped to #hero: #cost's Debian workflow is a <pre class="term"> too, and is not framed. */
+#hero .term {
+  width: min(60rem, 100%);
+  border: 1px solid #2b2e34;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgb(13 14 17 / 0.82);
+  box-shadow: 0 18px 50px #000a, inset 0 1px 0 #ffffff0d;
+}
+#hero .term-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 14px;
+  border-block-end: 1px solid #22252a;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #8b8f96;
+}
+#hero .term-bar i { width: 9px; height: 9px; border-radius: 50%; background: #2d3036; display: inline-block; flex: none; }
+#hero .term-title { margin-inline-start: 6px; min-width: 0; overflow-wrap: anywhere; }
+#hero .term-label { margin-inline-start: auto; }
+.replay {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  color: #b4b8be;
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.replay:hover { color: #f0ac72; }
+/* The pause control (scripts/hero/pause.ts): the replay key's size and colour, two bars, or a play triangle while the
+   motion is paused (html[data-hero-paused], when its label says Resume). Offered only with scripts and without
+   reduced motion (hidden otherwise). Paused, the console's caret is still too. */
+.hero-pause[hidden] { display: none; }
+.hero-pause-icon { display: block; box-sizing: border-box; width: 12px; height: 14px; border-inline: 4px solid currentColor; }
+html[data-hero-paused] .hero-pause-icon {
+  width: 12px; height: 14px;
+  border: 0; border-block: 7px solid transparent; border-inline-start: 12px solid currentColor;
+}
+html[data-hero-paused] #hero .caret { animation: none; }
+
+.console {
+  position: relative;
+  padding: 14px 18px 16px;
+  min-height: 11.5em;
+  font-family: var(--font-mono);
+  font-size: clamp(0.75rem, 0.5rem + 1.1vw, 1.125rem);
+  line-height: 1.7;
+  text-align: start;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.console-typed .pre { color: #8b8f96; }
+.console-typed .r { color: #ff5b4a; text-shadow: 0 0 12px #ff3b2f55; }
+.console-typed .c,
+.console-typed .note { color: #8b8f96; text-shadow: none; }
+.console-typed .a { color: #f0ac72; text-shadow: 0 0 12px #ff8a3044; }
+.console-typed .a .pre { text-shadow: none; }
+.caret {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.15em;
+  vertical-align: -0.22em;
+  background: #f0ac72;
+  margin-inline-start: 2px;
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .caret { animation: none; } }
+
+
+.hero-copy { max-width: 48rem; }
+.hero h1 { font-size: clamp(2.75rem, 1rem + 6vw, 5rem); margin-block: 0.5rem 0.4em; text-wrap: balance; }
+.subline { font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.375rem); color: oklch(0.76 0.01 255); margin: 0; }
+.hero .pill { display: inline-block; font-family: var(--font-mono); font-size: 0.875rem; color: oklch(0.69 0.155 48); text-decoration: none; }
+.hero-chips { margin: 1rem 0 0; }
+/* the scroll cue belongs to the hand-off (below); the plain layout has nothing to scroll through */
+.hero-cue { display: none; }
+/* The pill is the face (.licence-chip-face); the link around it is its tap target, 44 px tall on phones, through padding and an equal negative margin, so neither the pill nor its row moves. */
+.licence-chip { display: inline-block; text-decoration: none; }
+.licence-chip-face {
+  display: inline-block; font-family: var(--font-mono); font-size: 0.8125rem; color: oklch(0.82 0.01 255);
+  padding: 0.25rem 0.625rem; border: 1px solid oklch(0.45 0.01 255); border-radius: 999px;
+}
+.licence-chip:is(:hover, :focus-visible) .licence-chip-face { border-color: oklch(0.69 0.155 48); }
+/* the focus ring follows the pill, not the taller target (base.css's ring, moved to the face) */
+.licence-chip:focus-visible { outline: none; box-shadow: none; }
+.licence-chip:focus-visible .licence-chip-face { outline: 2px solid var(--focus); outline-offset: 3px; box-shadow: 0 4px 0 -1px var(--focus); }
+@media (max-width: 760px) { .licence-chip { padding-block: 7px; margin-block: -7px; } }
+/* the status pill too: a single-line pill is a 44 px target through padding and an equal negative margin */
+@media (max-width: 760px) { .hero .pill { padding-block: max(0px, (44px - 1lh) / 2); margin-block: min(0px, (1lh - 44px) / 2); } }
+
+/* Phones: the 16:10 poster cannot fill a tall box without cropping the word, so the whole poster sits
+   at the top (contain, full width) and the console, status pill, headline and subline start below it. */
+@media (max-width: 899px) {
+  .hero { --poster-h: calc(100vw * 1800 / 2880); }
+  .hero-poster,
+  .hero-poster img,
+  .hero-canvas {
+    inset: 0 0 auto 0;
+    height: var(--poster-h);
+    object-fit: contain;
+    object-position: center 40%;
+  }
+  .hero-inner { padding-block-start: calc(var(--poster-h) + 1rem); }
+  /* the text starts below the picture, so the scrim does too: over the picture it only greyed the blacks */
+  .hero::after { inset-block-start: var(--poster-h); }
+  /* the four lines wrap to nine rows at 390 px; never more than a third of a short (landscape) screen, but always
+     the four unwrapped lines (a landscape phone fits each on one row) */
+  .console { min-height: max(calc(4 * 1.7em + 30px), min(calc(9 * 1.7em + 30px), calc((100svh - var(--header-h)) / 3 - 2.5rem))); font-size: max(12px, 0.75rem); }
+}
+
+/* Landscape phones: a full-width 16:10 band is taller than the screen and the word sat at the fold. The band is
+   the screen's height instead and the picture covers it centred, as the scene's camera crops a wider box (scene.ts
+   frame()), so the word is in view and the poster and the canvas still line up. */
+@media (max-width: 899px) and (orientation: landscape) {
+  .hero { --poster-h: min(calc(100vw * 1800 / 2880), calc(100svh - var(--header-h))); }
+  .hero-poster,
+  .hero-poster img,
+  .hero-canvas { object-fit: cover; object-position: 50% 50%; }
+}
+
+/* Desktop: console on top, the word clear in the middle, the headline block below it, all of the h1 inside the
+   first viewport. The box is 16:10 but never taller than the viewport under the header; the poster covers it
+   (centred), and the 3D camera crops its frame the same way (scene.ts frame()), so the two always line up.
+   The word's letters end at 73.5% of the 16:10 picture (measured from the scene's letter boxes): --poster-scaled is the picture's height as
+   covered, so the copy starts 27% of it below the box's centre, just under the word. */
+@media (min-width: 900px) {
+  .hero {
+    --poster-h: min(max(calc(100vw * 1800 / 2880), 44rem), calc(100svh - var(--header-h)));
+    --poster-scaled: max(var(--poster-h), calc(100vw * 1800 / 2880));
+  }
+  .hero-poster,
+  .hero-poster img,
+  .hero-canvas {
+    inset: 0 0 auto 0;
+    height: var(--poster-h);
+    object-position: 50% 50%;
+  }
+  /* The headline is one line here: it takes the hero's full width, and its type follows that
+     width (cqi) so the headline always fits on one line (sized for a 14.2 em one); the subline keeps a reading measure. */
+  .hero-copy { max-width: none; container-type: inline-size; }
+  .subline { max-width: 48rem; }
+  .hero h1 { font-size: clamp(2.75rem, min(1rem + 6vw, 7.5svh, 100cqi / 14.6), 5rem); }
+  /* exactly the four lines; the letters stay clear
+     of the panel through the melt by the scene's framing (scene.ts frame()), not by a smaller console */
+  .console { min-height: calc(4 * 1.7em + 30px); }
+  /* The four lines never wrap here, so the panel's height (and its bottom, which the letters clear) is the same
+     on every system: the longest (the Windows line) is 75 characters, 0.6em each in JetBrains
+     Mono, and Linux rounds each advance up to a whole pixel (11 px at 18 px type, where macOS draws 10.8). The type follows the
+     panel's own width (cqi), 55 em to a line, so even rounded advances leave room; 64rem keeps it at ~18 px from
+     1125 px up. */
+  #hero .term { width: min(64rem, 100%); container-type: inline-size; }
+  .console { font-size: min(1.125rem, (100cqi - 36px) / 55); }
+  /* one definite column: an implicit one is sized by its content, so the panel's min(60rem, 100%) followed the
+     typed text (768 -> 947 px while it typed); now it is its full width from the first frame */
+  .hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: calc(var(--poster-h) / 2 + var(--poster-scaled) * 0.27 - 1.25rem) auto;
+    align-items: start;
+    gap: 0;
+  }
+}
+
+/* The hand-off, on the desktop hero with the enhancement on (the pin and its --hero timeline are in
+   story/motion.css; .story--flow is fit.ts's heroFits: the headline block does not fit below the risen word). The
+   mockup's choreography: the console out over 0-28% of the pin, the scene rising over 8-55%, the h1 in over 26-52%,
+   the subline 40-64%, the pills 54-76%, the scroll cue gone by 10%.
+   - The rise is a CSS transform on the canvas and the poster, driven by one registered number (--hero-lift, 0 -> 1) that
+     #hero animates: the poster keeps its own intro animation (introFallback, above) untouched, and three.js never
+     knows (the canvas's layout box, which the scene sizes and frames from, does not change).
+   - The headline block's box starts at the risen word's bottom (the letters end at 73.5% of the covered 16:10 picture,
+     see the desktop rules above; scaled about the box's centre, then raised) and fills the stage below it, centred
+     in it: it can never cover the letters, and heroFits checks it is not cut at the bottom.
+   - Nothing focusable is invisible: the console (its replay button) and the pills row are visibility: hidden while
+     faint (opacity under ~0.3). The h1 and the subline only fade: they stay in the accessibility tree.
+   Every scroll-driven animation is in longhand: the minifier folds a shorthand with animation-timeline into one that
+   browsers reject (see story/crash.css). */
+@property --hero-lift { syntax: '<number>'; inherits: true; initial-value: 0; }
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+    @media (min-width: 900px) {
+      html:not(.static) .hero-pin:not(.story--flow) {
+        --rise-y: -24vh;
+        --rise-s: 0.86;
+      }
+      html:not(.static) .hero-pin:not(.story--flow) > .hero {
+        animation-name: heroLift;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --hero;
+        animation-range: contain 8% contain 55%;
+      }
+      html:not(.static) .hero-pin:not(.story--flow) :is(img.hero-poster, .hero-canvas) {
+        transform: translateY(calc(var(--hero-lift) * var(--rise-y))) scale(calc(1 - var(--hero-lift) * (1 - var(--rise-s))));
+        /* the risen, smaller picture's edges fade into the stage : the scene's
+           black would otherwise end in a hard box; none at rest (--hero-lift 0) */
+        mask-image:
+          linear-gradient(to right, transparent, #000 calc(var(--hero-lift) * 14%), #000 calc(100% - var(--hero-lift) * 14%), transparent),
+          linear-gradient(#000 calc(100% - var(--hero-lift) * 32%), transparent);
+        mask-composite: intersect;
+      }
+      html:not(.static) .hero-pin:not(.story--flow) .term {
+        animation-name: heroConsoleOut;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --hero;
+        animation-range: contain 0% contain 28%;
+      }
+      /* rows that wrap: the h1 and the subline take a row each, then the pills row, where the status pill (first in
+         the reading order) sits before the licence chip */
+      html:not(.static) .hero-pin:not(.story--flow) .hero-copy {
+        position: absolute;
+        inset: calc(var(--poster-h) / 2 + var(--poster-scaled) * 0.235 * var(--rise-s) + var(--rise-y)) 0 0 0;
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: center;
+        align-items: center;
+        align-content: safe center;
+        column-gap: 0.75rem;
+        padding: 1.25rem var(--gutter);
+        text-align: center;
+      }
+      html:not(.static) .hero-pin:not(.story--flow) :is(h1, .subline) { flex: 0 0 100%; }
+      /* a 44ch measure, as padding: a max-width would let the pills row fill the subline's row */
+      html:not(.static) .hero-pin:not(.story--flow) .subline {
+        box-sizing: border-box; max-width: none; padding-inline: max(0px, (100% - 44ch) / 2);
+      }
+      html:not(.static) .hero-pin:not(.story--flow) :is(.hero-chips, .pill) { order: 1; margin: 1.25rem 0 0; }
+      html:not(.static) .hero-pin:not(.story--flow) .pill {
+        padding: 0.25rem 0.75rem; border: 1px solid oklch(0.36 0.04 45); border-radius: 999px; background: oklch(0 0 0 / 0.35);
+      }
+      html:not(.static) .hero-pin:not(.story--flow) .pill:is(:hover, :focus-visible) { border-color: oklch(0.69 0.155 48); }
+      html:not(.static) .hero-pin:not(.story--flow) :is(h1, .subline, .hero-chips, .pill) {
+        animation-name: heroRise;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --hero;
+      }
+      html:not(.static) .hero-pin:not(.story--flow) h1 { animation-range: contain 26% contain 52%; }
+      html:not(.static) .hero-pin:not(.story--flow) .subline { animation-range: contain 40% contain 64%; }
+      html:not(.static) .hero-pin:not(.story--flow) :is(.hero-chips, .pill) { animation-name: heroRiseLinks; animation-range: contain 54% contain 76%; }
+      html:not(.static) .hero-pin:not(.story--flow) .hero-cue {
+        display: block;
+        position: absolute;
+        inset-inline-start: 50%;
+        inset-block-end: 4vh;
+        translate: -50% 0;
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+        color: oklch(0.76 0.01 255);
+        animation-name: heroCueOut;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --hero;
+        animation-range: contain 0% contain 10%;
+      }
+    }
+  }
+}
+@keyframes heroLift { from { --hero-lift: 0; } to { --hero-lift: 1; } }
+/* opacity and the lift run linearly from 0% to 100%; visibility (discrete) turns hidden from 70% on */
+@keyframes heroConsoleOut {
+  0% { opacity: 1; transform: none; visibility: visible; }
+  70% { visibility: visible; }
+  70.01% { visibility: hidden; }
+  100% { opacity: 0; transform: translateY(-50px); visibility: hidden; }
+}
+@keyframes heroRise {
+  from { opacity: 0; transform: translateY(60px); }
+  to { opacity: 1; transform: none; }
+}
+/* visibility (discrete) turns visible from 30% on */
+@keyframes heroRiseLinks {
+  0% { opacity: 0; transform: translateY(60px); visibility: hidden; }
+  30% { visibility: hidden; }
+  30.01% { visibility: visible; }
+  100% { opacity: 1; transform: none; visibility: visible; }
+}
+@keyframes heroCueOut { to { opacity: 0; visibility: hidden; } }
+
+
+@media (max-width: 899px) {
+  .hero-inner { padding-block-start: 1.25rem; justify-content: flex-start; gap: 1rem; }
+  .hero-copy { display: contents; }
+  .hero-copy .pill { order: 0; }
+  .hero-copy h1 { order: 1; }
+  .hero-copy .subline { order: 3; }
+  .hero-copy .hero-chips { order: 4; }
+  /* the console closes the first screen: on a tall screen (a tablet) it starts below the picture, clear of the word */
+  #hero .term { order: 5; margin-block-start: auto; }
+  .hero::after { inset-block-start: 0; background: oklch(0.165 0.004 270 / .8); }
+}
+
+html.analytics-notice-visible:not(.static) .hero-pin:not(.story--flow) .hero-cue { inset-block-end: calc(4vh + var(--analytics-clearance, 0px)); }
+
+@media (min-width: 900px) and (max-height: 760px) {
+  html:not(.static) .hero-pin:not(.story--flow) .hero-copy { padding-block: .25rem; }
+  html:not(.static) .hero-pin:not(.story--flow) :is(.hero-chips, .pill) { margin-top: .25rem; }
+}
+
+@media (min-width: 900px) and (max-width: 1365px) and (max-height: 660px) {
+  html:not(.static) .hero-pin:not(.story--flow) h1 { margin-block-end: 0; }
+}

@@ -1,0 +1,26 @@
+/* The story's palette. The story, #why through #status, is dark in both
+   themes: these are fixed values, and .story sets color-scheme: dark so the site tokens it
+   still uses (--rust, --focus) resolve to their dark side. */
+:root {
+  --story-bg: oklch(0.165 0.004 270);
+  --story-raised: oklch(0.21 0.005 270);
+  --story-fg: oklch(0.92 0.006 255);
+  --story-muted: oklch(0.76 0.01 255);
+  /* body copy and citations */
+  --story-text: #cfcac4;
+  --story-cite: #9ea3aa;
+  --story-peach: #ffd2b0;
+  --story-amber: #f0ac72;
+  --story-line: #ffffff14;
+  /* C, C++ and the problem bars: steel grey. Rust orange (--rust) means Rust and IronAFS. */
+  --story-steel: #8b929b;
+  /* Only for the line to the AFS cells. */
+  --story-green: #7fd18b;
+  --story-green-soft: #b9e3bf;
+  /* cards: the diagram's boxes, the now/next and status cards, the fact cards */
+  --story-card: #0e0f13;
+  --story-card-glass: #0e0f13cc;
+  --story-card-border: #ffffff14;
+  --story-card-fact: linear-gradient(160deg, oklch(0.23 0.006 270), oklch(0.185 0.005 270));
+  --story-card-panel: linear-gradient(160deg, oklch(0.21 0.006 270), oklch(0.165 0.005 270));
+}

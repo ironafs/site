@@ -1,0 +1,51 @@
+---
+import { ui } from '../content/ui';
+import { trademarks } from '../content/trademarks';
+import { consent, privacy } from '../content/privacy';
+import { footer, menu, site } from '../content/site';
+import { links } from '../data/links';
+// Three link groups, each a nav named by its visible label, so no heading is added.
+// The paths and links are the menu's own data; the external rows open the way the menu's rows do.
+---
+<footer id="site-footer" class="site-footer">
+  <div class="container">
+    <div class="footer-groups">
+      <nav aria-labelledby="footer-site">
+        <p id="footer-site" class="footer-label">{footer.site}</p>
+        <ul>
+          {menu.paths.map(item => (
+            <li><a href={item.href}><span class="footer-path"><span class="slash" aria-hidden="true">/</span>{item.label}</span></a></li>
+          ))}
+        </ul>
+      </nav>
+      <nav aria-labelledby="footer-project">
+        <p id="footer-project" class="footer-label">{footer.project}</p>
+        <ul>
+          {menu.links.map(item => (
+            <li><a href={item.href} target="_blank" rel="noopener">{item.label} <span aria-hidden="true">↗</span></a></li>
+          ))}
+        </ul>
+      </nav>
+      <nav aria-labelledby="footer-author">
+        <p id="footer-author" class="footer-label">{footer.built}</p>
+        <ul>
+          {footer.author.map(item => (
+            <li><a href={item.href} target="_blank" rel="noopener">{item.label} <span aria-hidden="true">↗</span></a></li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+    <div class="footer-legal">
+      <p class="ownership">{footer.ownership}</p>
+      <p class="notice">{footer.notice}</p>
+      <p class="footer-licences"><span>{footer.copyright}.</span> <a class="licence" href={links.licence}>{footer.licence} <span class="licence-id">{site.ironafsLicence}</span></a></p>
+      <p class="footer-site-licence">{footer.siteLicence.before}<a href={links.siteLicensing}>{footer.siteLicence.label}</a>{footer.siteLicence.after}</p>
+      <p class="legal-links">
+        <a class="licence" href={links.trademarks}>{trademarks.title}</a>
+        <a class="licence" href={links.notices}>{ui.footerNotices}</a>
+        <a class="licence" href={links.privacy}>{privacy.title}</a>
+        <button type="button" data-analytics-settings aria-haspopup="dialog" hidden>{consent.settings}</button>
+      </p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,30 @@
+---
+import Section from './story/Section.astro';
+import Text from './story/Text.astro';
+import { afsContext } from '../content/why';
+---
+<Section id="what" eyebrow={afsContext.eyebrow} heading={afsContext.heading}>
+  <figure class="what-diagram" aria-label={afsContext.diagram.label}>
+    <div class="what-client what-iron"><b>{afsContext.diagram.iron.title}</b><small>{afsContext.diagram.iron.detail}</small></div>
+    <div class="what-kernel"><span class="what-user-label">{afsContext.diagram.userSpace}</span><span class="what-kernel-label">{afsContext.diagram.kernel}</span></div>
+    <div class="what-client what-open"><b>{afsContext.diagram.open.title}</b><small>{afsContext.diagram.open.detail}</small></div>
+    <div class="what-branch what-branch-iron" aria-hidden="true"></div>
+    <div class="what-branch what-branch-open" aria-hidden="true"></div>
+    <div class="what-wire"><span class="what-track what-track-start" aria-hidden="true"></span><span class="what-wire-label">{afsContext.diagram.wire}</span><span class="what-track what-track-end" aria-hidden="true"></span></div>
+    <div class="what-cells"><b>{afsContext.diagram.cells}</b></div>
+    <figcaption class="what-status"><span>{afsContext.diagram.target}</span><span>{afsContext.diagram.verified}</span></figcaption>
+  </figure>
+  <div class="what-body">
+    <p><Text text={afsContext.lead} /></p>
+    <dl class="afs-context">
+      {afsContext.definitions.map(({ term, description }) => (
+        <><dt>{term}</dt><dd>{description}</dd></>
+      ))}
+    </dl>
+    <p>{afsContext.compatibility}</p>
+    <p>{afsContext.explore}</p>
+    <ul class="buttons">
+      {afsContext.resources.map(({ label, href }) => <li><a class="button" href={href}>{label}</a></li>)}
+    </ul>
+  </div>
+</Section>

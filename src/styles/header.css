@@ -1,0 +1,267 @@
+/* Header: heat bar, GitHub flames, frosted glass, current-section ember, the mobile sheet.
+   The header is dark in both themes (tokens.css), so these colours are fixed iron tones. */
+.site-header {
+  border-block-end: 1px solid transparent;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+.site-header[data-solid] {
+  background: rgb(10 10 11 / 0.78);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-block-end-color: #1d1f23;
+}
+
+/* Desktop links: a thin bar of glowing iron heats on hover or focus, then cools. */
+.site-nav a { position: relative; color: var(--muted); transition: color 0.3s; }
+.site-nav a .slash { transition: color 0.3s, text-shadow 0.3s; }
+.site-nav a::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.75rem;
+  inset-block-end: 6px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #fff1c4, #ffb050 30%, #ff6a10 70%, #c2300a);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+  filter: brightness(0.4) saturate(0.6);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), filter 1.2s, opacity 1.4s;
+}
+.site-nav a:hover,
+.site-nav a:focus-visible { color: #f4efe8; }
+.site-nav a:hover .slash,
+.site-nav a:focus-visible .slash { color: #ffb050; text-shadow: 0 0 10px #ff6a1088; }
+.site-nav a:hover::after,
+.site-nav a:focus-visible::after {
+  transform: scaleX(1);
+  opacity: 1;
+  filter: brightness(1.15) drop-shadow(0 0 6px #ff6a10) drop-shadow(0 0 14px #ff4a0866);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.2s, opacity 0.1s;
+}
+/* The current section: a small cool ember under its link. */
+.site-nav a[aria-current='true'] { color: #f4efe8; }
+.site-nav a[aria-current='true']::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: 3px;
+  width: 4px;
+  height: 4px;
+  margin-inline-start: -2px;
+  border-radius: 50%;
+  background: #c2551c;
+  box-shadow: 0 0 6px #c2551c;
+}
+:is(.site-nav a, .menu-row):focus-visible { box-shadow: none; }
+
+/* The GitHub icon button catches fire. */
+.icon-button.github {
+  position: relative;
+  border: 1px solid #33363c;
+  border-radius: 10px;
+  color: #d9d4cc;
+  background: linear-gradient(180deg, #1a1b1f, #121316);
+  box-shadow: inset 0 1px 0 #ffffff12;
+  transition: color 0.25s, border-color 0.25s, box-shadow 0.4s;
+}
+.github svg { position: relative; z-index: 2; width: 22px; height: 22px; transition: filter 0.3s; }
+.github .fire { position: absolute; inset: -14px 0 4px; pointer-events: none; z-index: 1; opacity: 0; transition: opacity 0.25s; }
+.github .fire i {
+  position: absolute;
+  bottom: 6px;
+  width: 16px;
+  height: 22px;
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  background: radial-gradient(ellipse at 50% 80%, #fff3c8 0%, #ffc04d 28%, #ff6a10 58%, #ff6a1000 72%);
+  filter: blur(1.5px);
+  transform-origin: 50% 100%;
+  animation: flick 0.9s ease-in infinite;
+  animation-play-state: paused;
+}
+.github .fire i:nth-child(1) { left: 4px; animation-delay: -0.1s; }
+.github .fire i:nth-child(2) { left: 13px; width: 20px; height: 30px; animation-delay: -0.45s; }
+.github .fire i:nth-child(3) { left: 24px; animation-delay: -0.7s; }
+.github .fire i:nth-child(4) { left: 9px; width: 12px; height: 16px; animation-delay: -0.25s; animation-duration: 0.7s; }
+.github .fire i:nth-child(5) { left: 22px; width: 12px; height: 18px; animation-delay: -0.55s; animation-duration: 0.75s; }
+@keyframes flick {
+  0% { transform: translateY(4px) scale(0.6, 0.5); opacity: 0; }
+  25% { opacity: 1; }
+  70% { transform: translateY(-12px) scale(0.9, 1.1); opacity: 0.85; }
+  100% { transform: translateY(-22px) scale(0.3, 0.6); opacity: 0; }
+}
+.github:hover,
+.github:focus-visible,
+.github:active {
+  color: #fff1d6;
+  border-color: #c2551c;
+  box-shadow: inset 0 -14px 20px -10px #ff6a10cc, 0 0 26px -4px #ff6a10aa;
+}
+.github:hover svg,
+.github:focus-visible svg,
+.github:active svg { filter: drop-shadow(0 0 6px #ff8a30); }
+.github:hover .fire,
+.github:focus-visible .fire,
+.github:active .fire { opacity: 1; }
+.github:hover .fire i,
+.github:focus-visible .fire i,
+.github:active .fire i { animation-play-state: running; }
+
+/* The mobile menu button and the sheet. */
+.menu-button { margin-inline-start: 0.25rem; }
+html[data-menu-open] { overflow: hidden; }
+
+.menu {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  background: oklch(0.165 0.004 270);
+  color: oklch(0.92 0.006 255);
+  color-scheme: dark;
+  --menu-pad: max(16px, 4vw);
+  padding: max(16px, var(--safe-top, env(safe-area-inset-top, 0px))) max(var(--menu-pad), env(safe-area-inset-right, 0px)) max(16px, var(--safe-bottom, env(safe-area-inset-bottom, 0px))) max(var(--menu-pad), env(safe-area-inset-left, 0px));
+  transform: translateY(-100%);
+  transition: transform 0.2s ease-out;
+}
+.menu:not([open]) { display: none; }
+.menu[open] { transform: none; }
+@starting-style {
+  .menu[open] { transform: translateY(-100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu { transition-duration: 0s; }
+  .site-nav a::after { transition-duration: 0s; }
+  .github .fire i { animation: none; }
+  .github .fire,
+  .github:hover .fire,
+  .github:focus-visible .fire,
+  .github:active .fire { display: none; }
+}
+.menu::backdrop { background: oklch(0.165 0.004 270); }
+
+.menu-bar { display: flex; align-items: center; justify-content: space-between; min-height: 44px; flex: 0 0 auto; }
+.menu-title { font-family: var(--font-mono); font-weight: 500; color: #b9b5af; }
+.menu-body { flex: 0 0 auto; }
+.menu ul { list-style: none; margin: 0; padding: 0; }
+.menu-links { margin-block-start: 0.5rem; border-block-start: 1px solid #33363c; padding-block-start: 0.5rem; }
+
+.menu-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0.5rem 0.25rem;
+  color: #f4efe8;
+  text-decoration: none;
+  font-family: var(--font-mono);
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-label { font-size: 1.5rem; font-weight: 500; line-height: 1.2; }
+.menu-desc { font-family: var(--font-body); font-size: 0.875rem; color: #9a968f; line-height: 1.3; }
+.menu-row.plain { flex-direction: row; align-items: center; justify-content: flex-start; gap: 0.4em; font-size: 1.0625rem; }
+/* The tapped row gets the same heated bar as desktop hover. */
+.menu-row::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.25rem;
+  inset-block-end: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #fff1c4, #ffb050 30%, #ff6a10 70%, #c2300a);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s;
+}
+.menu-row:active::after,
+.menu-row:focus-visible::after {
+  transform: scaleX(1);
+  opacity: 1;
+  filter: drop-shadow(0 0 6px #ff6a10);
+  transition-duration: 0.2s, 0.1s;
+}
+.menu-row:active .slash,
+.menu-row:focus-visible .slash { color: #ffb050; }
+.menu-status { margin-block-start: auto; padding-block-start: 1.5rem; font-family: var(--font-mono); font-size: 0.875rem; }
+.menu-status a { color: #ffb050; }
+
+@media (min-width: 900px) {
+  .menu { display: none !important; }
+}
+.menu-status a { display: block; padding-block: 0.75rem; }
+
+/* The `/` key (desktop, fine pointers only: the layout rules, 6.2) and the hidden shell under the header.
+   Its look is the hero console's: JetBrains Mono on the dark console panel, the prompt in rust. */
+.shell-key { display: none; }
+.shell-key .keycap { color: #b9b5af; border-color: #33363c; background: #141518; transition: color 0.2s, border-color 0.2s; }
+.shell-key:hover .keycap,
+.shell-key:focus-visible .keycap,
+.shell-key[aria-expanded='true'] .keycap { color: #f0ac72; border-color: #c2551c; }
+@media (min-width: 900px) and (pointer: fine), (min-width: 900px) and (pointer: none) {
+  .shell-key:not([hidden]) { display: inline-flex; }
+}
+
+.shell {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline: auto max(var(--gutter), (100% - 90rem) / 2 + var(--gutter));
+  width: min(520px, calc(100vw - 32px));
+  margin: 0;
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: #a9adb4;
+  background: #0d0e11;
+  border: 1px solid #33363c;
+  border-radius: 10px;
+  box-shadow: 0 20px 50px #000c;
+  color-scheme: dark;
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+@starting-style {
+  .shell[open] { opacity: 0; transform: translateY(-6px); }
+}
+.shell-log { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; max-height: 220px; overflow: auto; }
+.shell-log:focus-visible { outline: 1px solid #c2551c; outline-offset: 2px; }
+.shell-log .ok { color: #ece8e3; }
+.shell-log .err { color: #ff6b5a; }
+.shell .ps { color: #f0ac72; white-space: nowrap; }
+.shell-row { display: flex; gap: 8px; align-items: center; }
+.shell-entry { position: relative; flex: 1; min-width: 0; overflow: hidden; }
+.shell-row input {
+  width: 100%;
+  min-width: 0;
+  padding: 4px 0;
+  background: none;
+  border: 0;
+  color: #ece8e3;
+  font: inherit;
+  caret-color: #f0ac72;
+}
+.shell-row input:focus-visible { outline: 1px solid #f0ac72; outline-offset: 2px; box-shadow: none; }
+.shell-cursor { position: absolute; inset: 4px auto auto 0; color: transparent; white-space: pre; pointer-events: none; visibility: hidden; }
+.shell-cursor::after { content: ''; display: inline-block; width: .6em; height: 1em; vertical-align: -.15em; background: #f0ac72; animation: shell-blink 1s steps(1) infinite; }
+.shell-entry:focus-within[data-cursor-end] .shell-cursor { visibility: visible; }
+.shell-entry:focus-within[data-cursor-end] input { caret-color: transparent; }
+@keyframes shell-blink { 50% { opacity: 0; } }
+.shell:focus-within { border-color: #c2551c; }
+@media (prefers-reduced-motion: reduce) {
+  .shell { transition: none; }
+  .shell-cursor::after { animation: none; }
+}
+@media (forced-colors: active) {
+  .shell { border-color: CanvasText; }
+  .shell-row input:focus { outline: 2px solid Highlight; }
+}

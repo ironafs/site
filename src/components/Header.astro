@@ -1,0 +1,70 @@
+---
+import { shell } from '../content/shell';
+import { ui } from '../content/ui';
+import '../styles/header.css';
+import StatusPill from './StatusPill.astro';
+// The header is dark in both themes (tokens.css), so its wordmark is the steel one; gunmetal is for light pages.
+import RustLogo from './RustLogo.astro';
+import { links } from '../data/links';
+import { menu, nav } from '../content/site';
+import { loadMilestones, shellStatus } from '../data/milestones';
+
+// the shell's status replies follow the build-time milestones, as the status section does
+const { items } = await loadMilestones();
+---
+<header id="site-header" class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/">
+      <span class="sr-only">{ui.home}</span><RustLogo id="header" class="logo" theme="dark" />
+    </a>
+    <nav class="site-nav" aria-label={ui.sections}>
+      <ul>
+        {nav.map(item => (
+          <li><a href={item.href}><span class="slash" aria-hidden="true">/</span>{item.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+    <button id="shell-key" class="icon-button shell-key" type="button" aria-label={ui.shell} aria-keyshortcuts="/" aria-expanded="false" aria-controls="shell" hidden>
+      <span class="keycap" aria-hidden="true">/</span>
+    </button>
+    <a class="icon-button github" href={links.github} aria-label={ui.github}>
+      <span class="fire" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><svg viewBox="0 0 16 16" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+    </a>
+    <button id="menu-button" class="icon-button menu-button" type="button" aria-expanded="false" aria-controls="menu" aria-haspopup="dialog" aria-label={menu.open}>
+      <span class="keycap" aria-hidden="true">/</span>
+    </button>
+  </div>
+  <!-- The hidden shell: a non-modal dialog under the header. Closed, it is not rendered, so nothing in it is focusable. -->
+  <dialog id="shell" class="shell" aria-label={ui.shellLabel} data-status={JSON.stringify(shellStatus(items))}>
+    <div id="shell-log" class="shell-log" role="log" aria-label={ui.shellOutput} tabindex="0"></div>
+    <div class="shell-row">
+      <span id="shell-prompt" class="ps">{shell.initialPrompt}</span>
+      <span class="shell-entry"><input id="shell-input" type="text" aria-label={ui.command} aria-describedby="shell-prompt" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" /><span class="shell-cursor" aria-hidden="true"><span></span></span></span>
+    </div>
+  </dialog>
+  <dialog id="menu" class="menu" aria-label={menu.open}>
+    <div class="menu-bar">
+      <span class="menu-title" aria-hidden="true"><span class="slash">/</span>{ui.menuTitle}</span>
+      <button id="menu-close" class="icon-button" type="button" aria-label={menu.close}><span class="keycap" aria-hidden="true">×</span></button>
+    </div>
+    <nav class="menu-body" aria-label={menu.open}>
+      <ul class="menu-paths">
+        {menu.paths.map(item => (
+          <li><a class="menu-row" href={item.href}><span class="menu-label"><span class="slash" aria-hidden="true">/</span>{item.label}</span><span class="menu-desc">{item.desc}</span></a></li>
+        ))}
+      </ul>
+      <ul class="menu-links">
+        {menu.links.map(item => (
+          <li><a class="menu-row plain" href={item.href} target="_blank" rel="noopener">{item.label} <span aria-hidden="true">↗</span></a></li>
+        ))}
+      </ul>
+    </nav>
+    <div class="menu-status"><StatusPill /></div>
+  </dialog>
+  <script>
+    import { initMenu } from '../scripts/menu';
+    import { initShell } from '../scripts/shell';
+    initMenu(document);
+    initShell(document);
+  </script>
+</header>

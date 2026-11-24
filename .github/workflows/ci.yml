@@ -1,0 +1,161 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels that PR's run still in progress. Every push to main is tested: each has its
+# own group (its commit), so no run of main waits behind another or is replaced while pending.
+concurrency:
+  group: ci-${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    # Pinned: Playwright 1.58.2 supports up to Ubuntu 24.04.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Hero bundle size (fails above 300 KB gzip)
+        run: node tools/bundle-size.mjs
+
+  # The browser suite, split across jobs. A hero intro runs on software GL, and one 1440x900 scene keeps a 2-core
+  # runner busy: the chromium-desktop slices run one test at a time (two scenes at once starved each other into
+  # timeouts), and are split by spec so each stays well under its timeout; so does chromium-phone (its frame-rate
+  # specs need the CPU). Every spec runs on chromium-desktop, where the story's enhanced assertions live, and
+  # tests/build/ci-matrix.test.mjs fails when any test of any project runs in no slice. Specs are named by path
+  # (`tests/e2e/x.spec.mjs`): Playwright reads each name as a pattern, and a bare `layout` also selects layout-v2.
+  # Sizes, one worker, measured locally on 2026-11-22 (a 2-core runner takes about 2-3x): console clearance 220 s in
+  # three (its tests run in parallel mode, so it shards by test), story-fit 310 s, story-cost 140 s, lifecycle 95 s,
+  # the others 60-140 s. The WebKit slices hold two workers and are sharded by test (--fully-parallel; no spec shares
+  # state between its tests): Playwright 1.58.2's WebKit on macOS hangs at its 80th page in one browser (Linux's does
+  # not), so a local run of these slices keeps each worker near 38 tests. tools/ci-local.mjs runs the slices locally.
+  e2e:
+    name: e2e (${{ matrix.name }})
+    runs-on: ubuntu-24.04
+    # Browser dependencies can take over 30 minutes to download before the test step starts.
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: chromium-desktop, console clearance 1/3
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/hero-console-clear.spec.mjs --shard=1/3
+          - name: chromium-desktop, console clearance 2/3
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/hero-console-clear.spec.mjs --shard=2/3
+          - name: chromium-desktop, console clearance 3/3
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/hero-console-clear.spec.mjs --shard=3/3
+          - name: chromium-desktop, scene lifecycle
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/hero-lifecycle.spec.mjs
+          - name: chromium-desktop, scene shell
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/hero-shell.spec.mjs
+          - name: chromium-desktop, melt and sequence
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/hero-melt.spec.mjs tests/e2e/hero-sequence.spec.mjs
+          - name: chromium-desktop, hand-off and Rust word
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/hero-handoff.spec.mjs tests/e2e/hero-phone.spec.mjs tests/e2e/rustword.spec.mjs
+          - name: chromium-desktop, pages
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/a11y.spec.mjs tests/e2e/intro.spec.mjs tests/e2e/layout.spec.mjs tests/e2e/menu.spec.mjs tests/e2e/review-fixes.spec.mjs tests/e2e/smoke.spec.mjs tests/e2e/shell.spec.mjs tests/e2e/logo.spec.mjs
+          - name: chromium-desktop, privacy
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/privacy.spec.mjs
+          - name: chromium-desktop, layout and budgets
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/layout-v2.spec.mjs tests/e2e/budgets.spec.mjs
+          - name: chromium-desktop, story fit
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/story-fit.spec.mjs
+          - name: chromium-desktop, story viewports
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/viewports.spec.mjs
+          - name: chromium-desktop, story cost
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/story-cost.spec.mjs
+          - name: chromium-desktop, story design and Rust
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/story-how.spec.mjs tests/e2e/story-rust.spec.mjs
+          - name: chromium-desktop, story
+            browser: chromium
+            args: --project=chromium-desktop --workers=1 tests/e2e/story-base.spec.mjs tests/e2e/story-crash.spec.mjs tests/e2e/story-platforms.spec.mjs tests/e2e/story-status.spec.mjs
+          - name: webkit-desktop 1/4
+            browser: webkit
+            args: --project=webkit-desktop --fully-parallel --shard=1/4
+          - name: webkit-desktop 2/4
+            browser: webkit
+            args: --project=webkit-desktop --fully-parallel --shard=2/4
+          - name: webkit-desktop 3/4
+            browser: webkit
+            args: --project=webkit-desktop --fully-parallel --shard=3/4
+          - name: webkit-desktop 4/4
+            browser: webkit
+            args: --project=webkit-desktop --fully-parallel --shard=4/4
+          - name: chromium-phone and no-WebGL
+            browser: chromium
+            args: --project=chromium-phone --project=chromium-nowebgl --workers=1
+          - name: webkit-phone 1/4
+            browser: webkit
+            args: --project=webkit-phone --fully-parallel --shard=1/4
+          - name: webkit-phone 2/4
+            browser: webkit
+            args: --project=webkit-phone --fully-parallel --shard=2/4
+          - name: webkit-phone 3/4
+            browser: webkit
+            args: --project=webkit-phone --fully-parallel --shard=3/4
+          - name: webkit-phone 4/4
+            browser: webkit
+            args: --project=webkit-phone --fully-parallel --shard=4/4
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npm run test:e2e -- --reporter=list ${{ matrix.args }}
+        timeout-minutes: 40
+
+  reuse:
+    name: reuse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check REUSE annotations
+        run: pipx run reuse==5.0.2 lint
+
+  ci-ok:
+    name: ci-ok
+    needs: [test, e2e, reuse]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require the build tests, every e2e slice and the REUSE check
+        env:
+          TEST_RESULT: ${{ needs.test.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+          REUSE_RESULT: ${{ needs.reuse.result }}
+        run: |
+          printf 'test: %s\ne2e: %s\nreuse: %s\n' "$TEST_RESULT" "$E2E_RESULT" "$REUSE_RESULT"
+          [[ "$TEST_RESULT" == success && "$E2E_RESULT" == success && "$REUSE_RESULT" == success ]]

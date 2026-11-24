@@ -1,0 +1,156 @@
+# SPDX-FileCopyrightText: 2026 Adrian Ana <adrian@adrianana.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+version = 1
+
+# Each tracked file has one path annotation, apart from the licence texts
+# in LICENSES/, which REUSE handles directly.
+
+# 1. Code and governance.
+[[annotations]]
+path = [
+  ".claude/**",
+  ".github/**",
+  ".gitignore",
+  ".nvmrc",
+  "AGENTS.md",
+  "AI.md",
+  "CLAUDE.md",
+  "CODE_OF_CONDUCT.md",
+  "CONTRIBUTING.md",
+  "LICENSE",
+  "LICENSING.md",
+  "README.md",
+  "REUSE.toml",
+  "SECURITY.md",
+  "astro.config.mjs",
+  "package-lock.json",
+  "package.json",
+  "playwright.config.mjs",
+  "tsconfig.json",
+  "brand/README.md",
+  "brand/src/*.py",
+  "brand/src/*.cjs",
+  "brand/src/*.json",
+  "docs/provenance.md",
+  "docs/sources/**",
+  "public/intro-gate.js",
+  "public/robots.txt",
+  "src/components/AfsContext.astro",
+  "src/components/AnalyticsConsent.astro",
+  "src/components/Built.astro",
+  "src/components/Design.astro",
+  "src/components/Follow.astro",
+  "src/components/Footer.astro",
+  "src/components/Hero.astro",
+  "src/components/JsonLd.astro",
+  "src/components/RustLogo.astro",
+  "src/components/Status.astro",
+  "src/components/StatusLine.astro",
+  "src/components/StatusPill.astro",
+  "src/components/Why.astro",
+  "src/components/story/**",
+  "src/data/**",
+  "src/lib/**",
+  "src/layouts/**",
+  "src/pages/**",
+  "src/scripts/**",
+  "src/styles/**",
+  "tests/build/**",
+  "tests/e2e/**",
+  "tests/fixtures/**",
+  "tools/**",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 Adrian Ana <adrian@adrianana.com>"
+SPDX-License-Identifier = "GPL-3.0-or-later"
+
+# 2. Content: the words (pure data modules, no code), the pictures and the
+#    web manifest copy in src/content/.
+[[annotations]]
+path = [
+  "src/content/**",
+  "tests/content/**",
+  "src/assets/story/**",
+  "src/assets/hero/poster.png",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Adrian Ana <adrian@adrianana.com>"
+SPDX-License-Identifier = "LicenseRef-AllRightsReserved"
+
+# 2a. The trademark policy: a verbatim copy of ironafs/ironafs's
+#    TRADEMARKS.md, which is GPL-3.0-or-later there, so the site's copy
+#    carries the same licence (owner, 2026-11-23): the /trademarks page's
+#    text and the test's canonical copy.
+[[annotations]]
+path = [
+  "src/content/trademarks.ts",
+  "tests/content/trademarks-canonical.md",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Adrian Ana <adrian@adrianana.com>"
+SPDX-License-Identifier = "GPL-3.0-or-later"
+
+# 3. The name and logo: the generated brand files and the
+#    copies the site serves. The generator scripts in brand/src/ are code.
+[[annotations]]
+path = [
+  "brand/svg/**",
+  "brand/png/**",
+  "brand/icons/**",
+  "public/brand/**",
+  "public/favicon.ico",
+  "public/favicon.svg",
+  "public/apple-touch-icon.png",
+  "public/icon-*.png",
+  "public/og-image.png",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Adrian Ana <adrian@adrianana.com>"
+SPDX-License-Identifier = "LicenseRef-AllRightsReserved"
+
+# 4. Third-party material (docs/provenance.md).
+
+# Space Grotesk Bold and its licence text, used by brand/src/ to draw the logo.
+[[annotations]]
+path = ["brand/src/fonts/SpaceGrotesk-Bold.woff", "brand/src/fonts/LICENSE-OFL.txt"]
+precedence = "override"
+SPDX-FileCopyrightText = "2020 The Space Grotesk Project Authors (https://github.com/floriankarsten/space-grotesk)"
+SPDX-License-Identifier = "OFL-1.1"
+
+# Seven glyphs of Space Grotesk Bold, converted by brand/src/glyphs.py for the
+# 3D letters: a Modified Version under the OFL.
+[[annotations]]
+path = "src/assets/hero/letters.typeface.json"
+precedence = "override"
+SPDX-FileCopyrightText = [
+  "2020 The Space Grotesk Project Authors (https://github.com/floriankarsten/space-grotesk)",
+  "2026 Adrian Ana <adrian@adrianana.com>",
+]
+SPDX-License-Identifier = "OFL-1.1"
+
+# The header's GitHub mark: the SVG path of Primer Octicons' mark-github-16
+# as of octicons commit b5a1530 (2023-01-05), MIT. GitHub's logo guidelines
+# also apply to its use.
+[[annotations]]
+path = "src/components/Header.astro"
+precedence = "override"
+SPDX-FileCopyrightText = [
+  "2026 Adrian Ana <adrian@adrianana.com>",
+  "2023 GitHub Inc. (the GitHub mark, Primer Octicons)",
+]
+SPDX-License-Identifier = "GPL-3.0-or-later AND MIT"
+
+# The notices the built site serves for the third-party code and fonts it
+# ships: their copyright lines and licence texts, as published upstream.
+[[annotations]]
+path = "public/licences.txt"
+precedence = "override"
+SPDX-FileCopyrightText = [
+  "2010-2026 three.js authors",
+  "2019-present VoidZero Inc. and Vite contributors",
+  "2023 GitHub Inc.",
+  "2020 The Space Grotesk Project Authors",
+  "2020 The JetBrains Mono Project Authors",
+]
+SPDX-License-Identifier = "MIT AND OFL-1.1"

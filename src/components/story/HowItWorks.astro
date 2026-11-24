@@ -1,0 +1,74 @@
+---
+// How it works (#design): one diagram per OS, with that OS's text.
+// Base (phones, reduced motion, no scroll-driven animation, html.static): each OS in turn, its text above its
+// diagram, every word visible; no tabs, no lines. Enhancement (how.css): pinned for 560vh, the text on the left
+// and the diagram on the right above 1250 px (stacked between 761 and 1250), one OS per third of the scroll,
+// real ARIA tabs (tabs.ts) and connectors drawn from the boxes' real edges (connectors.ts). A window too short for
+// all of it pinned (fit.ts) gets the base layer instead (.story--flow).
+// Each OS's text and diagram share one wrapper (.how-os) so the base reading order is text, then diagram;
+// the enhanced grid places them through display: contents.
+import Section from './Section.astro';
+import Text from './Text.astro';
+import OsDiagram from './OsDiagram.astro';
+import '../../styles/story/how.css';
+import { story } from '../../content/story';
+
+const { how } = story;
+---
+<Section id="design" pinned height={560} eyebrow={how.eyebrow} heading={how.heading} labelledby="design-h">
+  <p class="note">{how.note}</p>
+  <div class="tabs" role="tablist" aria-label={how.tablistLabel} hidden>
+    {how.os.map((os, i) => (
+      <button type="button" class="tab" id={`tab-${os.os}`} role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`panel-${os.os}`} tabindex={i === 0 ? '0' : '-1'}>{os.tab}</button>
+    ))}
+    <span class="tabs-cue">{how.scrollCue}</span>
+  </div>
+  <p class="step-progress" aria-live="off">{how.stepLabel} 1 {how.stepOf} 4</p>
+  <div class="how-oses">
+    {how.os.map((os, i) => (
+      <div class="how-os" data-os={os.os}>
+        <p class="osname">{os.tab}</p>
+        <div class="osp" id={`panel-${os.os}`} data-os={os.os}>
+          <h2 id={i === 0 ? 'design-h' : undefined} tabindex={i === 0 ? '-1' : undefined}><Text text={os.headline} /></h2>
+          <p class="lede"><Text text={os.lede} /></p>
+          <h3>{os.subhead}</h3>
+          <ul class="short">
+            {os.points.map(point => <li><b>{point.lead}</b> <Text text={point.text} /></li>)}
+          </ul>
+          <details class="more">
+            <summary>{how.detailsLabel}</summary>
+            <ul>{os.details.map(detail => <li><Text text={detail} /></li>)}</ul>
+          </details>
+          <p class="cite">{os.cite} · <span>{os.status}</span></p>
+        </div>
+        <OsDiagram os={os} index={i} />
+      </div>
+    ))}
+  </div>
+</Section>
+
+<script>
+  import { drawConnectors, clearConnectors } from '../../scripts/story/connectors';
+  import { initOsTabs } from '../../scripts/story/tabs';
+  import { guardFit, designFits } from '../../scripts/story/fit';
+
+  const section = document.getElementById('design');
+  if (section) {
+    const scenes = [...section.querySelectorAll<HTMLElement>('.scene')];
+    const tablist = section.querySelector<HTMLElement>('[role="tablist"]');
+    // Pinned only while everything fits (fit.ts), set snug if it needs it; the measurement needs the tabs' row, which
+    // flow hides.
+    const guard = guardFit(section, designFits, () => {
+      if (!tablist?.hidden) return () => {};
+      tablist.hidden = false;
+      return () => { tablist.hidden = true; };
+    }, true);
+    // the tabs and the lines follow the layout: pinned, or the base layer (phones, reduced motion, .story--flow)
+    const setTabs = initOsTabs(section, guard.pinned());
+    if (guard.pinned()) scenes.forEach(drawConnectors);
+    guard.onChange(on => {
+      setTabs(on);
+      scenes.forEach(on ? drawConnectors : clearConnectors);
+    });
+  }
+</script>

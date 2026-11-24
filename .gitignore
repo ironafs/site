@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: 2026 Adrian Ana <adrian@adrianana.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# Build and tooling output
+node_modules/
+dist/
+.astro/
+test-results/
+playwright-report/
+__pycache__/
+*.pyc
+.DS_Store
+# Local brainstorming companion (mockup server state)
+.superpowers/
+brand/src/.render.html
+brand/.venv/
+
+# Private notes and agent state, never published.
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
+.claude/local/
+.mcp.json
+.codex/
+.gemini/
+.cursor/
+/scratch/
+
+# Never commit secrets.
+.env
+.env.*
+!.env.example
+.envrc
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Editors and tool scratch.
+.idea/
+.vscode/
+*.code-workspace
+*.swp
+*~
+*.orig
+*.rej
+Thumbs.db
+
+/BUILD-REPORT.md

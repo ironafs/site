@@ -1,0 +1,2 @@
+/* The status pill's dot (StatusPill.astro). The status section's own rules are in story/status.css. */
+.pill-dot { display: inline-block; width: 0.5em; height: 0.5em; margin-inline-end: 0.5em; border-radius: 50%; background: currentColor; vertical-align: 0.1em; }

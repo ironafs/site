@@ -1,0 +1,27 @@
+---
+// The numbers (#numbers): two statistics, each with its definition and its source in its block.
+// Base: both stacked over the dimmed chip. Enhancement (crash.css): pinned, the two take turns and the chip
+// sharpens slightly. The numbers only ever show their real values: no counting through invented ones.
+import Section from './Section.astro';
+import Art from './Art.astro';
+import '../../styles/story/crash.css';
+import chip from '../../assets/story/chip.png';
+import { story } from '../../content/story';
+
+const { numbers } = story;
+---
+<Section id="numbers" pinned height={190} eyebrow={numbers.eyebrow} heading={numbers.heading}>
+  <div class="chipart" aria-hidden="true">
+    <Art src={chip} widths={[640, 1100, 1600, 2200]} sizes="(min-width: 1100px) 1100px, 100vw" afterLoad />
+  </div>
+  <div class="stats">
+    {numbers.stats.map((stat, i) => (
+      <div class={`stat s${i + 1}`} data-stat={stat.id}>
+        <p class="big">{stat.value}</p>
+        <p class="what">{stat.what}</p>
+        <p class="src"><a class="source" href={stat.source.href}>{stat.source.label}</a>{stat.note && ` · ${stat.note}`}</p>
+      </div>
+    ))}
+  </div>
+  <div class="dots" aria-hidden="true"><i></i><i></i></div>
+</Section>

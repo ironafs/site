@@ -1,0 +1,13 @@
+---
+// The hero pill and the phone menu's status line: one component, driven by the build-time milestones
+//. The text is plain and escaped by Astro; the dot and the arrow are decoration.
+import '../styles/status.css';
+import { currentMilestone, loadMilestones, statusPill } from '../data/milestones';
+import { links } from '../data/links';
+
+const { items } = await loadMilestones();
+const { hero = false } = Astro.props;
+const status = statusPill(currentMilestone(items));
+const text = hero ? status : status.replace('™', '');
+---
+<a class="pill" href={links.milestones}><span class="pill-dot" aria-hidden="true"></span>{text}<span class="pill-arrow" aria-hidden="true"> →</span></a>

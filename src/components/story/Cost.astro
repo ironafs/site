@@ -1,0 +1,95 @@
+---
+// The cost of shipping kernel code (#cost): four stacked cards, Windows, macOS, Linux and IronAFS,
+// each its text and its picture. Base (phones, reduced motion, no scroll-driven animation, html.static): the cards in
+// normal flow, every picture at its final state. Enhancement (cost.css): the cards are sticky in one stack; each
+// tilts up into place, pins and plays its picture, then sinks back as the next slides over it. The beats of each
+// picture carry data-step (and data-span for a longer one); src/scripts/story/stack.ts turns them into scroll
+// ranges measured from the layout.
+import Section from './Section.astro';
+import Art from './Art.astro';
+import '../../styles/story/cost.css';
+import drops from '../../assets/story/drops.png';
+import { story } from '../../content/story';
+
+const { cost } = story;
+const { windows, macos, linux, ironafs } = cost;
+const { dialog } = macos;
+// macOS: shut down, Recovery, (the switch, the tick), admin password, restart
+const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }));
+---
+<Section id="cost" eyebrow={cost.eyebrow} heading={cost.heading}>
+  <div class="stack" data-stack>
+    <article class="scard" aria-labelledby="cost-windows">
+      <div class="copy">
+        <p class="os">{windows.os}</p>
+        <h3 id="cost-windows">{windows.heading}</h3>
+        <p class="lede">{windows.lede}</p>
+        <p class="foot">{windows.foot}</p>
+      </div>
+      <div class="vis">
+        <ol class="pipe">
+          {windows.steps.map((s, i) => <li class:list={['on', { warn: s.warn, branch: s.branch }]} data-step={i}>{s.mark && <><b aria-hidden="true">{s.mark}</b>{' '}</>}{s.text}</li>)}
+        </ol>
+      </div>
+    </article>
+
+    <article class="scard" aria-labelledby="cost-macos">
+      <div class="copy">
+        <p class="os">{macos.os}</p>
+        <h3 id="cost-macos">{macos.heading}</h3>
+        <p class="lede">{macos.lede}</p>
+        <p class="foot">{macos.foot}</p>
+      </div>
+      <div class="vis">
+        <div class="mac">
+          <p class="t">{dialog.title}</p>
+          <p class="opt"><span class="r" aria-hidden="true"><i class="dot doff" data-step="2"></i></span>{dialog.full}</p>
+          <p class="opt"><span class="r" aria-hidden="true"><i class="dot don" data-step="2"></i></span>{dialog.reduced}</p>
+          <p class="opt sub"><span class="c" aria-hidden="true" data-step="3">✓</span>{dialog.allow}</p>
+          <p class="btns" aria-hidden="true"><span>{dialog.cancel}</span><span class="ok">{dialog.ok}</span></p>
+        </div>
+        <ol class="steps">
+          {macSteps.map(s => <li class="on" data-step={s.step}>{s.text}</li>)}
+        </ol>
+      </div>
+    </article>
+
+    <article class="scard" aria-labelledby="cost-linux">
+      <div class="copy">
+        <p class="os">{linux.os}</p>
+        <h3 id="cost-linux">{linux.heading}</h3>
+        <p class="lede">{linux.lede}</p>
+        <p class="foot">{linux.foot}</p>
+      </div>
+      <div class="vis">
+        <pre class="term" data-illustrative="debian"><span class="ln on d" data-step="0">{linux.workflow.label}</span>{linux.workflow.lines.map((line, i) => (
+          <span class:list={['ln', 'on', { 'e branch': line.tone === 'error', d: line.tone === 'dim' }]} data-step={i + 1}>{line.n && <><span class="p">{line.n}</span>{' '}</>}{line.text}</span>
+        ))}</pre>
+      </div>
+    </article>
+
+    <article class="scard iron" aria-labelledby="cost-ironafs">
+      <div class="iron-art" aria-hidden="true">
+        <Art src={drops} widths={[640, 1024, 1360]} sizes="(min-width: 761px) 84vw, 100vw" />
+      </div>
+      <div class="copy iron-copy">
+        <p class="os">{ironafs.os}</p>
+        <h3 id="cost-ironafs">{ironafs.heading}</h3>
+        <p class="lede">{ironafs.lede}</p>
+        {ironafs.foot && <p class="foot">{ironafs.foot}</p>}
+        <div class="afs">
+          <p class="bigcmd"><span class="p">{ironafs.prompt} </span><span class="typed" data-step="0" data-span="3">{ironafs.command}</span><span class="cur" aria-hidden="true"></span></p>
+          <p class="bigout">
+            <span class="on ok" data-step="3">{ironafs.output.ok}</span>
+            <span class="on design" data-step="4">{ironafs.output.design}</span>
+          </p>
+        </div>
+      </div>
+    </article>
+  </div>
+</Section>
+
+<script>
+  import { initStacks } from '../../scripts/story/stack';
+  initStacks();
+</script>

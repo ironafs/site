@@ -1,0 +1,85 @@
+---
+// Where the platforms are going (#platforms): three lanes (Linux, macOS, Windows) of events and IronAFS
+// at the end, every event linked to its primary source (story.platforms, from docs/sources/os-timeline.md); a card that
+// states a second fact links that fact's source too. Placement: src/data/timeline.ts (xFor, ticks, scale breaks).
+// Base (phones, reduced motion, no scroll-driven animation, html.static, or a window too short: fit guard): a vertical
+// list grouped by lane. Enhancement (platforms.css): a sideways track that slides with scroll while the lane names
+// stay put. Each marker and each year tick sits at xFor(date) of the track's width: the build writes the fraction in
+// data-x, and src/scripts/story/platforms.ts sets it as --x through the CSSOM (no style= attribute). data-gap is the
+// room to the lane's next event, which bounds a card's width so no two cards in a lane overlap.
+import Section from './Section.astro';
+import '../../styles/story/platforms.css';
+import { story } from '../../content/story';
+import { breaks, ticks, xFor } from '../../data/timeline';
+import type { TimelineEvent } from '../../lib/types';
+
+const { platforms } = story;
+const { lanes, events: timeline } = platforms;
+/** Give the last cards room after the final tick: no lane card reaches past END of the track (each ends 39 px before
+ *  it, platforms.css), and the IronAFS card starts there (data-end, set as --end), so it never covers a lane card. */
+const END = 1.1;
+const laneEvents = (lane: TimelineEvent['lane']) => {
+  const events = timeline.filter(e => e.lane === lane);
+  return events.map((e, i) => {
+    const x = xFor(e.date);
+    const next = events[i + 1] ? xFor(events[i + 1].date) : END;
+    return { ...e, x: x.toFixed(5), gap: (next - x).toFixed(5) };
+  });
+};
+const fin = laneEvents('ironafs');
+---
+<Section id="platforms" pinned height={300} eyebrow={platforms.eyebrow} heading={platforms.heading}>
+  <div class="tl" data-end={END}>
+    {lanes.map(lane => (
+      <div class="lane" data-lane={lane.id}>
+        <h3>{lane.name}</h3>
+        <div class="win">
+          <ol class="evs">
+            {laneEvents(lane.id).map(e => (
+              <li class="ev" data-x={e.x} data-gap={e.gap}>
+                <span class="mk" aria-hidden="true"></span>
+                <div class="card">
+                  <p class="y">{e.label}</p>
+                  <h4><a href={e.href}>{e.title}</a></h4>
+                  <p class="t">{e.text}</p>
+                  {e.sources && <p class="src">{e.sources.map(l => <a href={l.href}>{l.label}</a>)}</p>}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    ))}
+    <div class="lane fin-lane" data-lane="ironafs">
+      <div class="win">
+        <ol class="evs">
+          {fin.map(e => (
+            <li class="ev fin" data-x={e.x}>
+              <span class="mk" aria-hidden="true"></span>
+              <div class="card">
+                <p class="y">{e.label}</p>
+                <h3><a href={e.href}>{e.title}</a></h3>
+                <p class="t">{e.text}</p>
+                {e.sources && <p class="src">{e.sources.map(l => <a href={l.href}>{l.label}</a>)}</p>}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+    <div class="axis" aria-hidden="true">
+      <div class="win">
+        <div class="ticks">
+          {ticks.map(year => <span class="tick" data-x={xFor(year).toFixed(5)}>{year}</span>)}
+          {breaks.map(date => <span class="brk" data-x={xFor(date).toFixed(5)}>≈</span>)}
+          <i class="prog"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</Section>
+
+<script>
+  import { initPlatforms } from '../../scripts/story/platforms';
+  initPlatforms();
+</script>

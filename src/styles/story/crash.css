@@ -1,0 +1,158 @@
+/* The crash (#why) and the numbers (#numbers).
+   Base first (normal flow, final state), then the enhancement under motion.css's selector, verbatim.
+   Animations are written as longhands: the minifier folds an `animation` shorthand and its `animation-timeline`
+   into one shorthand, where a timeline is not allowed, and the browser then drops the whole declaration. */
+
+/* ---------- #why, base: the restart screen at 100%, static ---------- */
+#why { background: #000; border-block-start-color: #000; }
+#why .crash { text-align: center; font-family: "Segoe UI", system-ui, sans-serif; color: #d6d6d6; }
+#why .crash p { max-width: none; margin-inline: auto; }
+#why .msg, #why .pct { font-weight: 400; font-size: clamp(1.375rem, 1rem + 1.1vw, 2.375rem); line-height: 1.3; color: #d6d6d6; }
+#why .msg { max-width: 30ch; margin-block: 0 1rem; }
+#why .pct { margin-block: 0 2.5rem; }
+#why .pct-n { font-weight: 300; }
+#why .code { font-size: clamp(0.75rem, 0.6rem + 0.3vw, 0.875rem); line-height: 1.7; color: #bdbdbd; margin-block: 0 1rem; overflow-wrap: anywhere; }
+#why .code span { color: #d6d6d6; }
+#why .scan, #why .crt-line { display: none; }
+#why .crash-point {
+  max-width: 45ch; margin: clamp(2rem, 5vw, 4rem) auto 0; text-align: center;
+  font: 700 clamp(1.5rem, 2.5vw, 2.5rem)/1.2 var(--font-display); color: var(--story-fg);
+}
+
+/* ---------- #numbers, base: both numbers stacked over the dimmed chip ---------- */
+/* The chip stays dim enough that every line over it keeps AA contrast against its brightest pixel . */
+#numbers .chipart {
+  position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; margin-inline: auto;
+  width: min(1100px, 100%); aspect-ratio: 2720 / 1536; opacity: 0.18; pointer-events: none;
+  -webkit-mask-image: radial-gradient(60% 60% at 50% 55%, #000 40%, #0000 75%);
+  mask-image: radial-gradient(60% 60% at 50% 55%, #000 40%, #0000 75%);
+}
+#numbers .chipart picture, #numbers .chipart img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  #numbers .big {
+    background: linear-gradient(180deg, #fff 20%, var(--rust) 120%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+}
+#numbers .dots { display: none; }
+
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+    /* ---------- #why: count while it holds, then switch off like an old monitor ---------- */
+    /* view-timeline-inset: 0 on both sections: the default (auto) takes in html's scroll-padding-top, which would
+       start the timeline's contain range 72px before the stage actually pins (sticky top: 0). */
+    html:not(.static) #why:not(.story--flow) { view-timeline: --why block; view-timeline-inset: 0; }
+    html:not(.static) #why:not(.story--flow) > .stage { display: grid; place-items: center; max-width: none; padding: 0 6vw; }
+    html:not(.static) #why:not(.story--flow) .crash { position: absolute; inset: 0; }
+    html:not(.static) #why:not(.story--flow) .bsod {
+      position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0 6vw 8vh;
+      animation-name: bsodOut; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 46% contain 57%;
+    }
+    html:not(.static) #why:not(.story--flow) .msg { margin-block-end: 3vh; }
+    html:not(.static) #why:not(.story--flow) .pct { margin: 0; }
+    html:not(.static) #why:not(.story--flow) .code { position: absolute; left: 6vw; right: 6vw; bottom: 7vh; margin: 0; }
+    html:not(.static) #why:not(.story--flow) .pct-v {
+      position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+    html:not(.static) #why:not(.story--flow) .pct-n {
+      counter-reset: p var(--p);
+      animation-name: pct; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 0% contain 33.333%;
+    }
+    html:not(.static) #why:not(.story--flow) .pct-n::before { content: counter(p) / ""; }
+    html:not(.static) #why:not(.story--flow) .scan {
+      display: block; position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(#fff0 0 3px, #ffffff07 3px 4px);
+    }
+    html:not(.static) #why:not(.story--flow) .crt-line {
+      display: block; position: absolute; inset: calc(50% - 1px) 6vw auto; height: 2px; pointer-events: none;
+      background: #fff; border-radius: 100%; box-shadow: 0 0 8px #fff;
+      animation-name: crtOff; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 53% contain 72%;
+    }
+    html:not(.static) #why:not(.story--flow) .crash-point {
+      margin: 0;
+      animation-name: crashPointIn; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 74% contain 87%;
+    }
+    /* The open analytics notice covers the stage's bottom: keep the stop code above it. */
+    html:not(.static) #why:not(.story--flow):is(.analytics-notice-visible *) .code { bottom: calc(7vh + var(--analytics-clearance, 0px)); }
+
+    /* ---------- #numbers: the two numbers take turns; the chip sharpens slightly ---------- */
+    /* The swap is sequential: the first is gone at contain 46%, the second starts at 54%, so the
+       stage is empty between them and the two are never superimposed. */
+    html:not(.static) #numbers { view-timeline: --numbers block; view-timeline-inset: 0; }
+    html:not(.static) #numbers > .stage {
+      max-width: none; padding: 0;
+      background: radial-gradient(60% 50% at 50% 60%, #2a1208 0, var(--story-bg) 70%);
+    }
+    html:not(.static) #numbers .eyebrow { position: absolute; top: 12vh; left: 0; right: 0; text-align: center; margin: 0; max-width: none; }
+    html:not(.static) #numbers h2 {
+      position: absolute; top: calc(12vh + 1.75rem); left: 0; right: 0; margin: 0 auto; padding-inline: 6vw;
+      max-width: none; text-align: center; font-size: clamp(1.75rem, 3.4vw, 3rem); line-height: 1.1; letter-spacing: -0.015em;
+    }
+    html:not(.static) #numbers .stats { margin: 0; }
+    html:not(.static) #numbers .stat {
+      position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 18vh 6vw 0;
+      animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --numbers;
+    }
+    html:not(.static) #numbers .s1 { animation-name: inHoldOut; animation-range: contain 0% contain 46%; }
+    html:not(.static) #numbers .s2 { animation-name: inHold; animation-range: contain 54% contain 100%; }
+    /* Both sources stay in the tab order: the statistic whose source has keyboard focus shows whole, the other
+       steps aside, whatever the scroll position. */
+    html:not(.static) #numbers .stat:has(:focus-visible) { animation: none; opacity: 1; transform: none; pointer-events: auto; }
+    html:not(.static) #numbers .stats:has(:focus-visible) .stat:not(:has(:focus-visible)) { animation: none; opacity: 0; pointer-events: none; }
+    html:not(.static) #numbers .big { font-size: clamp(4.5rem, 13vw, 12.5rem); }
+    html:not(.static) #numbers .what { max-width: 36ch; margin: 1.125rem auto 0.625rem; font-size: clamp(1.125rem, 1.7vw, 1.5rem); line-height: 1.45; }
+    html:not(.static) #numbers .src { max-width: 90ch; margin: 0 auto; }
+    html:not(.static) #numbers .chipart {
+      bottom: -20vh; width: min(1100px, 100vw); opacity: 0.2;
+      animation-name: chipIn; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --numbers; animation-range: contain 0% contain 100%;
+    }
+    html:not(.static) #numbers .dots { display: grid; gap: 10px; position: absolute; right: 3vw; top: 50%; translate: 0 -50%; z-index: 1; }
+    html:not(.static) #numbers .dots i {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--story-line);
+      animation-name: statDot; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --numbers;
+    }
+    html:not(.static) #numbers .dots i:nth-child(1) { animation-range: contain 0% contain 46%; }
+    html:not(.static) #numbers .dots i:nth-child(2) { animation-range: contain 54% contain 100%; }
+  }
+}
+
+@property --p { syntax: "<integer>"; initial-value: 0; inherits: false; }
+@keyframes pct { to { --p: 100; } }
+@keyframes bsodOut {
+  0% { opacity: 1; transform: scaleY(1); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: scaleY(0.003); }
+}
+@keyframes crtOff {
+  0% { opacity: 0; transform: scaleX(1); }
+  25% { opacity: 1; transform: scaleX(1); }
+  85% { opacity: 1; transform: scaleX(0.003); }
+  100% { opacity: 0; transform: scaleX(0.003); }
+}
+@keyframes crashPointIn { from { opacity: 0; } to { opacity: 1; } }
+/* The two statistics share one place: a statistic takes pointer input only while it is shown (opacity 0.9 and
+   above), so a faded one never covers the other's link. Their sources stay in the tab order; keyboard focus shows
+   its statistic (above). */
+@keyframes inHoldOut {
+  0% { pointer-events: none; opacity: 0; transform: translateY(50px) scale(0.96); }
+  16.5% { pointer-events: none; }
+  16.6% { pointer-events: auto; }
+  18%, 82% { opacity: 1; transform: none; }
+  83% { pointer-events: auto; }
+  83.1% { pointer-events: none; }
+  100% { pointer-events: none; opacity: 0; transform: translateY(-50px); }
+}
+@keyframes inHold {
+  0% { pointer-events: none; opacity: 0; transform: translateY(50px) scale(0.96); }
+  22.5% { pointer-events: none; }
+  22.6% { pointer-events: auto; }
+  25%, 100% { pointer-events: auto; opacity: 1; transform: none; }
+}
+@keyframes chipIn {
+  from { transform: scale(1.15); opacity: 0.13; filter: blur(3px); }
+  to { transform: scale(1); opacity: 0.2; filter: blur(0); }
+}
+@keyframes statDot { 0%, 100% { background: var(--story-line); } 10%, 90% { background: var(--rust); } }
+#numbers .stat .src { font-size: .9375rem; color: #c2c5c9; }

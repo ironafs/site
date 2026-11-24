@@ -1,0 +1,52 @@
+---
+// The IronAFS wordmark that rusts (src/scripts/logo-rust.ts). The server renders the
+// finished, still wordmark: steel "Ir", the still cell as the "o", steel "n", and "AFS" as text (rust without
+// JavaScript, steel until the script takes it over, so it never flashes rust and then bare steel).
+import { ui } from '../content/ui';
+import '../styles/logo.css';
+import { stillCellMarkup } from '../scripts/logo-rust';
+
+interface Props {
+  /** dark: steel letters (the header, dark in both themes); light: gunmetal letters on a light page; auto: the
+   *  visitor's theme (the 404 page and #follow follow it), resolved when the script mounts */
+  theme?: 'dark' | 'light' | 'auto';
+  /** unique on the page: the cell's gradient ids */
+  id: string;
+  class?: string;
+  /** rust when the logo first comes into view rather than on load (for a logo far down the page) */
+  inView?: boolean;
+}
+const { theme = 'dark', id, class: extra, inView = false } = Astro.props;
+---
+<span class:list={['rl', `rl-${theme}`, extra]} data-rust-logo data-theme={theme} data-in-view={inView ? '' : undefined} aria-hidden="true"><span class="rl-steel">{ui.wordStart}</span><svg class="rl-cell" viewBox="0 0 100 100" focusable="false" set:html={stillCellMarkup(theme === 'light', `rl-${id}-`)}></svg><span class="rl-steel">{ui.wordMiddle}</span><span class="rl-afs">{ui.wordEnd}</span></span>
+<script>
+  import { mountRustLogo } from '../scripts/logo-rust';
+  const lightScheme = matchMedia('(prefers-color-scheme: light)');
+  const mount = (host: HTMLElement) => {
+    if (host.dataset.theme !== 'auto') {
+      mountRustLogo(host, { theme: host.dataset.theme === 'light' ? 'light' : 'dark' });
+      return;
+    }
+    // theme="auto" follows the visitor's theme, also when it changes while the page is open
+    const resolve = () => {
+      const theme = lightScheme.matches ? 'light' : 'dark';
+      host.classList.remove('rl-auto', 'rl-light', 'rl-dark');
+      host.classList.add(`rl-${theme}`);
+      return theme;
+    };
+    const logo = mountRustLogo(host, { theme: resolve() });
+    lightScheme.addEventListener('change', () => logo.setTheme(resolve()));
+  };
+  const seen = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      seen!.unobserve(entry.target);
+      mount(entry.target as HTMLElement);
+    }
+  }) : null;
+  for (const host of document.querySelectorAll<HTMLElement>('[data-rust-logo]:not([data-rust])')) {
+    host.dataset.rust = 'waiting';
+    if (seen && host.hasAttribute('data-in-view')) seen.observe(host);
+    else mount(host);
+  }
+</script>

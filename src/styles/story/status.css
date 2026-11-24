@@ -1,0 +1,80 @@
+/* Speed and status. Normal flow in every mode: these
+   sections close the story at reading pace, so nothing here is under the enhancement selector. Dark in both
+   themes, as the whole story. */
+
+/* ---------- #speed: one reading column under the head, on the container's edge ---------- */
+#speed h2 { font-size: clamp(1.75rem, 3.4vw, 3rem); line-height: 1.1; }
+#speed .speed-body p { font-size: 1.125rem; line-height: 1.65; max-width: 68ch; margin: 0 0 1rem; }
+
+/* ---------- #status ---------- */
+#status { --ms-line: #3a3d44; }
+#status > .stage { max-width: calc(1360px + 2 * var(--gutter)); padding-bottom: clamp(1.5rem, 4vh, 3rem); }
+#status h2 { font-size: clamp(2rem, 4.4vw, 4.25rem); line-height: 1.04; letter-spacing: -0.03em; max-width: 20ch; margin-bottom: 0.4em; }
+#status .lede { max-width: 56ch; margin-bottom: clamp(2rem, 6vh, 3.5rem); }
+
+/* the now, next and follow cards */
+#status .nownext { display: grid; grid-template-columns: 1fr; gap: 18px; margin: 0 0 clamp(2.5rem, 6vh, 3.5rem); }
+@media (min-width: 901px) { #status .nownext { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+#status .nn { border-radius: 20px; border: 1px solid var(--story-card-border); background: var(--story-card-glass); padding: 22px 24px; }
+#status .nn .k { font: 0.78125rem/1.4 var(--font-mono); color: var(--story-cite); margin: 0; }
+#status .nn-title { font: 700 clamp(1.125rem, 1.5vw, 1.5rem)/1.2 var(--font-display); letter-spacing: normal; text-transform: none; color: #fff; margin: 8px 0; }
+#status .nn-body { margin: 0; font-size: 0.9375rem; line-height: 1.5; color: var(--story-text); max-width: none; }
+#status .nn.now { border-color: #8a4422; box-shadow: 0 0 40px #d8662a22; }
+#status .nn.now .k { color: var(--story-peach); }
+
+/* the milestone track: a vertical list on narrow screens, a row of steps on wide ones. Done: a filled dot and the
+   line in rust; now: a ringed dot and the code in amber. Never dimmed (opacity failed AA once M0 closed). */
+#status .ms { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: 1.25rem; }
+#status .m { position: relative; max-width: none; padding-inline-start: 30px; }
+#status .m::before { content: ''; position: absolute; left: 0; top: 0.3em; z-index: 1; width: 12px; height: 12px; border-radius: 50%; background: var(--story-bg); border: 2px solid var(--ms-line); box-sizing: content-box; }
+#status .m::after { content: ''; position: absolute; left: 7px; top: 1.2em; bottom: -1.25rem; width: 2px; background: var(--ms-line); }
+#status .m:last-child::after { display: none; }
+#status .m.done::before { background: var(--rust); border-color: var(--rust); }
+#status .m.done::after { background: var(--rust); }
+#status .m.now::before { background: var(--rust); border-color: #ffb27a; box-shadow: 0 0 0 6px #d8662a33, 0 0 18px var(--rust); }
+#status .m.now::after { background: linear-gradient(var(--rust) 0 30%, var(--ms-line) 30%); }
+#status .m a { display: block; color: inherit; text-decoration: none; }
+#status .m b { display: block; font: 700 1.125rem/1.3 var(--font-display); color: #fff; }
+#status .m.now b { color: var(--story-amber); }
+#status .m-name { display: block; font-size: 0.84375rem; line-height: 1.4; color: var(--story-cite); }
+#status .m a:hover .m-name { text-decoration: underline; text-underline-offset: 0.2em; }
+/* phones: 44 px tap targets (story/base.css): a milestone (41 to 42.3 px) grows by its padding into its negative margin,
+   the layout unchanged. The follow links wrap onto two or three lines of one sentence, so padding alone would overlap
+   the targets of links on adjacent lines: each is a 44 px inline-block line instead (on the text baseline), its lines 44 px
+   apart, the targets touching and never overlapping. */
+@media (max-width: 760px) {
+  #status .m a { padding-block: 2px; margin-block: -2px; }
+  #status .nn-body a { display: inline-block; line-height: 44px; }
+}
+#status .status-counts { display: block; margin-top: 0.25rem; font: 0.75rem/1.4 var(--font-mono); color: var(--story-cite); }
+@media (min-width: 1100px) {
+  #status .ms { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; }
+  #status .m { padding: 30px 12px 0 0; }
+  #status .m::before { top: 3px; }
+  #status .m::after { left: 0; right: 0; top: 10px; bottom: auto; width: auto; height: 2px; }
+  #status .m:last-child::after { display: block; }
+  #status .m.now::after { background: linear-gradient(90deg, var(--rust) 0 30%, var(--ms-line) 30%); }
+}
+#status .status-asof, #status .status-empty { font: 0.8125rem/1.5 var(--font-mono); color: var(--story-cite); margin: 0 0 clamp(2rem, 5vh, 3rem); }
+
+/* the GitHub and ADR buttons */
+#status .ctas { display: flex; flex-wrap: wrap; gap: 12px; max-width: none; margin: 0; }
+#status .cta {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 11px 20px; border-radius: 99px; border: 1px solid var(--rust);
+  font: 0.9375rem/1.3 var(--font-mono); color: #111; background: var(--rust); text-decoration: none; max-width: 100%; overflow-wrap: anywhere;
+}
+#status .cta2 { color: var(--story-fg); background: none; border-color: var(--ms-line); }
+#status .cta:hover { text-decoration: underline; }
+
+/* the forge: below the text, full width, faded in at the top and out at the bottom; never behind text */
+#status .forge {
+  height: clamp(240px, 55vh, 620px);
+  -webkit-mask-image: linear-gradient(#0000, #000 35%, #000 75%, #0000);
+  mask-image: linear-gradient(#0000, #000 35%, #000 75%, #0000);
+}
+#status .forge img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 60%; filter: brightness(0.85); }
+
+@media (forced-colors: active) {
+  #status .m::before, #status .cta { border-color: CanvasText; }
+  #status .m.done::before, #status .m.now::before { background: CanvasText; }
+}

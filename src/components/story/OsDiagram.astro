@@ -1,0 +1,33 @@
+---
+// One OS's diagram: user space above, the kernel band below a dashed boundary. The boxes carry
+// the ids story.how names; connectors.ts draws the lines between them from `data-wires` (enhancement only).
+// The markup is in the request's order, programs → kernel → layer → ironafsd → cells, which is also the base
+// layer's single top-to-bottom column (phones, reduced motion, html.static).
+// The enhanced grid places each box explicitly (how.css).
+import type { OsHow } from '../../lib/types';
+import { story } from '../../content/story';
+
+interface Props { os: OsHow; index: number }
+const { os, index } = Astro.props;
+const d = story.how.diagram;
+const ownLayer = os.layer?.tag ? os.layer : undefined;
+const innerLayer = os.layer && !os.layer.tag ? os.layer : undefined;
+---
+<div class="scene" data-os={os.os} data-index={String(index)} data-wires={JSON.stringify(os.wires)}>
+  <span class="uband">{d.userSpace}</span>
+  <div class="nd g-prog" id={os.ids.programs}><b>{d.programs}</b><small>{os.programs}</small></div>
+  <div class="kband">
+    <div class="kernel-labels"><span class="kl">{d.kernel}</span><span class="kr">{d.kernelNote}</span></div>
+    <div class="nd os g-os" id={os.ids.kernel}><b>{os.kernel.title}</b><small>{os.kernel.sub}</small>{os.kernel.chips.map(chip => <span class="chip">{chip}</span>)}</div>
+  </div>
+  {ownLayer && (
+    <div class="nd proc g-layer" id={os.ids.layer}><span class="tagp">{ownLayer.tag}</span><b>{ownLayer.name}</b><small>{ownLayer.sub}</small></div>
+  )}
+  <div class:list={['nd proc g-daemon', innerLayer && 'wide']} id={os.ids.daemon}>
+    <span class="tagp">{d.daemon.tag}</span><b>{d.daemon.name}</b><small>{os.daemonSub ?? d.daemon.sub}</small>
+    <div class="nd inner"><b>{d.core.title}</b>{d.core.chips.map(chip => <span class="chip">{chip}</span>)}</div>
+    {innerLayer && <div class="nd inner" id={os.ids.layer}><b>{innerLayer.name}</b><small>{innerLayer.sub}</small></div>}
+  </div>
+  <div class="nd cells g-cells" id={os.ids.cells}><b>{d.cells}</b></div>
+  <p class="ostat">{os.status}</p>
+</div>

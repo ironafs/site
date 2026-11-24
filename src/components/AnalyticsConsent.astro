@@ -1,0 +1,63 @@
+---
+import { consent } from '../content/privacy';
+import { measurementId } from '../data/analytics';
+import { links } from '../data/links';
+import '../styles/privacy.css';
+
+const policy = `${links.privacy}#analytics`;
+const { cookieTable } = consent;
+---
+<section class="analytics-notice" data-analytics-banner data-measurement-id={measurementId} aria-labelledby="analytics-notice-h" hidden>
+  <div class="container analytics-notice-inner">
+    <div class="analytics-cookie" aria-hidden="true"><span></span></div>
+    <div class="analytics-copy">
+      <h2 id="analytics-notice-h" class="sr-only">{consent.noticeHeading}</h2>
+      <p class="analytics-prompt"><span class="analytics-cookie-small" aria-hidden="true">●</span>{consent.prompt.slice(0, -consent.promptCommand.length)}<span class="analytics-typed">{consent.promptCommand}</span></p>
+      <p class="analytics-output">{consent.noticePurpose} <span class="analytics-state" data-analytics-notice-status>{consent.pending}</span></p>
+    </div>
+    <div class="analytics-actions" data-analytics-notice-actions>
+      <button class="button analytics-command" type="button" data-notice-allow aria-label={consent.allow}>{consent.allowCommand}</button>
+      <button class="button analytics-command" type="button" data-notice-decline aria-label={consent.decline}>{consent.declineCommand}</button>
+      <button class="button" type="button" data-analytics-settings aria-haspopup="dialog">{consent.manage}</button>
+      <button class="button" type="button" data-analytics-dismiss aria-label={consent.closeNotice}><span aria-hidden="true">×</span></button>
+    </div>
+    <p class="analytics-noted" data-analytics-noted role="status" hidden>{consent.noted}</p>
+  </div>
+</section>
+<dialog class="analytics-preferences" data-analytics-preferences aria-labelledby="analytics-preferences-h" aria-describedby="analytics-intro">
+  <div class="analytics-dialog-head">
+    <h2 id="analytics-preferences-h">{consent.heading}</h2>
+    <button class="button analytics-close" type="button" data-analytics-close aria-label={consent.closePreferences} autofocus>×</button>
+  </div>
+  <div class="analytics-dialog-body">
+    <p id="analytics-intro">{consent.intro}</p>
+    <h3>{consent.category}</h3>
+    <p id="analytics-purpose">{consent.purpose}</p>
+    <label class="analytics-toggle">
+      <input type="checkbox" role="switch" data-analytics-toggle aria-describedby="analytics-purpose analytics-state" />
+      {consent.toggle}
+    </label>
+    <p id="analytics-state" data-analytics-status>{consent.status.undecided}</p>
+    <p>{consent.unchanged}</p>
+    <details class="analytics-details">
+      <summary>{consent.details}</summary>
+      <p>{consent.storage}</p>
+      <p>{consent.duration}</p>
+      <table>
+        <caption>{cookieTable.caption}</caption>
+        <thead><tr>{cookieTable.columns.map(heading => <th scope="col">{heading}</th>)}</tr></thead>
+        <tbody>{cookieTable.names.map(name => <tr><th scope="row"><code>{name}</code></th><td>{cookieTable.lifetime}</td></tr>)}</tbody>
+      </table>
+    </details>
+    <a class="analytics-policy-link" href={policy}>{consent.policyLink}</a>
+  </div>
+  <div class="analytics-actions analytics-dialog-actions">
+    <button class="button analytics-command" type="button" data-analytics-decline aria-label={consent.decline}>{consent.declineCommand}</button>
+    <button class="button analytics-command" type="button" data-analytics-allow aria-label={consent.allow}>{consent.allowCommand}</button>
+    <button class="button analytics-command" type="button" data-analytics-save aria-label={consent.save}>{consent.saveCommand}</button>
+  </div>
+</dialog>
+<script>
+  import { initAnalyticsConsent } from '../scripts/analytics-consent';
+  initAnalyticsConsent(document);
+</script>

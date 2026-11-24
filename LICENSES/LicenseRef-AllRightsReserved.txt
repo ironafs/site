@@ -1,0 +1,24 @@
+Copyright Adrian Ana. All rights reserved.
+
+This notice covers the website's content (its words and pictures) and the
+IronAFS name and logo, in the files that REUSE.toml
+marks with LicenseRef-AllRightsReserved. It reserves copyright only to the
+extent that copyright applies to that material. The IronAFS name and logo
+are also used as trademarks; see https://www.ironafs.org/trademarks/.
+
+No licence is granted to copy, adapt, distribute, publicly display or
+perform this material, in whole or in part, except:
+
+- what the law allows without a licence, such as quotation and fair use or
+  fair dealing;
+- viewing it as published at ironafs.org and in this repository; and
+- reproducing the unchanged IronAFS name and logo to refer accurately to
+  the IronAFS project, for example in articles, talks, package listings and
+  links to it; this is a copyright permission for the logo's artwork. How to
+  use the name: https://www.ironafs.org/trademarks/.
+
+The software licences elsewhere in this repository (GPL-3.0-or-later for
+the code, and the third-party licences listed in docs/provenance.md) do not
+apply to material under this notice.
+
+For any other use, ask: adrian@adrianana.com.

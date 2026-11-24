@@ -1,0 +1,19 @@
+---
+import Section from './Section.astro';
+import Text from './Text.astro';
+import '../../styles/story/rust.css';
+import { story } from '../../content/story';
+
+const { cards } = story;
+---
+<Section id="rust-cards" eyebrow={cards.eyebrow} heading={cards.heading}>
+  <div class="facts">
+    {[cards.mountpoint, cards.unsafeCard].map(card => (
+      <article class="fact">
+        <h3>{card.kicker}</h3>
+        <p><Text text={card.text} /></p>
+        <span class="s"><a class="source" href={card.source.href}>{card.source.label}</a></span>
+      </article>
+    ))}
+  </div>
+</Section>

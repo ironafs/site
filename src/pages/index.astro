@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Built from '../components/Built.astro';
+import Follow from '../components/Follow.astro';
+import AfsContext from '../components/AfsContext.astro';
+import Crash from '../components/story/Crash.astro';
+import Numbers from '../components/story/Numbers.astro';
+import HowItWorks from '../components/story/HowItWorks.astro';
+import Rust from '../components/story/Rust.astro';
+import RustCards from '../components/story/RustCards.astro';
+import Cost from '../components/story/Cost.astro';
+import Platforms from '../components/story/Platforms.astro';
+import Speed from '../components/story/Speed.astro';
+import StatusSection from '../components/story/StatusSection.astro';
+
+// The story in page order.
+---
+<Base>
+  <main id="main">
+    <Hero />
+
+    <Crash />
+
+    <Numbers />
+
+    <Cost />
+
+    <Platforms />
+
+    <AfsContext />
+
+    <HowItWorks />
+
+    <Rust />
+
+    <RustCards />
+
+    <Speed />
+
+    <StatusSection />
+
+    <Built />
+    <Follow />
+  </main>
+</Base>

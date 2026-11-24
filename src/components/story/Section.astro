@@ -1,0 +1,34 @@
+---
+// A story section: <section id class="story pin? h-*" data-pin-height> with a .stage child.
+// The base layer is normal flow; the pin and the height apply only under motion.css's enhancement selector,
+// so a browser without it (or html.static, or reduced motion, or a phone) gets no blank pinned space.
+// An empty eyebrow or heading is left out, never rendered empty. Decorative art goes in the "art" slot (behind the
+// stage) or the "after" slot (below it, full width, in normal flow: #status's forge).
+import '../../styles/story/tokens.css';
+import '../../styles/story/base.css';
+import '../../styles/story/motion.css';
+
+interface Props {
+  id: string;
+  pinned?: boolean;
+  /** The pinned scroll height in vh: one of the heights story/motion.css implements (.h-*). */
+  height?: 160 | 190 | 300 | 440 | 560;
+  eyebrow?: string;
+  heading?: string;
+  /** The id of a heading the section renders itself (in its slot), when it passes no `heading`. */
+  labelledby?: string;
+}
+const { id, pinned = false, height, eyebrow = '', heading = '', labelledby } = Astro.props;
+const hasArt = Astro.slots.has('art');
+const empty = !eyebrow && !heading && !Astro.slots.has('default');
+const classes = ['story', pinned && 'pin', pinned && height && `h-${height}`, empty && 'is-empty'].filter(Boolean).join(' ');
+---
+<section id={id} class={classes} data-pin-height={pinned && height ? String(height) : undefined} aria-labelledby={heading ? `${id}-h` : labelledby}>
+  {hasArt && <div class="story-art" aria-hidden="true"><slot name="art" /></div>}
+  <div class="stage">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    {heading && <h2 id={`${id}-h`} tabindex="-1">{heading}</h2>}
+    <slot />
+  </div>
+  {Astro.slots.has('after') && <slot name="after" />}
+</section>

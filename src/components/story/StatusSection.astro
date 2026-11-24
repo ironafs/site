@@ -1,0 +1,68 @@
+---
+// Status (#status), normal flow. The now and next cards follow the build-time milestones: the
+// current one is the earliest open milestone after M0 (milestones.ts); each card takes its title from GitHub and its
+// body from milestoneCopy, keyed by the code. The track shows every milestone by its GitHub title in code order; the
+// current one carries aria-current="step", closed ones read as done (a filled dot, and the word for assistive tech).
+// The forge picture sits below all of it, full width, never behind text.
+import { ui } from '../../content/ui';
+import '../../styles/story/status.css';
+import Section from './Section.astro';
+import Art from './Art.astro';
+import forge from '../../assets/story/forge.png';
+import { milestoneCopy, story } from '../../content/story';
+import { currentMilestone, loadMilestones, milestoneCode, nextMilestone, trackOrder, type Milestone } from '../../data/milestones';
+
+const { statusSection: s } = story;
+const { items, asOf, fromSnapshot } = await loadMilestones();
+const current = currentMilestone(items);
+const next = nextMilestone(items, current);
+const cards = [
+  { which: 'now', label: current?.open ? s.nowLabel : ui.closed, milestone: current },
+  { which: 'next', label: s.nextLabel, milestone: next },
+].filter((c): c is { which: string; label: string; milestone: Milestone } => c.milestone !== null);
+const bodyOf = (m: Milestone) => milestoneCopy[milestoneCode(m.title) ?? '']?.body ?? '';
+/** "M2a: core and Linux, read-only" → code "M2a", separator ": ", name "core and Linux, read-only". */
+const parts = (title: string) => {
+  const code = milestoneCode(title);
+  if (!code) return { code: '', sep: '', name: title };
+  const rest = title.slice(code.length);
+  const sep = /^:\s*/.exec(rest)?.[0] ?? '';
+  return { code, sep, name: rest.slice(sep.length) };
+};
+---
+<Section id="status" eyebrow={s.eyebrow} heading={s.heading}>
+  <p class="lede">{s.lede}</p>
+  <div class="nownext">
+    {cards.map(({ which, label, milestone }) => (
+      <article class={`nn ${which}`} data-card={which}>
+        <p class="k">{label}</p>
+        <h3 class="nn-title">{milestone.title}</h3>
+        {bodyOf(milestone) && <p class="nn-body">{bodyOf(milestone)}</p>}
+      </article>
+    ))}
+    <article class="nn follow" data-card="follow">
+      <p class="k">{s.follow.label}</p>
+      <h3 class="nn-title">{s.follow.title}</h3>
+      <p class="nn-body">{s.follow.links.map((link, i) => <>{i > 0 && ' · '}<a href={link.href}>{link.label}</a></>)}</p>
+    </article>
+  </div>
+  {items.length === 0 ? (
+    <p class="status-empty">{ui.milestonesEmpty}</p>
+  ) : (
+    <ol class="ms">
+      {trackOrder(items).map(m => {
+        const { code, sep, name } = parts(m.title);
+        const isCurrent = current !== null && m.number === current.number;
+        return (
+          <li class:list={['m', { done: !m.open, now: isCurrent }]} data-state={m.open ? 'open' : 'closed'}>
+            <a href={m.url} aria-current={isCurrent ? 'step' : undefined}>{code && <b>{code}</b>}{sep && <span class="sr-only">{sep}</span>}<span class="m-name">{name}</span></a>
+            {!m.open && <span class="sr-only">{ui.closedSpoken}</span>}
+            <span class="status-counts">{m.closedItems} {ui.done} {m.openItems} {ui.openItems}</span>
+          </li>
+        );
+      })}
+    </ol>
+  )}
+  <p class="status-asof">{ui.asOf} {asOf}{fromSnapshot ? ui.snapshot : ''}</p>
+  <div slot="after" class="forge" aria-hidden="true"><Art src={forge} widths={[640, 1280, 1920, 2560]} /></div>
+</Section>
