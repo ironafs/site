@@ -6,6 +6,17 @@
     try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
     var seen = false;
     try { seen = window.localStorage.getItem('ironafs-intro-seen') === '1'; } catch (e) {}
-    if (!seen && !reduced) document.documentElement.setAttribute('data-intro', 'play');
+    if (!seen && !reduced) {
+      document.documentElement.setAttribute('data-intro', 'play');
+      var opening = document.currentScript && document.currentScript.getAttribute('data-phone-opening');
+      if (opening && window.matchMedia('(max-width: 899px), (pointer: coarse)').matches) {
+        var preload = document.createElement('link');
+        preload.rel = 'preload';
+        preload.as = 'image';
+        preload.href = opening;
+        preload.fetchPriority = 'high';
+        document.head.appendChild(preload);
+      }
+    }
   } catch (e) {}
 })();

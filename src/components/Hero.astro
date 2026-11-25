@@ -41,14 +41,14 @@ import '../styles/hero.css';
             class="hero-poster"
             src={poster}
             formats={['avif', 'webp']}
-            widths={[960, 1440, 1920, 2880]}
+            widths={[480, 960, 1440, 1920, 2880]}
             sizes="100vw"
             alt=""
             width={2880}
             height={1800}
-            fetchpriority="low"
+            fetchpriority="high"
             loading="eager"
-            decoding="async"
+            decoding="sync"
           />
         </div>
       </div>

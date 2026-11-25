@@ -213,7 +213,10 @@ for (const mode of ['return visit', 'reduced motion']) {
     await page.waitForTimeout(4000);
     await page.evaluate(() => document.body.click());
     const last = (await page.evaluate(() => window.__lcp)).at(-1);
+    const openingFetched = await page.evaluate(() => performance.getEntriesByType('resource')
+      .some(entry => /\/_astro\/opening-phone\.[^/]+\.webp$/.test(entry.name)));
     console.log(`${mode} LCP: ${last.tag} at ${Math.round(last.t)} ms`);
+    expect(openingFetched, 'a visit that skips the intro only needs the cooled artwork').toBe(false);
     expect(last.t).toBeLessThanOrEqual(2000);
   });
 }
