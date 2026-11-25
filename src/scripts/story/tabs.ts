@@ -15,7 +15,7 @@ export function initOsTabs(section: HTMLElement, on: boolean): (on: boolean) => 
   const scenes = [...section.querySelectorAll<HTMLElement>('.scene')];
   if (!tablist || tabs.length !== panels.length || panels.length !== scenes.length) return () => {};
   const count = tabs.length;
-  const marker = section.querySelector<HTMLElement>('[data-step-current]');
+  const stepText = section.querySelector('[data-step-current]')?.firstChild;
   let stop: (() => void) | null = null;
   let frame = 0;
   // the tab chosen by a click or a key, held until the scroll reaches its third (or gives up)
@@ -35,7 +35,7 @@ export function initOsTabs(section: HTMLElement, on: boolean): (on: boolean) => 
     const step = Math.min(4, Math.floor((position - active) * 4) + 1);
     section.dataset.step = String(step);
     section.dataset.platform = String(active);
-    if (marker) marker.textContent = String(step);
+    if (stepText) stepText.nodeValue = String(step);
     panels.forEach((panel, i) => panel.querySelectorAll('.short > li').forEach((li, j) => {
       li.classList.toggle('is-current', i === active && j === step - 2);
     }));
