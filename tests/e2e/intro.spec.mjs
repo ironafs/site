@@ -193,6 +193,9 @@ test('first visit: the largest contentful paint on the phone profile is the open
   await warmUp(browser, info.project.use);
   await page.addInitScript(lcpObserver);
   await page.goto('/');
+  const opening = page.locator('#hero .hero-opening');
+  const openingPath = await opening.evaluate(el => new URL(getComputedStyle(el).backgroundImage.slice(5, -2)).pathname);
+  await expect(page.locator('head link[rel="preload"][as="image"][href*="opening-phone"]')).toHaveAttribute('href', openingPath);
   await page.waitForTimeout(3000);
   await page.evaluate(() => document.body.click());
   expect(['hero opening', 'hero h1', 'hero subline']).toContain((await page.evaluate(() => window.__lcp)).at(-1).role);
@@ -205,6 +208,10 @@ for (const mode of ['return visit', 'reduced motion']) {
     if (mode === 'return visit') await page.addInitScript(seenFlag);
     else await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.addInitScript(lcpObserver);
+    const openingRequests = [];
+    page.on('request', request => {
+      if (/\/_astro\/opening-phone\.[^/]+\.webp$/.test(new URL(request.url()).pathname)) openingRequests.push(request.url());
+    });
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
     await cdp.send('Network.enable');
@@ -213,10 +220,8 @@ for (const mode of ['return visit', 'reduced motion']) {
     await page.waitForTimeout(4000);
     await page.evaluate(() => document.body.click());
     const last = (await page.evaluate(() => window.__lcp)).at(-1);
-    const openingFetched = await page.evaluate(() => performance.getEntriesByType('resource')
-      .some(entry => /\/_astro\/opening-phone\.[^/]+\.webp$/.test(entry.name)));
     console.log(`${mode} LCP: ${last.tag} at ${Math.round(last.t)} ms`);
-    expect(openingFetched, 'a visit that skips the intro only needs the cooled artwork').toBe(false);
+    expect(openingRequests, 'a visit that skips the intro only needs the cooled artwork').toEqual([]);
     expect(last.t).toBeLessThanOrEqual(2000);
   });
 }
