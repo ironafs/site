@@ -372,14 +372,17 @@ test('the frame-rate floor gives no verdict while the hero is off screen, and ju
 
 // The first-frame watchdog counts only while the canvas is on screen (the render loop runs only then), not while
 // the hero's text is: on a phone layout the canvas is the top band of a taller section.
-test('a first visit on a phone layout with the canvas scrolled away but the console in view for 15 s: the intro still plays', async ({ page }) => {
+test('a first visit on a phone layout with the canvas scrolled away but the copy in view for 15 s: the intro still plays', async ({ page }) => {
   test.setTimeout(120_000);
   const errors = pageErrors(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/?test');
-  const band = await page.evaluate(() => document.querySelector('.hero-poster img, img.hero-poster').getBoundingClientRect().bottom);
-  await page.evaluate(y => window.scrollTo({ top: y + 20, behavior: 'instant' }), band);
-  expect(await page.evaluate(() => { const r = document.getElementById('hero').getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }), 'the hero section is still in view').toBe(true);
+  await page.evaluate(() => {
+    const track = document.querySelector('.hero-intro-track').getBoundingClientRect();
+    window.scrollTo({ top: scrollY + track.bottom + 20, behavior: 'instant' });
+  });
+  await expect.poll(() => page.locator('.hero-art').evaluate(el => el.getBoundingClientRect().bottom)).toBeLessThanOrEqual(0);
+  await expect(page.locator('.hero-copy')).toBeInViewport();
   await page.waitForTimeout(15_000); // longer than the 12 s watchdog
   await expect(hero(page)).toHaveAttribute('data-await-melt', ''); // still waiting for the intro, no fallback
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
