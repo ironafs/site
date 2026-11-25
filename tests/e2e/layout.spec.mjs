@@ -151,10 +151,10 @@ test.describe('without JavaScript', () => {
   });
 });
 
-// : a 44 px target must not overlap another's, or a tap meant for one can open the other.
-// At 390 px every link, summary and button in main and the footer: no two hit rectangles (each line of a wrapped
-// link on its own) intersect, and a tap at each rectangle's centre lands on its own element.
-test('at 390 px no two tap targets in main or the footer overlap, and each one\'s centre hits it', async ({ page }) => {
+// Check every target in normal flow. story-crash.spec checks the two statistics' links at their separate
+// scroll positions when they share the same pinned stage.
+test('at 390 px in normal flow, tap targets in main and the footer have distinct hit areas', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   const { count, overlaps, missed } = await page.evaluate(async () => {

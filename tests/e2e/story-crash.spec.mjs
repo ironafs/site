@@ -46,6 +46,18 @@ const enhanced = page => page.evaluate(() => CSS.supports('animation-timeline: v
   && matchMedia('(scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px)').matches
   && !document.documentElement.classList.contains('static'));
 
+async function expectActiveStatSource(page, active) {
+  await expect(page.locator(`#numbers .stat:not(.s${active}) .source`)).toHaveCSS('pointer-events', 'none');
+  const source = page.locator(`#numbers .s${active} .source`);
+  await expect(source).toHaveCSS('pointer-events', 'auto');
+  const hits = await source.evaluate(link => [...link.getClientRects()].map(rect => {
+    const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return link.contains(hit);
+  }));
+  expect(hits.length).toBeGreaterThan(0);
+  expect(hits.every(Boolean), `all parts of source ${active} respond to taps`).toBe(true);
+}
+
 test.describe('portrait phone holds', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(!test.info().project.use.hasTouch, 'phone projects');
@@ -84,10 +96,12 @@ test.describe('portrait phone holds', () => {
     expect((await numbers.boundingBox()).y).toBe(stageTop);
     expect(await shown(page, '#numbers .s1')).toBeGreaterThan(0.95);
     expect(await shown(page, '#numbers .s2')).toBe(0);
+    await expectActiveStatSource(page, 1);
     await pinnedAt(page, 'numbers', 0.8);
     expect((await numbers.boundingBox()).y).toBe(stageTop);
     expect(await shown(page, '#numbers .s1')).toBe(0);
     expect(await shown(page, '#numbers .s2')).toBeGreaterThan(0.95);
+    await expectActiveStatSource(page, 2);
     const source = await page.locator('#numbers .s2 .src').boundingBox();
     expect(source.y + source.height).toBeLessThan(noticeTop);
     await page.setViewportSize({ width: 375, height: 600 });

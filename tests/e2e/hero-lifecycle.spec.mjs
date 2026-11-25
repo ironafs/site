@@ -102,30 +102,29 @@ test('replay while the first scene is still being built: the build is abandoned,
   await returnVisit(page);
   await page.addInitScript(() => {
     window.__first = null;
-    window.__lost = 0;
-    document.addEventListener('DOMContentLoaded', () => {
-      const h = document.getElementById('hero');
-      new MutationObserver(() => {
-        const canvas = h.querySelector('canvas.hero-canvas');
-        if (!canvas || window.__first) return;
-        // a microtask after the canvas went in: the build has made its renderer and is paused before the next part
-        window.__first = canvas;
-        canvas.addEventListener('webglcontextlost', () => { window.__lost++; });
-        document.getElementById('replay').click();
-      }).observe(h.querySelector('.hero-art'), { childList: true });
-    });
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+      const gl = getContext.call(this, type, ...args);
+      if (!window.__first && type === 'webgl2' && gl && this.matches('#hero canvas.hero-canvas')) {
+        // The startup yields before acquiring a context. Replay at the first yield after acquiring it.
+        window.__first = this;
+        window.__firstContext = gl;
+        queueMicrotask(() => document.getElementById('replay').click());
+      }
+      return gl;
+    };
   });
   await page.goto('/?test');
   await expect(hero(page)).toHaveAttribute('data-scene', 'live', { timeout: 60_000 });
   const state = await page.evaluate(() => ({
     canvases: document.querySelectorAll('#hero canvas').length,
     firstGone: !!window.__first && !window.__first.isConnected,
-    firstLost: window.__lost,
+    firstLost: window.__firstContext?.isContextLost(),
     phase: document.getElementById('hero').dataset.phase,
   }));
   expect(state.canvases, 'one canvas: the replay\'s').toBe(1);
   expect(state.firstGone, 'the abandoned build\'s canvas was removed').toBe(true);
-  expect(state.firstLost, 'its context was freed').toBeGreaterThan(0);
+  expect(state.firstLost, 'its context was freed').toBe(true);
   expect(state.phase, 'the replay plays from the start').toBe('chip');
   expect(errors).toEqual([]);
 });
@@ -361,11 +360,17 @@ test('the frame-rate floor gives no verdict while the hero is off screen, and ju
   await returnVisit(page);
   await page.goto('/?test&fps=1000');
   await expect(hero(page)).toHaveAttribute('data-scene', 'live', { timeout: 30_000 });
+  const canvas = page.locator('#hero canvas.hero-canvas');
   await page.evaluate(() => window.scrollTo({ top: document.querySelector('.hero-pin').offsetHeight + 800, behavior: 'instant' }));
+  await expect(canvas).not.toBeInViewport();
   await page.waitForTimeout(10_000); // the warm-up and several 2 s windows, all off screen
-  await expect(page.locator('#hero canvas.hero-canvas'), 'no verdict off screen: the scene is still there').toHaveCount(1);
+  await expect(canvas, 'no verdict off screen: the scene is still there').toHaveCount(1);
   await expect(hero(page)).toHaveAttribute('data-scene', 'live');
+  const frameCount = async () => Number(await hero(page).getAttribute('data-frames'));
+  const framesBeforeReturn = await frameCount();
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  // The floor can only judge the scene after it starts rendering again on a loaded runner.
+  await expect.poll(frameCount, { timeout: 30_000 }).toBeGreaterThan(framesBeforeReturn);
   await expectFallback(page); // back on screen: a window of real renders, below the floor
   expect(errors).toEqual([]);
 });
