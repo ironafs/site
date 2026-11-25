@@ -158,17 +158,38 @@ test.describe('portrait phone holds', () => {
       const notice = page.locator('[data-analytics-banner]');
       await expect(notice).toBeVisible();
       await expect(terminal).toHaveCSS('position', 'sticky');
+      await expect(terminal).toHaveAttribute('data-terminal', 'waiting');
       await terminal.evaluate(el => {
+        const playback = window.__costPlayback = { start: null, order: [] };
+        const command = el.querySelector('.typed');
+        const status = el.querySelector('.bigout .ok');
+        const detail = el.querySelector('.bigout .design');
+        // Capture the short initial state in the page before a slow runner can miss it.
+        const observer = new MutationObserver(() => {
+          playback.start = {
+            state: el.dataset.terminal,
+            opacity: getComputedStyle(status).opacity,
+            y: el.getBoundingClientRect().top,
+            pin: parseFloat(getComputedStyle(el).top),
+          };
+          observer.disconnect();
+        });
+        observer.observe(el, { attributes: true, attributeFilter: ['data-terminal'] });
+        command.addEventListener('animationend', () => playback.order.push('command'), { once: true });
+        status.addEventListener('animationstart', () => playback.order.push('status'), { once: true });
+        detail.addEventListener('animationstart', () => playback.order.push('detail'), { once: true });
         const rect = el.getBoundingClientRect();
         const noticeTop = document.querySelector('[data-analytics-banner]').getBoundingClientRect().top;
         scrollTo({ top: scrollY + rect.bottom - noticeTop + 24, behavior: 'instant' });
       });
-      await expect(terminal).toHaveAttribute('data-terminal', 'playing');
-      await expect(terminal.locator('.bigout .ok')).toHaveCSS('opacity', '0');
-      const size = await terminal.boundingBox();
-      const pin = parseFloat(await terminal.evaluate(el => getComputedStyle(el).top));
-      expect(size.y).toBeGreaterThan(pin + 20);
+      const start = () => page.evaluate(() => window.__costPlayback.start);
+      await expect.poll(start).not.toBeNull();
+      const first = await start();
+      expect(first.state).toBe('playing');
+      expect(first.opacity).toBe('0');
+      expect(first.y).toBeGreaterThan(first.pin + 20);
       await expect(terminal).toHaveAttribute('data-terminal', 'done');
+      expect(await page.evaluate(() => window.__costPlayback.order)).toEqual(['command', 'status', 'detail']);
       await expect(terminal.locator('.bigout .design')).toHaveCSS('opacity', '1');
       const command = await terminal.locator('.typed').evaluate(el => [el.clientWidth, el.scrollWidth]);
       expect(command[0]).toBeGreaterThanOrEqual(command[1] - 1);
