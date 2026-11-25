@@ -270,6 +270,30 @@ test('phone: the console and art hold together above the copy, then release', as
   await expect.poll(async () => (await intro.boundingBox()).y).toBeLessThan(start - 40);
 });
 
+test('phone: enabling the intro hold leaves the copy in place', async ({ page }) => {
+  test.skip(page.viewportSize().width > 760, 'phone projects');
+  let resume;
+  const delayed = new Promise(resolve => { resume = resolve; });
+  await page.route('**/_astro/Hero.astro_astro_type_script_index_0_lang.*.js', async route => {
+    await delayed;
+    await route.continue();
+  });
+  await page.goto('/', { waitUntil: 'commit' });
+  const intro = page.locator('.hero-intro');
+  const copyGap = () => page.locator('.hero-copy').evaluate(el =>
+    el.getBoundingClientRect().top - document.querySelector('.hero-intro').getBoundingClientRect().bottom);
+  let before;
+  try {
+    await expect(page.locator('.hero-art')).toHaveCSS('position', 'relative');
+    await expect(intro).toHaveCSS('position', 'static');
+    before = await copyGap();
+  } finally {
+    resume();
+  }
+  await expect(intro).toHaveCSS('position', 'sticky');
+  expect(Math.abs(await copyGap() - before)).toBeLessThan(1);
+});
+
 test('phone: the intro scrolls normally in short landscape and under reduced motion', async ({ page }) => {
   test.skip(page.viewportSize().width > 760, 'phone projects');
   await page.setViewportSize({ width: 844, height: 390 });

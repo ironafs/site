@@ -80,9 +80,9 @@ async function phoneProfile(page) {
 /** Records LCP, layout shifts (without recent input), long tasks and when the hero scene went live. */
 const observe = () => {
   window.__perf = { lcp: [], cls: 0, long: [], live: 0 };
-  // the element is recorded by what it is in the hero copy (its h1 id or the subline class), as intro.spec.mjs does
   const role = el => !el ? '?' : el.id === 'headline' && el.closest('#hero .hero-copy') ? 'hero h1'
-    : el.matches('#hero .hero-copy p.subline') ? 'hero subline' : el.tagName;
+    : el.matches('#hero .hero-copy p.subline') ? 'hero subline'
+    : el.matches('#hero .hero-art .hero-opening') ? 'hero opening' : el.tagName;
   new PerformanceObserver(list => { for (const e of list.getEntries()) window.__perf.lcp.push({ tag: e.element?.tagName ?? '?', role: role(e.element), t: e.startTime }); })
     .observe({ type: 'largest-contentful-paint', buffered: true });
   new PerformanceObserver(list => { for (const e of list.getEntries()) if (!e.hadRecentInput) window.__perf.cls += e.value; })
@@ -131,10 +131,10 @@ test('the hardware-renderer rule accepts only a named hardware GPU', () => {
 test.describe('phone profile (chromium-phone, 4x CPU, Fast 4G, first visit, 3D included)', () => {
   test.beforeEach(({}, info) => test.skip(!phone(info), 'the phone budgets: chromium-phone'));
 
-  // the LCP is the hero text (the h1 or the subline, as in intro.spec.mjs), not the 3D. No input: the LCP search runs through the whole
-  // intro, to its end (cooled) and 2 s past it. ?test keeps the scene running where its frame rate is below the
+  // The phone opens on the console and cold plate above the hero copy. With no input the LCP search runs through
+  // the whole intro, to its end (cooled) and 2 s past it. ?test keeps the scene running where its frame rate is below the
   // phone's floor (software GL): the profile is a mid-range phone, which holds the floor.
-  test('LCP within 2000 ms and the hero text, CLS within 0.05: a first visit with no input, through the whole intro', async ({ page, browser }, info) => {
+  test('LCP within 2000 ms for the hero, CLS within 0.05: a first visit with no input, through the whole intro', async ({ page, browser }, info) => {
     test.setTimeout(120_000);
     await warmUp(browser, info.project.use, { webgl: true });
     await page.addInitScript(observe);
@@ -146,7 +146,7 @@ test.describe('phone profile (chromium-phone, 4x CPU, Fast 4G, first visit, 3D i
     const lcp = perf.lcp.at(-1);
     console.log(`phone budgets: LCP ${lcp.role} at ${Math.round(lcp.t)} ms (${perf.lcp.length} entries); CLS ${perf.cls.toFixed(4)}; the scene live at ${Math.round(perf.live)} ms`);
     expect(perf.live, 'the 3D was included: the scene drew').toBeGreaterThan(0);
-    expect(['hero h1', 'hero subline'], 'the hero text is the largest paint through the intro').toContain(lcp.role);
+    expect(['hero opening', 'hero h1', 'hero subline'], 'the opening artwork or headline copy is the largest paint through the intro').toContain(lcp.role);
     expect(lcp.t, 'LCP').toBeLessThanOrEqual(2000);
     expect(perf.cls, 'CLS').toBeLessThanOrEqual(0.05);
   });

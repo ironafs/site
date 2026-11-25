@@ -397,22 +397,17 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
     const idle = (run: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(run, { timeout: 1000 }) : window.setTimeout(run, 50));
     return new Promise<void>(resolve => idle(() => {
       if (ended) return resolve();
-      const hidden: Object3D[] = [];
-      scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
-      if (!hidden.length) return resolve();
-      // compile() reads visibility now, synchronously: no frame is drawn before it is restored. A throw (compileAsync
-      // compiles before it returns its promise) or a rejection is a failed compile: the next frame ends the scene.
-      let warmed: Promise<unknown>;
-      try {
-        warmed = renderer.compileAsync(scene, camera).catch(() => { shaderFailed = true; });
-      } catch {
-        shaderFailed = true;
-        warmed = Promise.resolve();
-      } finally {
-        for (const o of hidden) o.visible = false;
-      }
-      window.setTimeout(resolve, WARM_TIMEOUT_MS);
-      void warmed.then(() => resolve());
+      const deadline = window.setTimeout(resolve, WARM_TIMEOUT_MS);
+      void (async () => {
+        if (phoneTier) {
+          await compilePhoneMaterials(false);
+        } else {
+          await renderer.compileAsync(scene, camera);
+        }
+      })().catch(() => { if (!ended) shaderFailed = true; }).finally(() => {
+        window.clearTimeout(deadline);
+        resolve();
+      });
     }));
   }
 
@@ -429,17 +424,15 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
     modules.length = 0;
   }
 
-  async function compileFirstFrame(): Promise<void> {
-    if (!phoneTier) {
-      await renderer.compileAsync(scene, camera);
-      return;
-    }
-    // Shader preparation can block synchronously before compileAsync returns.
-    // Prepare each material with the whole scene's lighting, yielding for touch input between them.
+  async function compilePhoneMaterials(visible: boolean): Promise<void> {
+    // Three's compileAsync includes hidden meshes. Select the meshes first and compile each material with
+    // the scene's lighting, yielding between them so touch input can paint during the warm-up.
+    const shown = new Set<Object3D>();
+    scene.traverseVisible(object => { shown.add(object); });
     const objects = new Map<Mesh['material'], Object3D>();
     scene.traverse(object => {
       const mesh = object as Mesh;
-      if (mesh.material) objects.set(mesh.material, object);
+      if (mesh.material && shown.has(object) === visible) objects.set(mesh.material, object);
     });
     for (const object of objects.values()) {
       await pause();
@@ -497,15 +490,14 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
       if (running || ended) return;
       running = true;
       ctx.setPhase(ctx.startAt === 'finished' ? 'cooled' : 'chip');
-      // compile what the first frame shows before it, so the intro never starts with a hitch (the rest: warmLater).
-      // compileAsync compiles synchronously before it returns its promise: a throw there, or a rejection, ends the
-      // scene; the loop starts only once it has settled.
+      // The phone warms hidden materials after the first frame. The desktop prepares the scene together.
       const failed = (error: unknown) => {
         console.warn('IronAFS hero: the 3D scene failed to compile; showing the poster instead.', error);
         dispose();
       };
       try {
-        void compileFirstFrame().then(() => { compiled = true; sync(); }, error => { if (!ended) failed(error); });
+        const firstFrame = phoneTier ? compilePhoneMaterials(true) : renderer.compileAsync(scene, camera);
+        void firstFrame.then(() => { compiled = true; sync(); }, error => { if (!ended) failed(error); });
       } catch (error) {
         failed(error);
       }

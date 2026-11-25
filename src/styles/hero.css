@@ -243,8 +243,9 @@ html[data-hero-paused] #hero .caret { animation: none; }
   .hero::after { display: none; }
 }
 
-@media (max-width: 899px) and (min-height: 620px) and (orientation: portrait) and (prefers-reduced-motion: no-preference) {
-  html:not(.static) #hero[data-mobile-hold] .hero-intro-track::after {
+@media (max-width: 899px) and (min-height: 620px) and (orientation: portrait) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  /* Set the scroll distance on first paint. The fit check only controls stickiness. */
+  html:not(.static) #hero .hero-intro-track::after {
     content: '';
     display: block;
     height: clamp(96px, 16svh, 150px);

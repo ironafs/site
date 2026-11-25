@@ -1,4 +1,3 @@
-import { story } from '../../content/story';
 // The #design OS tabs: the ARIA tabs pattern, only while the enhancement is on.
 // Scrolling moves through the three OSes (each owns a third of the pinned scroll, the same thirds the connector
 // phases use); a click or an arrow key scrolls to the middle of that OS's third; aria-selected, the roving
@@ -16,7 +15,7 @@ export function initOsTabs(section: HTMLElement, on: boolean): (on: boolean) => 
   const scenes = [...section.querySelectorAll<HTMLElement>('.scene')];
   if (!tablist || tabs.length !== panels.length || panels.length !== scenes.length) return () => {};
   const count = tabs.length;
-  const marker = section.querySelector<HTMLElement>('.step-progress');
+  const marker = section.querySelector<HTMLElement>('[data-step-current]');
   let stop: (() => void) | null = null;
   let frame = 0;
   // the tab chosen by a click or a key, held until the scroll reaches its third (or gives up)
@@ -36,7 +35,7 @@ export function initOsTabs(section: HTMLElement, on: boolean): (on: boolean) => 
     const step = Math.min(4, Math.floor((position - active) * 4) + 1);
     section.dataset.step = String(step);
     section.dataset.platform = String(active);
-    if (marker?.firstChild) marker.firstChild.nodeValue = `${story.how.stepLabel} ${step} ${story.how.stepOf} 4`;
+    if (marker) marker.textContent = String(step);
     panels.forEach((panel, i) => panel.querySelectorAll('.short > li').forEach((li, j) => {
       li.classList.toggle('is-current', i === active && j === step - 2);
     }));

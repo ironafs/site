@@ -24,7 +24,7 @@ const { how } = story;
     ))}
     <span class="tabs-cue">{how.scrollCue}</span>
   </div>
-  <p class="step-progress" aria-live="off">{how.stepLabel} 1 {how.stepOf} 4</p>
+  <p class="step-progress" aria-live="off">{how.stepLabel} <span data-step-current>1</span> {how.stepOf} 4</p>
   <div class="how-oses">
     {how.os.map((os, i) => (
       <div class="how-os" data-os={os.os}>

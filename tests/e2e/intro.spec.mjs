@@ -180,24 +180,22 @@ test('the poster carries width and height (no layout shift) and the console stay
 
 const lcpObserver = () => {
   window.__lcp = [];
-  // the element is recorded by what it is in the hero copy (its h1 id or the subline class), not only by its tag
   const role = el => !el ? '?' : el.id === 'headline' && el.closest('#hero .hero-copy') ? 'hero h1'
-    : el.matches('#hero .hero-copy p.subline') ? 'hero subline' : el.tagName;
+    : el.matches('#hero .hero-copy p.subline') ? 'hero subline'
+    : el.matches('#hero .hero-art .hero-opening') ? 'hero opening' : el.tagName;
   new PerformanceObserver(list => { for (const e of list.getEntries()) window.__lcp.push({ tag: e.element?.tagName ?? '?', role: role(e.element), t: e.startTime }); })
     .observe({ type: 'largest-contentful-paint', buffered: true });
 };
 const phoneOnly = (browserName, info) => browserName !== 'chromium' || info.project.name !== 'chromium-phone';
 
-// The first screen's largest paint is the hero's text, never the 3D canvas, the poster or anything outside the hero
-// copy. With the headline block first on phones, the subline can be larger than the h1: either one is right.
-test('first visit: the largest contentful paint on the phone profile is the hero text (h1 or subline)', async ({ page, browser, browserName }, info) => {
+test('first visit: the largest contentful paint on the phone profile is the opening artwork or headline copy', async ({ page, browser, browserName }, info) => {
   test.skip(phoneOnly(browserName, info), 'LCP API: chromium phone');
   await warmUp(browser, info.project.use);
   await page.addInitScript(lcpObserver);
   await page.goto('/');
   await page.waitForTimeout(3000);
   await page.evaluate(() => document.body.click());
-  expect(['hero h1', 'hero subline']).toContain((await page.evaluate(() => window.__lcp)).at(-1).role);
+  expect(['hero opening', 'hero h1', 'hero subline']).toContain((await page.evaluate(() => window.__lcp)).at(-1).role);
 });
 
 for (const mode of ['return visit', 'reduced motion']) {

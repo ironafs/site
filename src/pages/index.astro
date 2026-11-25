@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import openingPhone from '../assets/hero/opening-phone.webp?url';
 import Hero from '../components/Hero.astro';
 import Built from '../components/Built.astro';
 import Follow from '../components/Follow.astro';
@@ -17,6 +18,7 @@ import StatusSection from '../components/story/StatusSection.astro';
 // The story in page order.
 ---
 <Base>
+  <link slot="head" rel="preload" as="image" href={openingPhone} fetchpriority="high" media="(max-width: 899px) and (prefers-reduced-motion: no-preference), (pointer: coarse) and (prefers-reduced-motion: no-preference)" />
   <main id="main">
     <Hero />
 
