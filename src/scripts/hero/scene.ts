@@ -11,8 +11,10 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 
-export type Phase = 'chip' | 'drop' | 'melt' | 'cooled';
+export type Phase = 'chip' | 'drop' | 'heating' | 'melt' | 'cooled';
 export type Tier = 'desktop' | 'phone';
 /** 'intro': the whole sequence from the chip alone; 'finished': straight to the cooled word at rest (a return visit). */
 export type StartAt = 'intro' | 'finished';
@@ -190,6 +192,11 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
   const phoneTier = opts.tier === 'phone';
 
   await pause(); // the renderer and its context
+  if (phoneTier && !document.hidden) {
+    // Creating the environment draws synchronously. Give controls a frame to paint before that work starts.
+    await new Promise<void>(resolve => window.requestAnimationFrame(() => window.setTimeout(resolve, 0)));
+    await pause();
+  }
   const scene = new Scene();
   scene.background = new Color(BG);
   scene.fog = new Fog(BG, 16, 34);
@@ -233,6 +240,8 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
   const bloom = new UnrealBloomPass(new Vector2(1, 1), phoneTier ? 0.36 : 0.5, phoneTier ? 0.22 : 0.35, 0.85);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
+  const edgeSmoothing = phoneTier ? null : new ShaderPass(FXAAShader);
+  if (edgeSmoothing) composer.addPass(edgeSmoothing);
   await pause();
 
   let wordWidth = DEFAULT_WORD_WIDTH;
@@ -297,6 +306,10 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
     const h = Math.max(1, canvas.clientHeight);
     renderer.setSize(w, h, false); // false: the stylesheet sizes the canvas (no inline style under the CSP)
     composer.setSize(w, h);
+    if (edgeSmoothing) {
+      const dpr = renderer.getPixelRatio();
+      edgeSmoothing.uniforms.resolution.value.set(1 / (w * dpr), 1 / (h * dpr));
+    }
     bloom.setSize(phoneTier ? w / 2 : w, phoneTier ? h / 2 : h); // phones: bloom at half resolution
     camera.aspect = w / h;
     frame();
@@ -416,6 +429,25 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
     modules.length = 0;
   }
 
+  async function compileFirstFrame(): Promise<void> {
+    if (!phoneTier) {
+      await renderer.compileAsync(scene, camera);
+      return;
+    }
+    // Shader preparation can block synchronously before compileAsync returns.
+    // Prepare each material with the whole scene's lighting, yielding for touch input between them.
+    const objects = new Map<Mesh['material'], Object3D>();
+    scene.traverse(object => {
+      const mesh = object as Mesh;
+      if (mesh.material) objects.set(mesh.material, object);
+    });
+    for (const object of objects.values()) {
+      await pause();
+      await renderer.compileAsync(object, camera, scene);
+      if (shaderFailed) throw new Error('A hero shader failed to compile');
+    }
+  }
+
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -473,7 +505,7 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
         dispose();
       };
       try {
-        renderer.compileAsync(scene, camera).then(() => { compiled = true; sync(); }, failed);
+        void compileFirstFrame().then(() => { compiled = true; sync(); }, error => { if (!ended) failed(error); });
       } catch (error) {
         failed(error);
       }

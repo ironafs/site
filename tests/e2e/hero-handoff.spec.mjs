@@ -235,20 +235,49 @@ async function expectV1(page) {
   expect(order.chip.top, 'the licence chip after the subline').toBeGreaterThanOrEqual(order.sub.bottom - 1);
 }
 
-test('phone: the h1 is visible at the top, in v1\'s layout, the pill above the h1', async ({ page }) => {
+test('phone: the console and art hold together above the copy, then release', async ({ page }) => {
   test.skip(page.viewportSize().width > 760, 'phone projects');
   await page.goto('/');
   await expect(page.locator('.hero-pin')).not.toHaveClass(/story--flow/);
-  // the phone's first viewport holds the picture and the console; the h1 follows (v1)
-  expect(await page.locator('#hero').evaluate(el => getComputedStyle(el).position)).not.toBe('sticky');
+  await expect(page.locator('#hero')).not.toHaveCSS('position', 'sticky');
+  const intro = page.locator('.hero-intro');
+  await expect(intro).toHaveCSS('position', 'sticky');
   expect(await shown(page, '.hero h1')).toBe(1);
   await expect(page.locator('.hero-cue')).toBeHidden();
   const order = await page.evaluate(() => {
     const r = s => document.querySelector(s).getBoundingClientRect();
-    return { h1: r('.hero h1').top, sub: r('.hero .subline'), pill: r('.hero .pill') };
+    const notice = document.querySelector('.analytics-notice:not([hidden])');
+    return {
+      header: r('#site-header').bottom,
+      terminal: r('#hero .term'),
+      art: r('.hero-art'),
+      pill: r('.hero .pill'),
+      h1: r('.hero h1').top,
+      clearance: notice?.getBoundingClientRect().top ?? innerHeight,
+    };
   });
-  expect(order.pill.bottom, 'status pill above the h1 (v1)').toBeLessThanOrEqual(order.h1 + 1);
+  expect(order.terminal.top).toBeGreaterThanOrEqual(order.header - 1);
+  expect(Math.abs(order.terminal.bottom - order.art.top)).toBeLessThan(2);
+  expect(order.art.bottom).toBeLessThan(order.clearance);
+  expect(order.pill.top).toBeGreaterThan(order.art.bottom);
+  expect(order.pill.bottom).toBeLessThanOrEqual(order.h1 + 1);
   await expect(page.locator('.term-title')).toHaveText(TITLE);
+
+  const start = (await intro.boundingBox()).y;
+  await page.evaluate(() => scrollTo({ top: 86, behavior: 'instant' }));
+  await expect.poll(async () => Math.abs((await intro.boundingBox()).y - start)).toBeLessThan(2);
+  await page.evaluate(() => scrollTo({ top: 220, behavior: 'instant' }));
+  await expect.poll(async () => (await intro.boundingBox()).y).toBeLessThan(start - 40);
+});
+
+test('phone: the intro scrolls normally in short landscape and under reduced motion', async ({ page }) => {
+  test.skip(page.viewportSize().width > 760, 'phone projects');
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.goto('/');
+  await expect(page.locator('.hero-intro')).toHaveCSS('position', 'static');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('.hero-intro')).toHaveCSS('position', 'static');
 });
 
 test('.static: the h1 is visible at the top, in v1\'s layout', async ({ page }) => {

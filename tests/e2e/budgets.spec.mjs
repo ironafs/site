@@ -190,7 +190,7 @@ test.describe('phone profile (chromium-phone, 4x CPU, Fast 4G, first visit, 3D i
         if (window.__built || !document.querySelector('#hero canvas.hero-canvas')) return;
         window.__built = performance.now();
         window.__buildStarted();
-      }).observe(document.getElementById('hero'), { childList: true }));
+      }).observe(document.querySelector('#hero .hero-art'), { childList: true }));
     });
     await page.goto('/');
     const box = await page.locator('#menu-button').boundingBox();

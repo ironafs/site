@@ -7,6 +7,7 @@
 // ranges measured from the layout.
 import Section from './Section.astro';
 import Art from './Art.astro';
+import PhoneBeat from './PhoneBeat.astro';
 import '../../styles/story/cost.css';
 import drops from '../../assets/story/drops.png';
 import { story } from '../../content/story';
@@ -26,11 +27,11 @@ const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }
         <p class="lede">{windows.lede}</p>
         <p class="foot">{windows.foot}</p>
       </div>
-      <div class="vis">
+      <PhoneBeat><div class="vis">
         <ol class="pipe">
           {windows.steps.map((s, i) => <li class:list={['on', { warn: s.warn, branch: s.branch }]} data-step={i}>{s.mark && <><b aria-hidden="true">{s.mark}</b>{' '}</>}{s.text}</li>)}
         </ol>
-      </div>
+      </div></PhoneBeat>
     </article>
 
     <article class="scard" aria-labelledby="cost-macos">
@@ -40,7 +41,7 @@ const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }
         <p class="lede">{macos.lede}</p>
         <p class="foot">{macos.foot}</p>
       </div>
-      <div class="vis">
+      <PhoneBeat><div class="vis">
         <div class="mac">
           <p class="t">{dialog.title}</p>
           <p class="opt"><span class="r" aria-hidden="true"><i class="dot doff" data-step="2"></i></span>{dialog.full}</p>
@@ -51,7 +52,7 @@ const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }
         <ol class="steps">
           {macSteps.map(s => <li class="on" data-step={s.step}>{s.text}</li>)}
         </ol>
-      </div>
+      </div></PhoneBeat>
     </article>
 
     <article class="scard" aria-labelledby="cost-linux">
@@ -61,11 +62,11 @@ const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }
         <p class="lede">{linux.lede}</p>
         <p class="foot">{linux.foot}</p>
       </div>
-      <div class="vis">
+      <PhoneBeat><div class="vis">
         <pre class="term" data-illustrative="debian"><span class="ln on d" data-step="0">{linux.workflow.label}</span>{linux.workflow.lines.map((line, i) => (
           <span class:list={['ln', 'on', { 'e branch': line.tone === 'error', d: line.tone === 'dim' }]} data-step={i + 1}>{line.n && <><span class="p">{line.n}</span>{' '}</>}{line.text}</span>
         ))}</pre>
-      </div>
+      </div></PhoneBeat>
     </article>
 
     <article class="scard iron" aria-labelledby="cost-ironafs">
@@ -77,13 +78,13 @@ const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }
         <h3 id="cost-ironafs">{ironafs.heading}</h3>
         <p class="lede">{ironafs.lede}</p>
         {ironafs.foot && <p class="foot">{ironafs.foot}</p>}
-        <div class="afs">
+        <PhoneBeat><div class="afs">
           <p class="bigcmd"><span class="p">{ironafs.prompt} </span><span class="typed" data-step="0" data-span="3">{ironafs.command}</span><span class="cur" aria-hidden="true"></span></p>
           <p class="bigout">
             <span class="on ok" data-step="3">{ironafs.output.ok}</span>
             <span class="on design" data-step="4">{ironafs.output.design}</span>
           </p>
-        </div>
+        </div></PhoneBeat>
       </div>
     </article>
   </div>

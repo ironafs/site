@@ -205,7 +205,9 @@ for (const mode of ['static', 'default']) {
   });
 }
 
-test('phone: the phases are stacked at their final state, the cards in one column', async ({ page }) => {
+test('phone with reduced motion: the phases are stacked at their final state, the cards in one column', async ({ page }) => {
+  test.skip(page.viewportSize().width > 760, 'phone projects');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   test.skip(await enhanced(page), 'the phone and base layout');
   // both phases' text and panels, in reading order: phase 1 text, bars, phase 2 text, density

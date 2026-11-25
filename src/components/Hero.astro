@@ -15,34 +15,41 @@ import '../styles/hero.css';
 ---
 <div class="hero-pin">
 <section id="hero" class="hero" data-phase="cooled" aria-labelledby="headline">
-  <Picture
-    class="hero-poster"
-    src={poster}
-    formats={['avif', 'webp']}
-    widths={[960, 1440, 1920, 2880]}
-    sizes="100vw"
-    alt=""
-    width={2880}
-    height={1800}
-    fetchpriority="low"
-    loading="eager"
-    decoding="async"
-  />
   <div class="hero-inner">
-    <div class="term">
-      <div class="term-bar">
-        <i></i><i></i><i></i>
-        <span class="term-title">{ui.termTitle}</span>
-        <span class="term-label">{ui.console}</span>
-        <button id="hero-pause" class="replay hero-pause" type="button" aria-label={motion.pause} hidden><span class="hero-pause-icon" aria-hidden="true"></span></button>
-        <button id="replay" class="replay" type="button" aria-label={ui.replay}><span aria-hidden="true">↻</span></button>
-      </div>
-      <div id="console" class="console">
-        <div id="console-sr" class="sr-only">{CONSOLE_LINES.map(l => <div>{l.prefix}{l.text}{l.note}</div>)}</div>
-        <div id="console-typed" class="console-typed" aria-hidden="true">
-          {CONSOLE_LINES.map((l, i) => (
-            <div class={`line ${l.cls}`}><span class="pre">{l.prefix}</span><span class="msg">{l.text}</span>{l.note && <span class="note">{l.note}</span>}{i === CONSOLE_LINES.length - 1 && <span class="caret"></span>}</div>
-          ))}
+    <div class="hero-intro-track">
+      <div class="hero-intro">
+        <div class="term">
+          <div class="term-bar">
+            <i></i><i></i><i></i>
+            <span class="term-title">{ui.termTitle}</span>
+            <span class="term-label">{ui.console}</span>
+            <button id="hero-pause" class="replay hero-pause" type="button" aria-label={motion.pause} hidden><span class="hero-pause-icon" aria-hidden="true"></span></button>
+            <button id="replay" class="replay" type="button" aria-label={ui.replay}><span aria-hidden="true">↻</span></button>
+          </div>
+          <div id="console" class="console">
+            <div id="console-sr" class="sr-only">{CONSOLE_LINES.map(l => <div>{l.prefix}{l.text}{l.note}</div>)}</div>
+            <div id="console-typed" class="console-typed" aria-hidden="true">
+              {CONSOLE_LINES.map((l, i) => (
+                <div class={`line ${l.cls}`}><span class="pre">{l.prefix}</span><span class="msg">{l.text}</span>{l.note && <span class="note">{l.note}</span>}{i === CONSOLE_LINES.length - 1 && <span class="caret"></span>}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div class="hero-art">
+          <div class="hero-opening" aria-hidden="true"></div>
+          <Picture
+            class="hero-poster"
+            src={poster}
+            formats={['avif', 'webp']}
+            widths={[960, 1440, 1920, 2880]}
+            sizes="100vw"
+            alt=""
+            width={2880}
+            height={1800}
+            fetchpriority="low"
+            loading="eager"
+            decoding="async"
+          />
         </div>
       </div>
     </div>
@@ -58,12 +65,16 @@ import '../styles/hero.css';
   <script>
     import { initConsole } from '../scripts/console';
     import { startHeroWhenIdle } from '../scripts/hero/loader';
+    import { initMobileHeroHold } from '../scripts/hero/mobile-hold';
     import { initHeroPause } from '../scripts/hero/pause';
     import { guardFit, heroFits } from '../scripts/story/fit';
     // The loader first: it reads the head gate's data-intro before the console rewrites it.
     const hero = document.getElementById('hero');
     initHeroPause(document);
-    if (hero) startHeroWhenIdle(hero);
+    if (hero) {
+      startHeroWhenIdle(hero);
+      initMobileHeroHold(hero);
+    }
     initConsole(document);
     // pinned only on a desktop hero whose headline block fits below the risen word (fit.ts); otherwise the plain layout
     const pin = hero?.parentElement;

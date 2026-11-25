@@ -2,6 +2,7 @@ import { consoleLines } from '../content/expected.mjs';
 import { test, expect } from '@playwright/test';
 
 const LINES = consoleLines;
+const TRAY_TOP = 1.22;
 const noWebgl = () => test.info().project.name === 'chromium-nowebgl';
 const hero = page => page.locator('#hero');
 const posterOpacity = page => page.locator('img.hero-poster, .hero-poster img').first().evaluate(el => Number(getComputedStyle(el).opacity));
@@ -26,6 +27,31 @@ test('the canvas appears only after load, owns data-phase and sets data-scene', 
   await expect(canvas).toHaveAttribute('aria-hidden', 'true');
   await expect(hero(page)).toHaveAttribute('data-phase', 'drop', { timeout: 60_000 }); // only the scene writes drop: it owns the phase while live
   expect(errors).toEqual([]);
+});
+
+test('a first visit shows the cold plate while awaiting the first scene frame', async ({ page }) => {
+  let releaseScene;
+  const waiting = new Promise(resolve => { releaseScene = resolve; });
+  await page.route('**/_astro/scene.*.js', async route => {
+    await waiting;
+    await route.continue();
+  });
+  await page.goto('/?test', { waitUntil: 'domcontentloaded' });
+  const opening = hero(page).locator('.hero-opening');
+  try {
+    await expect(opening).toBeVisible();
+    const width = await opening.evaluate(async el => {
+      const image = new Image();
+      image.src = getComputedStyle(el).backgroundImage.slice(5, -2);
+      await image.decode();
+      return image.naturalWidth;
+    });
+    expect(width).toBeGreaterThan(0);
+    expect(await hero(page).getAttribute('data-scene')).toBeNull();
+  } finally {
+    releaseScene();
+  }
+  await expect(hero(page)).toHaveAttribute('data-scene', 'live', { timeout: 20_000 });
 });
 
 test('replay on a return visit plays the intro: a new scene from the chip, the poster hidden', async ({ page }) => {
@@ -125,7 +151,7 @@ test('a return visit starts the scene at the finished state: cooled at once, emb
             if (node.nodeName === 'CANVAS') window.__posterAtCanvas = getComputedStyle(h.querySelector('img.hero-poster, .hero-poster img')).opacity;
           }
         }
-      }).observe(h, { attributes: true, attributeFilter: ['data-phase'], childList: true });
+      }).observe(h, { attributes: true, attributeFilter: ['data-phase'], childList: true, subtree: true });
       new MutationObserver(() => { window.__typed++; }).observe(document.getElementById('console-typed'), { subtree: true, childList: true, characterData: true });
     });
   });
@@ -137,7 +163,9 @@ test('a return visit starts the scene at the finished state: cooled at once, emb
   expect(Number(await hero(page).getAttribute('data-t-cooled'))).toBeLessThan(0.2);
   await expect.poll(async () => JSON.parse(await hero(page).getAttribute('data-embers'))[0]).toBeGreaterThan(0.5);
   expect(await hero(page).getAttribute('data-pool')).toBe('0');
-  for (const y of JSON.parse(await hero(page).getAttribute('data-base'))) expect(Math.abs(y)).toBeLessThanOrEqual(0.01);
+  const bases = JSON.parse(await hero(page).getAttribute('data-base'));
+  expect(bases).toHaveLength(7);
+  for (const y of bases) expect(Math.abs(y - TRAY_TOP)).toBeLessThanOrEqual(0.01);
   await page.waitForTimeout(1500);
   await expect(hero(page)).toHaveAttribute('data-phase', 'cooled');
   expect(await page.evaluate(() => window.__phases.filter(p => p !== 'cooled'))).toEqual([]);

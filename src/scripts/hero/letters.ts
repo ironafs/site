@@ -24,7 +24,15 @@ const DROP_HEIGHT = 10;
 const TRAIL = 64; // the heat trail: recent pointer contacts on the iron (world position + time)
 
 /** A letter's weld band: its top (world y, 0 = none) and its glow (1 hot, 0 cooled). */
-export type Weld = { top: { value: number }; glow: { value: number } };
+export type Weld = { top: { value: number }; glow: { value: number }; base: { value: number } };
+export type CastingWord = {
+  base: number;
+  level: { value: number };
+  heat: { value: number };
+  hideUnfilled?: boolean;
+  cutEdges?: boolean;
+};
+export type CutProfile = { outline: Vector2[]; counters: Vector2[][] };
 
 type Letter = {
   mesh: Mesh;
@@ -56,6 +64,7 @@ export type Letters = SceneModule & {
   readonly forgeIntensity: number;
   /** Each letter's x, footprint half-width and weld band (melt.ts drives the band). */
   readonly feet: ReadonlyArray<{ x: number; half: number; weld: Weld }>;
+  readonly cutProfiles: ReadonlyArray<ReadonlyArray<CutProfile>>;
   /** The heat each landed letter eases towards (0 = cold iron; the melt warms the letters it is eating into). */
   heatTo: number[];
   /** The pointer in normalised device coordinates while it is over the hero, else null (the embers follow it). */
@@ -129,6 +138,16 @@ const easeOutBounce = (t: number) => {
   return n * (t -= 2.625 / d) * t + 0.984375;
 };
 
+function firmDrop(p: number): number {
+  const contact = 0.86;
+  if (p <= contact) return p * p;
+  const u = (p - contact) / (1 - contact);
+  const contactHeight = contact * contact;
+  const contactSpeed = 2 * contact * (1 - contact);
+  return contactHeight + (1 - contactHeight) * u * u * (3 - 2 * u)
+    + contactSpeed * u * (1 - u) * (1 - u);
+}
+
 export type LetterMaterialOptions = {
   /** The shared iron maps (ironTextures): each material samples its own clones of them. */
   iron: IronTextures;
@@ -154,11 +173,20 @@ export function makeLetterMaterial({ iron, envMap, index }: LetterMaterialOption
 
 const INTERACTIVE = 'a, button, input, textarea, select, summary, label, [role="button"], [role="menuitem"]';
 
-export async function createLetters(ctx: SceneContext): Promise<Letters> {
+export async function createLetters(
+  ctx: SceneContext,
+  firstDrop = CHIP_ALONE_S,
+  { firmLanding = false, casting, rustProgress }: {
+    firmLanding?: boolean;
+    casting?: CastingWord;
+    rustProgress?: { value: number };
+  } = {},
+): Promise<Letters> {
   const phone = ctx.tier === 'phone';
+  const castIronFinish = rustProgress !== undefined;
   const { scene, camera } = ctx;
   const canvas = ctx.renderer.domElement;
-  const hero = canvas.parentElement;
+  const hero = canvas.closest<HTMLElement>('#hero') ?? canvas.parentElement;
 
   // ---- the heat trail: the pointer warms the iron where it passes (desktop; a touch screen has no hover)
   const trail = Array.from({ length: TRAIL }, () => new Vector4(0, 0, 0, -999));
@@ -168,13 +196,18 @@ export async function createLetters(ctx: SceneContext): Promise<Letters> {
   // sets each letter's band top and glow): dark glossy metal under a wavy edge, glowing while it is hot.
   const patch = (m: MeshStandardMaterial, weld: Weld) => {
     m.onBeforeCompile = sh => {
-      Object.assign(sh.uniforms, shared, { uWeld: weld.top, uWGlow: weld.glow });
+      Object.assign(sh.uniforms, shared, { uWeld: weld.top, uWGlow: weld.glow, uWeldBase: weld.base });
+      if (rustProgress) sh.uniforms.uRustProgress = rustProgress;
+      if (casting) Object.assign(sh.uniforms, { uCastLevel: casting.level, uCastHeat: casting.heat });
       sh.vertexShader = sh.vertexShader
-        .replace('#include <common>', '#include <common>\nvarying vec3 vW;')
-        .replace('#include <project_vertex>', '#include <project_vertex>\nvW = (modelMatrix*vec4(transformed,1.)).xyz;');
+        .replace('#include <common>', `#include <common>\nvarying vec3 vW; ${castIronFinish ? 'varying float vLetterHeight;' : ''}`)
+        .replace('#include <project_vertex>', `#include <project_vertex>\nvW = (modelMatrix*vec4(transformed,1.)).xyz;
+          ${castIronFinish ? 'vLetterHeight = transformed.y;' : ''}`);
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', `#include <common>
-          varying vec3 vW; uniform vec4 uTrail[${TRAIL}]; uniform float uNow, uWeld, uWGlow;
+          varying vec3 vW; uniform vec4 uTrail[${TRAIL}]; uniform float uNow, uWeld, uWGlow, uWeldBase;
+          ${castIronFinish ? 'varying float vLetterHeight; uniform float uRustProgress;' : ''}
+          ${casting ? 'uniform float uCastLevel, uCastHeat;' : ''}
           float gHeat, gClean, gWB;
           void trailField(){
             gHeat = 0.; gClean = 0.;
@@ -187,22 +220,56 @@ export async function createLetters(ctx: SceneContext): Promise<Letters> {
             }`}
           }`)
         .replace('#include <map_fragment>', `#include <map_fragment>
+          ${casting ? `float castFill = uCastLevel - vW.y + .025*sin(vW.x*14. - uNow*8.) + .014*sin(vW.z*23.+vW.x*4.);
+          ${casting.hideUnfilled ? 'if (castFill < 0.) discard;' : ''}
+          float castSolid = smoothstep(-.026, .026, castFill);
+          float hotEdge = castSolid * (1. - smoothstep(.01, .13, castFill));` : ''}
           trailField();
           float rustAmt = smoothstep(.03,.14, diffuseColor.r - diffuseColor.b);
+          ${castIronFinish ? `
+          float heightOrder = 1. - clamp(vLetterHeight / 1.20, 0., 1.);
+          float variation = .5 + .5 * sin(vW.x * 11. + sin(vLetterHeight * 16.) * 2. + vW.z * 7.);
+          float oxidationOrder = .23 + .37 * heightOrder + .19 * variation;
+          float oxidation = smoothstep(oxidationOrder - .15, oxidationOrder + .15, uRustProgress);
+          vec3 iron = vec3(dot(diffuseColor.rgb, vec3(.24, .65, .11))) * vec3(.97, 1., 1.05);
+          diffuseColor.rgb = mix(iron, diffuseColor.rgb, oxidation);
+          rustAmt *= oxidation;
+          ` : ''}
           diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.62,.64,.67), gClean*(.35 + .65*rustAmt));
+          ${castIronFinish ? `
+          float fillet = max(uWeld - uWeldBase, 0.);
+          float roughEdge = .74 + .30*sin(vW.x*43. + vW.z*15.) + .20*sin(vW.x*16. - vW.z*29.);
+          float ridge = max(.018, fillet * roughEdge);
+          gWB = fillet > .001 ? 1. - smoothstep(ridge * .15, ridge, vW.y - uWeldBase) : 0.;
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.095,.079,.067), gWB * .82);` : `
           float wave = .06*sin(vW.x*11.+1.3) + .04*sin(vW.x*23.+vW.z*7.) + .03*sin(vW.z*17.);
           gWB = uWeld > .001 ? 1. - smoothstep(uWeld + wave - .07, uWeld + wave, vW.y) : 0.;
-          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.075,.078,.085), gWB);`)
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.075,.078,.085), gWB);`}
+          ${casting ? 'diffuseColor.rgb = mix(vec3(.0027,.0019,.0015), diffuseColor.rgb, castSolid);' : ''}`)
         .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-          roughnessFactor = mix(mix(roughnessFactor, .16, gClean), .2, gWB);`)
+          roughnessFactor = mix(mix(roughnessFactor, .16, gClean), ${castIronFinish ? '.43' : '.2'}, gWB);
+          ${casting ? 'roughnessFactor = mix(.96, roughnessFactor, castSolid);' : ''}`)
         .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
-          metalnessFactor = mix(clamp(mix(metalnessFactor, 1., gClean) - gHeat*.6, 0., 1.), 1., gWB);`)
+          ${castIronFinish ? 'metalnessFactor = mix(metalnessFactor, .25, rustAmt * .76);' : ''}
+          metalnessFactor = mix(clamp(mix(metalnessFactor, 1., gClean) - gHeat*.6, 0., 1.), ${castIronFinish ? '.79' : '1.'}, gWB);
+          ${casting ? 'metalnessFactor *= castSolid;' : ''}`)
         .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+          ${castIronFinish ? `
+          float grazing = 1. - abs(dot(nonPerturbedNormal, normalize(vViewPosition)));
+          float hotFoot = 1. - smoothstep(.027, .265, vLetterHeight + .032 * sin(vW.x * 25. + vW.z * 16.));
+          float hotBevel = .89 * smoothstep(.05, .68, grazing);
+          float rimHeat = .058 + max(hotBevel, .88 * hotFoot);
+          totalEmissiveRadiance *= mix(1., rimHeat, uRustProgress);
+          ` : ''}
           vec3 hc = mix(vec3(.9,.12,.01), vec3(1.,.55,.12), smoothstep(.4,.9,gHeat));
           hc = mix(hc, vec3(1.,.9,.6), smoothstep(.85,1.,gHeat));
           totalEmissiveRadiance += hc * pow(gHeat,1.6) * .55;
           totalEmissiveRadiance = mix(totalEmissiveRadiance, vec3(0.), gWB);
-          totalEmissiveRadiance += vec3(1.,.3,.04) * gWB * uWGlow * (1.1 - .6*clamp(vW.y/max(uWeld,.01),0.,1.));`);
+          totalEmissiveRadiance += vec3(1.,.3,.04) * gWB * uWGlow * (1.1 - .6*clamp((vW.y-uWeldBase)/max(uWeld-uWeldBase,.01),0.,1.));
+          ${casting ? `float castHeat = castSolid * uCastHeat * (.74 + .26*sin(vW.x*10. - vW.y*13. + uNow*3.));
+          totalEmissiveRadiance += vec3(1.,.20,.026) * castHeat
+            * ${casting.cutEdges ? '(.025 + .78*(1. - abs(normal.z)))' : '1.18'};
+          totalEmissiveRadiance += vec3(1.,.67,.27) * hotEdge * uCastHeat * 1.29;` : ''}`);
     };
   };
 
@@ -235,15 +302,24 @@ export async function createLetters(ctx: SceneContext): Promise<Letters> {
   const textures: CanvasTexture[] = [iron.map, iron.rmap];
   const materials: Material[] = [];
   const parts: Array<{ g: TextGeometry; x: number; adv: number }> = [];
+  const cutProfiles: CutProfile[][] = [];
   let cursor = 0;
   for (const ch of WORD) {
     const adv = (typeface.glyphs[ch as keyof typeof typeface.glyphs].ha * SIZE) / typeface.resolution;
     const g = new TextGeometry(ch, {
-      font, size: SIZE, depth: 0.5, curveSegments: phone ? 8 : 12,
-      bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.04, bevelSegments: phone ? 3 : 6,
+      font, size: SIZE, depth: 0.5, curveSegments: phone && !firmLanding ? 8 : 12,
+      bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.04, bevelSegments: phone && !firmLanding ? 3 : 6,
     });
     g.computeBoundingBox();
     const bb = g.boundingBox!;
+    if (casting?.cutEdges) {
+      const lower = bb.min.y;
+      const placed = (points: Vector2[]) => points.map(p => p.add(new Vector2(cursor, -lower)));
+      cutProfiles.push(font.generateShapes(ch, SIZE).map(shape => ({
+        outline: placed(shape.getPoints(18)),
+        counters: shape.holes.map(hole => placed(hole.getPoints(18))),
+      })));
+    }
     g.translate(-adv / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2); // pivot: the glyph's advance centre, on the floor
     g.computeBoundingBox();
     g.computeVertexNormals();
@@ -251,22 +327,38 @@ export async function createLetters(ctx: SceneContext): Promise<Letters> {
     cursor += adv + TRACK;
   }
   const total = cursor - TRACK;
+  for (const profiles of cutProfiles) {
+    for (const { outline, counters } of profiles) {
+      for (const path of [outline, ...counters]) {
+        for (const p of path) p.x -= total / 2;
+      }
+    }
+  }
   let chip: Chip | null = null;
   const letters: Letter[] = parts.map(({ g, x, adv }, i) => {
     // envMapIntensity only scales a material's own envMap (three r163+), so the letters carry the room map
     const { mat, textures: own } = makeLetterMaterial({ iron, envMap: ctx.envMap, index: i });
+    if (castIronFinish) {
+      mat.bumpMap = mat.roughnessMap;
+      mat.bumpScale = 0.024;
+      mat.envMapIntensity = 1.43;
+    }
     textures.push(...own);
-    const weld: Weld = { top: { value: 0 }, glow: { value: 0 } };
+    const weld: Weld = { top: { value: 0 }, glow: { value: 0 }, base: { value: 0 } };
     patch(mat, weld);
     materials.push(mat);
     const mesh = new Mesh(g, mat);
-    mesh.castShadow = mesh.receiveShadow = true;
+    mesh.castShadow = !casting;
+    mesh.receiveShadow = true;
     mesh.userData.i = i;
     const bx = x - total / 2;
     mesh.position.set(bx, 12, 0);
     scene.add(mesh);
     const half = adv / 2 - 0.08; // the glyph's footprint, a little inside its advance
-    return { mesh, mat, weld, bx, half, start: CHIP_ALONE_S + i * LETTER_GAP_S, landed: false, heat: 0.85, squash: 0, ring: 0, y: 12, rest: 0 };
+    return {
+      mesh, mat, weld, bx, half, start: casting ? -1000 : firstDrop + i * LETTER_GAP_S,
+      landed: !!casting, heat: casting ? 0 : 0.85, squash: 0, ring: 0, y: 12, rest: 0,
+    };
   });
 
   const forgeLight = new PointLight(0xff5a14, 0, 8, 1.8);
@@ -297,9 +389,12 @@ export async function createLetters(ctx: SceneContext): Promise<Letters> {
     if (!hit) return;
     const L = letters[hit.object.userData.i];
     if (!L.landed) return;
-    L.heat = 0.8; L.squash = 1;
-    ctx.shake(0.2);
-    for (const o of letters) if (o !== L) o.ring = Math.max(o.ring, 0.5 / (1 + Math.abs(o.bx - L.bx)));
+    L.heat = 0.8;
+    if (!firmLanding) {
+      L.squash = 1;
+      ctx.shake(0.2);
+      for (const o of letters) if (o !== L) o.ring = Math.max(o.ring, 0.5 / (1 + Math.abs(o.bx - L.bx)));
+    }
     emit(hit.point, phone ? 90 : 220, 1.25, 0.3);
   };
   window.addEventListener('pointermove', onMove);
@@ -307,15 +402,20 @@ export async function createLetters(ctx: SceneContext): Promise<Letters> {
   window.addEventListener('pointerout', onOut);
 
   const hot = new Color(), cRed = new Color(1, 0.2, 0.02), cWhite = new Color(1, 0.85, 0.55);
+  const cHotOrange = new Color(1, 0.66, 0.31);
+  const cAmber = new Color(1, 0.43, 0.085);
   const corner = new Vector3();
   const lightOffset = new Vector3(0, 0, 0.6);
   let landedAt: number | null = null;
   const heatTo = letters.map(() => 0);
   const feet = letters.map(L => ({ x: L.bx, half: L.half, weld: L.weld }));
+  const fall = firmLanding ? 0.67 : FALL_S;
+  const dropHeight = firmLanding ? 4.25 : DROP_HEIGHT;
 
   return {
     total,
     feet,
+    cutProfiles,
     heatTo,
     get pointer() { return overHero ? ndc : null; },
     sparks: emit,
@@ -376,12 +476,12 @@ export async function createLetters(ctx: SceneContext): Promise<Letters> {
       } else forgeLight.intensity *= 0.9;
 
       for (const L of letters) {
-        const p = Math.min(Math.max((t - L.start) / FALL_S, 0), 1);
-        L.rest = chip ? chipTopUnder({ x: L.bx, half: L.half }, chip.halfWidth, chip.topAt) : 0;
-        L.y = L.rest + (1 - easeOutBounce(p)) * DROP_HEIGHT;
+        const p = Math.min(Math.max((t - L.start) / fall, 0), 1);
+        L.rest = chip ? chipTopUnder({ x: L.bx, half: L.half }, chip.halfWidth, chip.topAt) : (casting?.base ?? 0);
+        L.y = L.rest + (1 - (firmLanding ? firmDrop(p) : easeOutBounce(p))) * dropHeight;
         if (p >= 1 && !L.landed) {
           L.landed = true;
-          ctx.shake(0.1);
+          if (!firmLanding) ctx.shake(0.1);
           emit(new Vector3(L.bx, L.rest + 0.05, 0), phone ? 30 : 60, 0.8, 0.9);
           if (landedAt === null && letters.every(o => o.landed)) landedAt = t;
         }
@@ -392,9 +492,11 @@ export async function createLetters(ctx: SceneContext): Promise<Letters> {
         L.mesh.scale.set(1 + L.squash * 0.16 + wob, 1 - L.squash * 0.22 - wob, 1 + L.squash * 0.16);
         L.mesh.position.set(L.bx, L.y, 0);
         const k = Math.min(L.heat, 1.25);
-        hot.copy(cRed).lerp(cWhite, Math.min(Math.max(0, k - 0.6) / 0.65, 1));
-        L.mat.emissive.copy(hot).multiplyScalar(Math.pow(k, 1.7) * 1.6);
-        L.mat.color.setScalar(1 - Math.min(k, 1) * 0.85);
+        const oxide = rustProgress?.value ?? 0;
+        hot.copy(castIronFinish ? cHotOrange : cWhite).lerp(cAmber, oxide);
+        hot.lerp(cRed, 1 - Math.min(Math.max(0, k - 0.6) / 0.65, 1));
+        L.mat.emissive.copy(hot).multiplyScalar(Math.pow(k, 1.7) * (castIronFinish ? 1.25 - oxide * 0.29 : 1.6));
+        L.mat.color.setScalar(1 - Math.min(k, 1) * (0.85 - oxide * 0.59));
       }
 
       for (let i = 0; i < MAX; i++) {

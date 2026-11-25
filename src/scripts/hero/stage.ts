@@ -3,7 +3,7 @@
 // then (melted + 3.5 s) cooled. After that the scene stays live at rest: embers drift, a letter warms under
 // the pointer and takes a strike. A return visit starts at that finished state directly.
 import { Plane, Raycaster, Vector3 } from 'three';
-import { CHIP_TOP, createChip, LABEL_FONTS } from './chip';
+import { CHIP_TOP, createChip } from './chip';
 import { createEmbers } from './embers';
 import { createFire } from './fire';
 import { chipTopUnder } from './footprint';
@@ -13,17 +13,6 @@ import type { SceneContext, SceneModule } from './scene';
 
 const MELT_AFTER_LANDING_S = 0.35;
 const EMBERS_FADE_S = 2.5;
-const FONT_WAIT_MS = 2500;
-
-/** Loads the label's fonts before the scene is built (the label is drawn once, into a texture). Never rejects. */
-export async function preloadLabelFonts(): Promise<void> {
-  try {
-    const loads = Promise.all(LABEL_FONTS.map(font => document.fonts.load(font, 'kernel module')));
-    await Promise.race([loads, new Promise(resolve => setTimeout(resolve, FONT_WAIT_MS))]);
-  } catch {
-    // the label falls back to the system monospace
-  }
-}
 
 /**
  * The module factory for createScene. `hook`: the #hero element under ?test, which then shows the letters'

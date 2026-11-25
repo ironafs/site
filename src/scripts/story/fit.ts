@@ -12,7 +12,7 @@
 // Measured again on resize, after the fonts load, when a <details> in it opens or closes, and on a mode change.
 // Positions come from layout offsets: a phase on its way out is translated by its animation, but its layout box
 // is where it would sit. Inline fragments are measured relative to their first fragment, in the same layout box.
-import { storyEnhanced, onModeChange } from './mode';
+import { storyEnhanced, onModeChange, PHONE_STORY_QUERY, TABLET_STORY_QUERY } from './mode';
 
 export const FLOW = 'story--flow';
 export const SNUG = 'story--snug';
@@ -67,7 +67,11 @@ const headerBottom = () => document.getElementById('site-header')?.getBoundingCl
 
 /** The pinned stage's visible band: below the header, above the stage’s (one viewport’s) bottom. */
 export function stageBand(stage: HTMLElement): [number, number] {
-  return [headerBottom(), stage.clientHeight + stage.clientTop];
+  const bottom = stage.clientHeight + stage.clientTop;
+  if (!matchMedia(TABLET_STORY_QUERY).matches) return [headerBottom(), bottom];
+  const viewport = window.visualViewport;
+  const notice = parseFloat(getComputedStyle(stage).getPropertyValue('--analytics-clearance')) || 0;
+  return [headerBottom(), (viewport?.scale ?? 1) > 1.01 ? 0 : Math.min(bottom, viewport?.height ?? innerHeight) - notice];
 }
 
 /**
@@ -140,6 +144,32 @@ export function heroFits(pin: HTMLElement): boolean {
   return inside(copy.querySelectorAll<HTMLElement>(':scope > *'), hero, band.top, hero.clientHeight + hero.clientTop);
 }
 
+/** The phone stages sit below the header. Measure both phases above any fixed cookie notice. */
+export function phoneStoryFits(section: HTMLElement): boolean {
+  if (!matchMedia(PHONE_STORY_QUERY).matches) return true;
+  const viewport = window.visualViewport;
+  if ((viewport?.scale ?? 1) > 1.01) return false;
+  const stage = section.querySelector<HTMLElement>(':scope > .stage');
+  if (!stage) return false;
+  const height = Math.min(innerHeight, viewport?.height ?? innerHeight);
+  const clearance = parseFloat(getComputedStyle(stage).getPropertyValue('--analytics-clearance')) || 0;
+  const bottom = Math.min(stage.clientHeight, height - headerBottom()) - clearance;
+  const parts = section.id === 'why' ? '.msg, .pct, .code, .crash-point' : '.eyebrow, h2, .big, .what, .src';
+  if (!inside(stage.querySelectorAll<HTMLElement>(parts), stage, 8, bottom - 8)) return false;
+  if (section.id !== 'why') return true;
+  const progress = stage.querySelector<HTMLElement>('.pct');
+  const code = stage.querySelector<HTMLElement>('.code');
+  const progressBox = progress && boxIn(progress, stage);
+  const codeBox = code && boxIn(code, stage);
+  return !!progressBox && !!codeBox && progressBox.bottom + 8 <= codeBox.top;
+}
+
+interface FitOptions {
+  prepare?: () => () => void;
+  snug?: boolean;
+  phone?: boolean;
+}
+
 export interface FitGuard {
   /** Whether the section is pinned now: the enhancement is on and everything fits. */
   pinned(): boolean;
@@ -154,13 +184,13 @@ export interface FitGuard {
  * The measurement takes the classes off for one synchronous layout and puts them back as measured: no frame is
  * drawn in between.
  */
-export function guardFit(section: HTMLElement, fits: (section: HTMLElement) => boolean, prepare?: () => () => void, snug = false): FitGuard {
+export function guardFit(section: HTMLElement, fits: (section: HTMLElement) => boolean, { prepare, snug = false, phone = false }: FitOptions = {}): FitGuard {
   const listeners: ((pinned: boolean) => void)[] = [];
   let pinned = false;
 
   const check = () => {
     let next = false;
-    if (storyEnhanced()) {
+    if (storyEnhanced(phone)) {
       section.classList.remove(FLOW, SNUG);
       const undo = prepare?.();
       next = fits(section);
@@ -189,11 +219,16 @@ export function guardFit(section: HTMLElement, fits: (section: HTMLElement) => b
 
   check();
   addEventListener('resize', schedule);
+  const tablet = matchMedia(TABLET_STORY_QUERY);
+  const checkClearance = () => { if (phone || tablet.matches) schedule(); };
+  window.visualViewport?.addEventListener('resize', checkClearance);
+  addEventListener('analytics-clearance-change', checkClearance);
+  tablet.addEventListener('change', schedule);
   document.fonts?.ready.then(schedule);
   // toggle does not bubble: listen in the capture phase
   section.addEventListener('toggle', schedule, true);
   // at once, not a frame later: the tabs must not keep a panel hidden in the base layer for a frame
-  onModeChange(check);
+  onModeChange(check, phone);
 
   return { pinned: () => pinned, onChange: cb => { listeners.push(cb); } };
 }

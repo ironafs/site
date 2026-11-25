@@ -112,7 +112,7 @@ test('replay while the first scene is still being built: the build is abandoned,
         window.__first = canvas;
         canvas.addEventListener('webglcontextlost', () => { window.__lost++; });
         document.getElementById('replay').click();
-      }).observe(h, { childList: true });
+      }).observe(h.querySelector('.hero-art'), { childList: true });
     });
   });
   await page.goto('/?test');
@@ -162,7 +162,7 @@ test('during a replay, data-scene="live" is set only while a scene that has draw
       new MutationObserver(() => {
         const t = h.dataset.timings ? JSON.parse(h.dataset.timings) : {};
         if (h.dataset.scene === 'live' && t.built !== undefined && t.frame === undefined) window.__liveUndrawn.push(h.dataset.timings);
-      }).observe(h, { attributes: true, childList: true, attributeFilter: ['data-scene', 'data-timings'] });
+      }).observe(h, { attributes: true, childList: true, subtree: true, attributeFilter: ['data-scene', 'data-timings'] });
     });
   });
   await page.goto('/?test');

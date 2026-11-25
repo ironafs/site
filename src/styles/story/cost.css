@@ -119,65 +119,67 @@
 
 @supports (animation-timeline: view()) {
   @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
-    html:not(.static) #cost > .stage { max-width: calc(1360px + 2 * var(--gutter)); padding: 14vh var(--gutter) 10vh; }
-    html:not(.static) #cost h2 { font: 700 clamp(32px, 4.4vw, 68px)/1.04 var(--font-display); letter-spacing: -0.03em; max-width: none; margin: 0 0 8vh; }
+    @media not all and (pointer: coarse) and (max-width: 1100px) {
+      html:not(.static) #cost > .stage { max-width: calc(1360px + 2 * var(--gutter)); padding: 14vh var(--gutter) 10vh; }
+      html:not(.static) #cost h2 { font: 700 clamp(32px, 4.4vw, 68px)/1.04 var(--font-display); letter-spacing: -0.03em; max-width: none; margin: 0 0 8vh; }
 
-    /* the stack: a 75vh scroll between cards, which is each card's pinned window; the ::after is the room after the
-       last card. view-timeline-inset: 0, as in crash.css: otherwise html's scroll-padding-top shifts the ranges. */
-    html:not(.static) #cost .stack { gap: 75vh; margin: 0; view-timeline: --stack block; view-timeline-inset: 0; }
-    html:not(.static) #cost .stack::after { content: ""; }
-    html:not(.static) #cost .scard {
-      --i: 0;
-      position: sticky; top: calc(12vh + var(--i) * 22px); min-height: 72vh; padding: 5vh 4vw;
-      animation-name: cs-sinkBack; animation-duration: auto; animation-timing-function: linear;
-      animation-fill-mode: both; animation-timeline: --stack;
-      animation-range: var(--r, cover 100% cover 100%);
-    }
-    html:not(.static) #cost .scard:nth-child(2) { --i: 1; }
-    html:not(.static) #cost .scard:nth-child(3) { --i: 2; }
-    html:not(.static) #cost .scard:nth-child(4) { --i: 3; animation-name: none; }
-    /* stack.ts measures the natural positions with the cards unstuck, for one synchronous layout */
-    html:not(.static) #cost .stack.is-measuring > .scard { position: relative; top: 0; }
-    /* snug cards (stack.ts: the text wraps to more lines than a card holds): less room above and below the text */
-    html:not(.static) #cost .stack--snug > .scard { padding-block: 2.5vh; }
-    html:not(.static) #cost .stack--snug .scard h3 { margin-block: 6px 12px; }
-    html:not(.static) #cost .stack--snug .afs { margin-top: 1.5vh; }
-    html:not(.static) #cost .vis { height: 52vh; min-height: 0; padding: 26px; }
-    html:not(.static) #cost .scard h3 { font-size: clamp(28px, 3.2vw, 50px); }
-    html:not(.static) #cost .scard .lede { font-size: clamp(16px, 1.3vw, 19px); }
-    html:not(.static) #cost .scard.iron h3 { font-size: clamp(44px, min(6vw, 6.5vh), 96px); }
-    html:not(.static) #cost .scard.iron .lede { font-size: clamp(18px, 1.6vw, 23px); max-width: 55ch; }
+      /* the stack: a 75vh scroll between cards, which is each card's pinned window; the ::after is the room after the
+         last card. view-timeline-inset: 0, as in crash.css: otherwise html's scroll-padding-top shifts the ranges. */
+      html:not(.static) #cost .stack { gap: 75vh; margin: 0; view-timeline: --stack block; view-timeline-inset: 0; }
+      html:not(.static) #cost .stack::after { content: ""; }
+      html:not(.static) #cost .scard {
+        --i: 0;
+        position: sticky; top: calc(12vh + var(--i) * 22px); min-height: 72vh; padding: 5vh 4vw;
+        animation-name: cs-sinkBack; animation-duration: auto; animation-timing-function: linear;
+        animation-fill-mode: both; animation-timeline: --stack;
+        animation-range: var(--r, cover 100% cover 100%);
+      }
+      html:not(.static) #cost .scard:nth-child(2) { --i: 1; }
+      html:not(.static) #cost .scard:nth-child(3) { --i: 2; }
+      html:not(.static) #cost .scard:nth-child(4) { --i: 3; animation-name: none; }
+      /* stack.ts measures the natural positions with the cards unstuck, for one synchronous layout */
+      html:not(.static) #cost .stack.is-measuring > .scard { position: relative; top: 0; }
+      /* snug cards (stack.ts: the text wraps to more lines than a card holds): less room above and below the text */
+      html:not(.static) #cost .stack--snug > .scard { padding-block: 2.5vh; }
+      html:not(.static) #cost .stack--snug .scard h3 { margin-block: 6px 12px; }
+      html:not(.static) #cost .stack--snug .afs { margin-top: 1.5vh; }
+      html:not(.static) #cost .vis { height: 52vh; min-height: 0; padding: 26px; }
+      html:not(.static) #cost .scard h3 { font-size: clamp(28px, 3.2vw, 50px); }
+      html:not(.static) #cost .scard .lede { font-size: clamp(16px, 1.3vw, 19px); }
+      html:not(.static) #cost .scard.iron h3 { font-size: clamp(44px, min(6vw, 6.5vh), 96px); }
+      html:not(.static) #cost .scard.iron .lede { font-size: clamp(18px, 1.6vw, 23px); max-width: 55ch; }
 
-    /* the schematic's switch and tick and the typed command: each in its own range of the stack's timeline (stack.ts) */
-    html:not(.static) #cost :is(.mac .doff, .mac .don, .mac .c, .typed) {
-      animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
-      animation-timeline: --stack; animation-range: var(--r, normal);
-    }
-    /* a step is dim (0.15) from the stack's arrival until its turn (--d), then lights up (--r) and stays lit. Neither
-       animation fills backwards: before the stack reaches the viewport (the page's top, where nothing of it is on
-       screen) every step is at its final state, as in the base layer. */
-    html:not(.static) #cost .on {
-      animation-name: cs-dim, cs-lightUp; animation-duration: auto, auto; animation-timing-function: linear, linear;
-      animation-fill-mode: none, forwards; animation-timeline: --stack, --stack;
-      animation-range: var(--d, cover 0% cover 0%), var(--r, normal);
-    }
-    html:not(.static) #cost .mac .doff { opacity: 1; animation-name: cs-dotOff; }
-    html:not(.static) #cost .mac .don { animation-name: cs-dotOn; }
-    html:not(.static) #cost .mac .c { animation-name: cs-tick; }
-    html:not(.static) #cost .bigcmd .typed { overflow: hidden; width: 0; animation-name: cs-type; animation-timing-function: steps(10); }
-    /* five blinks, then a steady cursor (WCAG 2.2.2); stack.ts restarts them each time the cursor comes into view */
-    html:not(.static) #cost .bigcmd .cur {
-      animation-name: cs-blink; animation-duration: 1s; animation-timing-function: steps(1); animation-iteration-count: 5; animation-fill-mode: forwards;
-    }
+      /* the schematic's switch and tick and the typed command: each in its own range of the stack's timeline (stack.ts) */
+      html:not(.static) #cost :is(.mac .doff, .mac .don, .mac .c, .typed) {
+        animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
+        animation-timeline: --stack; animation-range: var(--r, normal);
+      }
+      /* a step is dim (0.15) from the stack's arrival until its turn (--d), then lights up (--r) and stays lit. Neither
+         animation fills backwards: before the stack reaches the viewport (the page's top, where nothing of it is on
+         screen) every step is at its final state, as in the base layer. */
+      html:not(.static) #cost .on {
+        animation-name: cs-dim, cs-lightUp; animation-duration: auto, auto; animation-timing-function: linear, linear;
+        animation-fill-mode: none, forwards; animation-timeline: --stack, --stack;
+        animation-range: var(--d, cover 0% cover 0%), var(--r, normal);
+      }
+      html:not(.static) #cost .mac .doff { opacity: 1; animation-name: cs-dotOff; }
+      html:not(.static) #cost .mac .don { animation-name: cs-dotOn; }
+      html:not(.static) #cost .mac .c { animation-name: cs-tick; }
+      html:not(.static) #cost .bigcmd .typed { overflow: hidden; width: 0; animation-name: cs-type; animation-timing-function: steps(10); }
+      /* five blinks, then a steady cursor (WCAG 2.2.2); stack.ts restarts them each time the cursor comes into view */
+      html:not(.static) #cost .bigcmd .cur {
+        animation-name: cs-blink; animation-duration: 1s; animation-timing-function: steps(1); animation-iteration-count: 5; animation-fill-mode: forwards;
+      }
 
-    /* A window too short for a card under its sticky top (stack.ts adds .stack--flow): the cards in normal flow, every
-       picture at its final state, as in the base layer. */
-    html:not(.static) #cost .stack.stack--flow { gap: 22px; perspective: none; }
-    html:not(.static) #cost .stack--flow > .scard { position: relative; top: 0; min-height: 0; animation-name: none; }
-    html:not(.static) #cost .stack--flow .vis { height: auto; }
-    html:not(.static) #cost .stack--flow :is(.on, .mac .doff, .mac .don, .mac .c, .typed, .cur) { animation-name: none; }
-    html:not(.static) #cost .stack--flow .mac .doff { opacity: 0; }
-    html:not(.static) #cost .stack--flow .bigcmd .typed { width: auto; overflow: visible; }
+      /* A window too short for a card under its sticky top (stack.ts adds .stack--flow): the cards in normal flow, every
+         picture at its final state, as in the base layer. */
+      html:not(.static) #cost .stack.stack--flow { gap: 22px; perspective: none; }
+      html:not(.static) #cost .stack--flow > .scard { position: relative; top: 0; min-height: 0; animation-name: none; }
+      html:not(.static) #cost .stack--flow .vis { height: auto; }
+      html:not(.static) #cost .stack--flow :is(.on, .mac .doff, .mac .don, .mac .c, .typed, .cur) { animation-name: none; }
+      html:not(.static) #cost .stack--flow .mac .doff { opacity: 0; }
+      html:not(.static) #cost .stack--flow .bigcmd .typed { width: auto; overflow: visible; }
+    }
   }
 }
 

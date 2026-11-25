@@ -1,5 +1,5 @@
 /* The crash (#why) and the numbers (#numbers).
-   Base first (normal flow, final state), then the enhancement under motion.css's selector, verbatim.
+   Base first (normal flow, final state), then the desktop and portrait phone enhancement.
    Animations are written as longhands: the minifier folds an `animation` shorthand and its `animation-timeline`
    into one shorthand, where a timeline is not allowed, and the browser then drops the whole declaration. */
 
@@ -37,7 +37,8 @@
 #numbers .dots { display: none; }
 
 @supports (animation-timeline: view()) {
-  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px),
+    (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 320px) and (max-width: 760px) and (min-height: 560px) and (orientation: portrait) {
     /* ---------- #why: count while it holds, then switch off like an old monitor ---------- */
     /* view-timeline-inset: 0 on both sections: the default (auto) takes in html's scroll-padding-top, which would
        start the timeline's contain range 72px before the stage actually pins (sticky top: 0). */
@@ -79,42 +80,105 @@
     /* ---------- #numbers: the two numbers take turns; the chip sharpens slightly ---------- */
     /* The swap is sequential: the first is gone at contain 46%, the second starts at 54%, so the
        stage is empty between them and the two are never superimposed. */
-    html:not(.static) #numbers { view-timeline: --numbers block; view-timeline-inset: 0; }
-    html:not(.static) #numbers > .stage {
+    html:not(.static) #numbers:not(.story--flow) { view-timeline: --numbers block; view-timeline-inset: 0; }
+    html:not(.static) #numbers:not(.story--flow) > .stage {
       max-width: none; padding: 0;
       background: radial-gradient(60% 50% at 50% 60%, #2a1208 0, var(--story-bg) 70%);
     }
-    html:not(.static) #numbers .eyebrow { position: absolute; top: 12vh; left: 0; right: 0; text-align: center; margin: 0; max-width: none; }
-    html:not(.static) #numbers h2 {
+    html:not(.static) #numbers:not(.story--flow) .eyebrow { position: absolute; top: 12vh; left: 0; right: 0; text-align: center; margin: 0; max-width: none; }
+    html:not(.static) #numbers:not(.story--flow) h2 {
       position: absolute; top: calc(12vh + 1.75rem); left: 0; right: 0; margin: 0 auto; padding-inline: 6vw;
       max-width: none; text-align: center; font-size: clamp(1.75rem, 3.4vw, 3rem); line-height: 1.1; letter-spacing: -0.015em;
     }
-    html:not(.static) #numbers .stats { margin: 0; }
-    html:not(.static) #numbers .stat {
+    html:not(.static) #numbers:not(.story--flow) .stats { margin: 0; }
+    html:not(.static) #numbers:not(.story--flow) .stat {
       position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
       text-align: center; padding: 18vh 6vw 0;
       animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --numbers;
     }
-    html:not(.static) #numbers .s1 { animation-name: inHoldOut; animation-range: contain 0% contain 46%; }
-    html:not(.static) #numbers .s2 { animation-name: inHold; animation-range: contain 54% contain 100%; }
+    html:not(.static) #numbers:not(.story--flow) .s1 { animation-name: inHoldOut; animation-range: contain 0% contain 46%; }
+    html:not(.static) #numbers:not(.story--flow) .s2 { animation-name: inHold; animation-range: contain 54% contain 100%; }
     /* Both sources stay in the tab order: the statistic whose source has keyboard focus shows whole, the other
        steps aside, whatever the scroll position. */
-    html:not(.static) #numbers .stat:has(:focus-visible) { animation: none; opacity: 1; transform: none; pointer-events: auto; }
-    html:not(.static) #numbers .stats:has(:focus-visible) .stat:not(:has(:focus-visible)) { animation: none; opacity: 0; pointer-events: none; }
-    html:not(.static) #numbers .big { font-size: clamp(4.5rem, 13vw, 12.5rem); }
-    html:not(.static) #numbers .what { max-width: 36ch; margin: 1.125rem auto 0.625rem; font-size: clamp(1.125rem, 1.7vw, 1.5rem); line-height: 1.45; }
-    html:not(.static) #numbers .src { max-width: 90ch; margin: 0 auto; }
-    html:not(.static) #numbers .chipart {
+    html:not(.static) #numbers:not(.story--flow) .stat:has(:focus-visible) { animation: none; opacity: 1; transform: none; pointer-events: auto; }
+    html:not(.static) #numbers:not(.story--flow) .stats:has(:focus-visible) .stat:not(:has(:focus-visible)) { animation: none; opacity: 0; pointer-events: none; }
+    html:not(.static) #numbers:not(.story--flow) .big { font-size: clamp(4.5rem, 13vw, 12.5rem); }
+    html:not(.static) #numbers:not(.story--flow) .what { max-width: 36ch; margin: 1.125rem auto 0.625rem; font-size: clamp(1.125rem, 1.7vw, 1.5rem); line-height: 1.45; }
+    html:not(.static) #numbers:not(.story--flow) .src { max-width: 90ch; margin: 0 auto; }
+    html:not(.static) #numbers:not(.story--flow) .chipart {
       bottom: -20vh; width: min(1100px, 100vw); opacity: 0.2;
       animation-name: chipIn; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --numbers; animation-range: contain 0% contain 100%;
     }
-    html:not(.static) #numbers .dots { display: grid; gap: 10px; position: absolute; right: 3vw; top: 50%; translate: 0 -50%; z-index: 1; }
-    html:not(.static) #numbers .dots i {
+    html:not(.static) #numbers:not(.story--flow) .dots { display: grid; gap: 10px; position: absolute; right: 3vw; top: 50%; translate: 0 -50%; z-index: 1; }
+    html:not(.static) #numbers:not(.story--flow) .dots i {
       width: 8px; height: 8px; border-radius: 50%; background: var(--story-line);
       animation-name: statDot; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --numbers;
     }
-    html:not(.static) #numbers .dots i:nth-child(1) { animation-range: contain 0% contain 46%; }
-    html:not(.static) #numbers .dots i:nth-child(2) { animation-range: contain 54% contain 100%; }
+    html:not(.static) #numbers:not(.story--flow) .dots i:nth-child(1) { animation-range: contain 0% contain 46%; }
+    html:not(.static) #numbers:not(.story--flow) .dots i:nth-child(2) { animation-range: contain 54% contain 100%; }
+  }
+}
+
+/* These two scenes can fit a phone in portrait. Size them to the small viewport so Safari's
+   toolbars can retract during a swipe without changing the length of a scene. */
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 320px) and (max-width: 760px) and (min-height: 560px) and (orientation: portrait) {
+    html:not(.static) :is(#why, #numbers):not(.story--flow) {
+      --phone-story-top: var(--header-live, var(--header-h));
+      --phone-story-height: calc(100svh - var(--phone-story-top));
+      --phone-story-clearance: var(--analytics-clearance, 0px);
+      height: calc(var(--phone-story-height) + var(--phone-story-travel));
+      view-timeline-inset: var(--phone-story-top) max(0px, calc(100% - 100svh));
+    }
+    html:not(.static) #why:not(.story--flow) { --phone-story-travel: clamp(240px, 36svh, 360px); }
+    html:not(.static) #numbers:not(.story--flow) { --phone-story-travel: clamp(340px, 52svh, 480px); }
+    html:not(.static) :is(#why, #numbers):not(.story--flow) > .stage {
+      position: sticky;
+      top: var(--phone-story-top);
+      margin-top: -1px;
+      height: var(--phone-story-height);
+      overflow: hidden;
+    }
+
+    html:not(.static) #why:not(.story--flow) > .stage {
+      padding: 0 var(--gutter) var(--phone-story-clearance);
+    }
+    html:not(.static) #why:not(.story--flow) .bsod {
+      padding: 0 var(--gutter) calc(var(--phone-story-clearance) + 4.5rem);
+    }
+    html:not(.static) #why:not(.story--flow):is(.analytics-notice-visible *) .code,
+    html:not(.static) #why:not(.story--flow) .code {
+      inset-inline: var(--gutter);
+      bottom: calc(var(--phone-story-clearance) + 1.25rem);
+      margin: 0;
+    }
+    html:not(.static) #why:not(.story--flow) .crt-line {
+      top: calc((100% - var(--phone-story-clearance)) / 2);
+    }
+
+    html:not(.static) #numbers:not(.story--flow) > .stage {
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem var(--gutter) calc(var(--phone-story-clearance) + 3rem);
+    }
+    html:not(.static) #numbers:not(.story--flow) :is(.eyebrow, h2) {
+      position: static;
+      padding: 0;
+    }
+    html:not(.static) #numbers:not(.story--flow) h2 { margin-top: 0.55rem; }
+    html:not(.static) #numbers:not(.story--flow) .stats { position: relative; flex: 1; min-height: 0; }
+    html:not(.static) #numbers:not(.story--flow) .stat { padding: 0; }
+    html:not(.static) #numbers:not(.story--flow) .big {
+      font-size: min(clamp(3.75rem, 15vw, 6rem), (100vw - 2 * var(--gutter)) / 3.4);
+    }
+    html:not(.static) #numbers:not(.story--flow) .chipart { bottom: var(--phone-story-clearance); }
+    html:not(.static) #numbers:not(.story--flow) .dots {
+      grid-auto-flow: column;
+      justify-content: center;
+      inset: auto 0 calc(var(--phone-story-clearance) + 1.25rem);
+      translate: none;
+      pointer-events: none;
+    }
   }
 }
 

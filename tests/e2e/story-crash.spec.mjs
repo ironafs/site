@@ -10,7 +10,7 @@ const isStatic = page => page.addInitScript(() => {
   document.addEventListener('readystatechange', add);
 });
 
-/** Scrolls to `f` (0..1) of a pinned section's pinned scroll: its top at the viewport's top to its bottom at the bottom. */
+/** Scrolls to `f` (0..1) of the stage's sticky travel, including its header inset on phones. */
 async function pinnedAt(page, id, f) {
   allowFrames(8); // at least three still frames and the jump's, two requestAnimationFrame callbacks each
   await page.evaluate(async ({ id, f }) => {
@@ -20,7 +20,9 @@ async function pinnedAt(page, id, f) {
     // story-rust.spec.mjs does)
     for (let last = NaN, still = 0; still < 3; still = scrollY === last ? still + 1 : 0) { last = scrollY; await frame(); }
     const s = document.getElementById(id);
-    const target = Math.round(s.getBoundingClientRect().top + scrollY + f * (s.offsetHeight - innerHeight));
+    const stage = s.querySelector('.stage');
+    const inset = parseFloat(getComputedStyle(stage).top) || 0;
+    const target = Math.round(s.getBoundingClientRect().top + scrollY - inset + f * (s.offsetHeight - stage.offsetHeight));
     for (let i = 0; i < 10; i++) {
       scrollTo({ top: target, behavior: 'instant' });
       await frame();
@@ -43,6 +45,157 @@ const shown = (page, selector) => page.evaluate(selector => {
 const enhanced = page => page.evaluate(() => CSS.supports('animation-timeline: view()')
   && matchMedia('(scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px)').matches
   && !document.documentElement.classList.contains('static'));
+
+test.describe('portrait phone holds', () => {
+  test.beforeEach(async ({ page }) => {
+    test.skip(!test.info().project.use.hasTouch, 'phone projects');
+    await page.route(/\/_astro\/scene\.[^/]*\.js$/, route => route.abort());
+    await page.route('**/privacy/analytics-policy', route => route.fulfill({ json: { mode: 'opt-in' } }));
+    await page.goto('/');
+    test.skip(!(await page.evaluate(() => CSS.supports('animation-timeline: view()'))), 'needs scroll-driven animation');
+  });
+
+  test('the stage holds while the story changes and releases after the last phase', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 699 });
+    const header = await page.locator('#site-header').boundingBox();
+    const notice = page.locator('[data-analytics-banner]');
+    await expect(notice).toBeVisible();
+    const noticeTop = (await notice.boundingBox()).y;
+    const why = page.locator('#why > .stage');
+    await expect(why).toHaveCSS('position', 'sticky');
+    await pinnedAt(page, 'why', 0.17);
+    const stageTop = (await why.boundingBox()).y;
+    expect(stageTop).toBeCloseTo(header.y + header.height, 0);
+    expect(await shown(page, '#why .msg')).toBeGreaterThan(0.95);
+    const progress = await page.locator('#why .pct-n').evaluate(el => Number(getComputedStyle(el).getPropertyValue('--p')));
+    expect(progress).toBeGreaterThan(0);
+    expect(progress).toBeLessThan(100);
+    const code = await page.locator('#why .code').boundingBox();
+    expect(code.y + code.height).toBeLessThan(noticeTop);
+    await pinnedAt(page, 'why', 0.9);
+    expect((await why.boundingBox()).y).toBe(stageTop);
+    expect(await shown(page, '#why .crash-point')).toBeGreaterThan(0.95);
+    await pinnedAt(page, 'why', 1.2);
+    expect((await why.boundingBox()).y).toBeLessThan(stageTop - 20);
+
+    const numbers = page.locator('#numbers > .stage');
+    await expect(numbers).toHaveCSS('position', 'sticky');
+    await pinnedAt(page, 'numbers', 0.25);
+    expect((await numbers.boundingBox()).y).toBe(stageTop);
+    expect(await shown(page, '#numbers .s1')).toBeGreaterThan(0.95);
+    expect(await shown(page, '#numbers .s2')).toBe(0);
+    await pinnedAt(page, 'numbers', 0.8);
+    expect((await numbers.boundingBox()).y).toBe(stageTop);
+    expect(await shown(page, '#numbers .s1')).toBe(0);
+    expect(await shown(page, '#numbers .s2')).toBeGreaterThan(0.95);
+    const source = await page.locator('#numbers .s2 .src').boundingBox();
+    expect(source.y + source.height).toBeLessThan(noticeTop);
+    await page.setViewportSize({ width: 375, height: 600 });
+    await expect(why).toHaveCSS('position', 'sticky');
+  });
+
+  test('short screens, landscape and reduced motion keep both sections in normal flow', async ({ page }) => {
+    for (const [width, height, reducedMotion] of [[375, 550, 'no-preference'], [844, 390, 'no-preference'], [390, 844, 'reduce']]) {
+      await page.setViewportSize({ width, height });
+      await page.emulateMedia({ reducedMotion });
+      for (const id of ['why', 'numbers']) await expect(page.locator(`#${id} > .stage`)).toHaveCSS('position', 'relative');
+      expect(await shown(page, '#numbers .s1')).toBe(1);
+      expect(await shown(page, '#numbers .s2')).toBe(1);
+    }
+  });
+
+  test('individual diagrams, charts and workflows hold below the bar and above the notice', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 699 });
+    const notice = page.locator('[data-analytics-banner]');
+    await expect(notice).toBeVisible();
+    const noticeTop = (await notice.boundingBox()).y;
+    const targets = ['#cost .vis', '#cost .afs', '#design .scene', '#rust .ph1', '#rust .dens'];
+    for (const selector of targets) {
+      for (const target of await page.locator(selector).all()) {
+        await expect(target).toHaveCSS('position', 'sticky');
+        const positions = await target.evaluate(async el => {
+          const top = parseFloat(getComputedStyle(el).top);
+          const track = el.parentElement;
+          const start = track.getBoundingClientRect().top + scrollY - top;
+          const distance = track.offsetHeight - el.offsetHeight;
+          const mark = async fraction => {
+            scrollTo({ top: start + fraction * distance, behavior: 'instant' });
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+            const rect = el.getBoundingClientRect();
+            return [rect.top, rect.bottom];
+          };
+          return { top, first: await mark(0.2), last: await mark(0.8), released: await mark(1.25) };
+        });
+        expect(positions.first[0]).toBeCloseTo(positions.top, 0);
+        expect(positions.last[0]).toBeCloseTo(positions.top, 0);
+        expect(positions.first[1]).toBeLessThan(noticeTop);
+        expect(positions.released[0]).toBeLessThan(positions.top - 12);
+      }
+    }
+    await expect(page.locator('#platforms .lane > h3').first()).toHaveCSS('position', 'sticky');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    for (const selector of targets) await expect(page.locator(selector).first()).not.toHaveCSS('position', 'sticky');
+  });
+
+  for (const [width, height] of [[390, 699], [600, 900], [820, 1000], [1024, 768]]) {
+    test(`the shell types when readable on ${width}×${height}, then keeps its output`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      const terminal = page.locator('#cost .afs');
+      const notice = page.locator('[data-analytics-banner]');
+      await expect(notice).toBeVisible();
+      await expect(terminal).toHaveCSS('position', 'sticky');
+      await terminal.evaluate(el => {
+        const rect = el.getBoundingClientRect();
+        const noticeTop = document.querySelector('[data-analytics-banner]').getBoundingClientRect().top;
+        scrollTo({ top: scrollY + rect.bottom - noticeTop + 24, behavior: 'instant' });
+      });
+      await expect(terminal).toHaveAttribute('data-terminal', 'playing');
+      await expect(terminal.locator('.bigout .ok')).toHaveCSS('opacity', '0');
+      const size = await terminal.boundingBox();
+      const pin = parseFloat(await terminal.evaluate(el => getComputedStyle(el).top));
+      expect(size.y).toBeGreaterThan(pin + 20);
+      await expect(terminal).toHaveAttribute('data-terminal', 'done');
+      await expect(terminal.locator('.bigout .design')).toHaveCSS('opacity', '1');
+      const command = await terminal.locator('.typed').evaluate(el => [el.clientWidth, el.scrollWidth]);
+      expect(command[0]).toBeGreaterThanOrEqual(command[1] - 1);
+      await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+      await expect(terminal).toHaveAttribute('data-terminal', 'done');
+    });
+  }
+
+  test('a fling past the shell leaves the command and output readable', async ({ page }) => {
+    const terminal = page.locator('#cost .afs');
+    await expect(terminal).toHaveCSS('position', 'sticky');
+    await terminal.evaluate(el => {
+      const track = el.parentElement;
+      const top = parseFloat(getComputedStyle(el).top);
+      scrollTo({ top: track.getBoundingClientRect().bottom + scrollY - top - el.offsetHeight + 24, behavior: 'instant' });
+    });
+    await expect(terminal).toHaveAttribute('data-terminal', 'done');
+    await expect(terminal.locator('.bigout .design')).toHaveCSS('opacity', '1');
+  });
+
+  test('short tablets start the smaller Design and Rust scenes before they pin', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 768 });
+    const notice = page.locator('[data-analytics-banner]');
+    await expect(notice).toBeVisible();
+    for (const id of ['design', 'rust']) await expect(page.locator(`#${id}`)).toHaveAttribute('data-compact-scenes', 'tablet');
+    for (const selector of ['#design .scene[data-os="linux"]', '#rust .ph1']) {
+      const panel = page.locator(selector);
+      await expect(panel).toHaveCSS('position', 'sticky');
+      await panel.evaluate(el => {
+        const top = parseFloat(getComputedStyle(el).top);
+        scrollTo({ top: el.parentElement.getBoundingClientRect().top + scrollY - top - 30, behavior: 'instant' });
+      });
+      await expect.poll(() => panel.evaluate(el => Number(el.parentElement.style.getPropertyValue('--phone-beat-progress')))).toBeGreaterThan(0.1);
+      const art = await panel.boundingBox();
+      const top = parseFloat(await panel.evaluate(el => getComputedStyle(el).top));
+      expect(art.y).toBeGreaterThan(top + 20);
+      expect(art.y + art.height).toBeLessThan((await notice.boundingBox()).y);
+    }
+    await expect(page.locator('#platforms .lane > h3').first()).toHaveCSS('position', 'sticky');
+  });
+});
 
 test.describe('base layer', () => {
   test.beforeEach(async ({ page }) => {
