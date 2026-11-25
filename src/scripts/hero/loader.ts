@@ -166,9 +166,11 @@ export function startHeroWhenIdle(hero: HTMLElement): void {
     canvas.className = 'hero-canvas';
     canvas.setAttribute('aria-hidden', 'true');
     art.prepend(canvas);
-    // Context creation is synchronous. Let the browser present a frame before beginning GPU work.
+    // Context creation is synchronous. Give pending input a frame to run and another to present its result.
     if (!document.hidden) {
-      await new Promise<void>(resolve => window.requestAnimationFrame(() => window.setTimeout(resolve, 0)));
+      await new Promise<void>(resolve => {
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => window.setTimeout(resolve, 0)));
+      });
     }
     if (mine !== token) { canvas.remove(); return; }
     watchdog.watch(canvas); // the first frame can come only while the canvas itself is on screen
