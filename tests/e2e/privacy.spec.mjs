@@ -486,7 +486,8 @@ test('command choices have equal appearance in normal, hover, focus and active s
   await page.keyboard.press('Tab'); expect(await style(decline)).toEqual(focus);
 });
 
-test('notice reveals in order, keeps its size and ends visible', async ({ page }) => {
+test('wide desktop notice reveals in order, keeps its size and ends visible', async ({ page }) => {
+  test.skip(page.viewportSize().width < 1101, 'wide desktop notice');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.route('**/privacy/analytics-policy', route => route.fulfill({ json: { mode: 'opt-in' } }));
   await page.goto('/');
@@ -507,6 +508,28 @@ test('notice reveals in order, keeps its size and ends visible', async ({ page }
   expect(result.hidden).toEqual(Array(6).fill('hidden'));
   expect(result.visible).toEqual(Array(7).fill(['visible', '1']));
   expect(result.start).toBe(result.end);
+});
+
+test('phone and tablet notice controls are visible immediately', async ({ page }) => {
+  test.skip(!test.info().project.use.hasTouch, 'compact notice');
+  await page.route('**/privacy/analytics-policy', route => route.fulfill({ json: { mode: 'opt-in' } }));
+  for (const [width, height] of [[180, 460], [320, 650], [390, 699], [768, 1024], [1024, 768]]) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    const notice = banner(page);
+    await expect(notice).toBeVisible();
+    const styles = await notice.evaluate(el => ['.analytics-typed', '.analytics-output', '[data-notice-allow]', '[data-notice-decline]'].map(selector => {
+      const style = getComputedStyle(el.querySelector(selector));
+      return [style.animationName, style.visibility, style.opacity];
+    }));
+    expect(styles).toEqual(Array(4).fill(['none', 'visible', '1']));
+    expect(await notice.locator('[data-analytics-settings]').evaluate(el => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return range.getClientRects().length;
+    })).toBe(1);
+    expect(await notice.evaluate(el => el.scrollWidth)).toBeLessThanOrEqual(width + 1);
+  }
 });
 
 test('reduced motion shows every notice element without animation', async ({ page }) => {

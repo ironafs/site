@@ -167,9 +167,9 @@ test('the IronAFS output text is at least 12 px', async ({ page }) => {
   expect(Math.min(...sizes)).toBeGreaterThanOrEqual(12);
 });
 
-test('phone and base: four cards in normal flow, every step at full opacity, the command typed out', async ({ page }) => {
+test('reduced motion: four cards in normal flow, every step at full opacity, the command typed out', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  test.skip(await enhanced(page), 'the phone and base layout');
   const cards = page.locator('#cost .scard');
   await expect(cards).toHaveCount(4);
   const boxes = await cards.evaluateAll(els => els.map(el => ({ ...el.getBoundingClientRect().toJSON(), position: getComputedStyle(el).position })));

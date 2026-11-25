@@ -35,6 +35,11 @@
   filter: drop-shadow(0 10px 40px #d8662a33);
 }
 #rust .rw-css::before, #rust .rw-css::after { content: none; }
+#rust .rw-css::before {
+  position: absolute; inset: 0; z-index: 1; padding-top: inherit; pointer-events: none; color: transparent;
+  background: linear-gradient(105deg, #0000 40%, #ffffff55 50%, #0000 60%) no-repeat; background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text;
+}
 @supports ((background-clip: text) or (-webkit-background-clip: text)) {
   #rust .rw-css {
     color: transparent;
@@ -62,6 +67,28 @@
 #rust .rwname { font-size: 0.875rem; color: var(--story-muted); max-width: 46ch; margin: 0 0 0.5rem; }
 #rust .rwclaim { font-size: clamp(1rem, 0.9rem + 0.35vw, 1.1875rem); line-height: 1.55; color: var(--story-text); max-width: 46ch; margin: 0; }
 #rust .rwclaim b { color: var(--rust); }
+@media (max-width: 1100px) {
+  #rust .rustart {
+    opacity: 0.16;
+    -webkit-mask-image: linear-gradient(180deg, #000, #0008 42%, #0000 78%);
+    mask-image: linear-gradient(180deg, #000, #0008 42%, #0000 78%);
+  }
+  #rust .rwname { color: var(--story-cite); }
+}
+
+/* Use the same steel, sheen, and patina as the pinned chapter when the word arrives in normal flow. */
+@media (max-width: 69.999rem) and (prefers-reduced-motion: no-preference) {
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    #rust .rust-word[data-compact-entry='waiting'] .rw-css::after { opacity: 0; }
+    #rust .rust-word[data-compact-entry='entered'] .rw-css::before {
+      content: "Rust" / "";
+      animation: rs-sheen 650ms ease-out both;
+    }
+    #rust .rust-word[data-compact-entry='entered'] .rw-css::after {
+      animation: rs-rwSpread 950ms 120ms ease-out both;
+    }
+  }
+}
 
 #rust .rphase h2, #rust .rphase .phase-h {
   font: 700 clamp(1.5rem, 1rem + 1.6vw, 2.375rem)/1.06 var(--font-display); letter-spacing: -0.03em;
@@ -215,9 +242,7 @@
 
     /* the word: a sheen over the steel, then rust breaking out in four spots and spreading */
     html:not(.static) #rust:not(.story--flow) .rw-css::before {
-      content: "Rust" / ""; position: absolute; inset: 0; z-index: 1; padding-top: inherit; pointer-events: none; color: transparent;
-      background: linear-gradient(105deg, #0000 40%, #ffffff55 50%, #0000 60%) no-repeat; background-size: 250% 100%;
-      -webkit-background-clip: text; background-clip: text;
+      content: "Rust" / "";
       animation-name: rs-sheen; animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
       animation-timeline: --rust-tl; animation-range: contain 0% contain 18%;
     }

@@ -13,6 +13,7 @@
 }
 .hero-poster,
 .hero-poster img,
+.hero-opening,
 .hero-canvas {
   position: absolute;
   inset: 0;
@@ -22,6 +23,25 @@
   object-position: 50% 60%;
   z-index: -2;
 }
+.hero-opening {
+  display: none;
+  pointer-events: none;
+  /* The canvas fades in above the matching plate, so there is art throughout the hand-off. */
+  z-index: -3;
+  background: url('../assets/hero/opening.webp') no-repeat 50% 60% / cover;
+}
+@media (max-width: 899px), (pointer: coarse) {
+  .hero-opening { background-image: url('../assets/hero/opening-phone.webp'); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-intro='play'] .hero-opening {
+    display: block;
+    animation: openingTimeout 0s 5s forwards;
+  }
+  html[data-intro='typing'] .hero:not([data-phase='cooled']) .hero-opening { display: block; }
+}
+/* If the intro module never runs, show the cooled poster at the existing fallback deadline. */
+@keyframes openingTimeout { to { visibility: hidden; } }
 /* The finished state is the default (no JS, return visits, reduced motion). On a first visit the head gate
    sets html[data-intro]: the poster waits for the console to finish and the typed layer is hidden until
    typing starts, so the headline is the first paint and the full text never flashes. */
@@ -59,6 +79,9 @@ html[data-intro='play'] .console-typed { visibility: hidden; animation: introFal
   justify-content: space-between;
   gap: 2rem;
 }
+.hero-intro-track,
+.hero-intro,
+.hero-art { display: contents; }
 
 /* Scoped to #hero: #cost's Debian workflow is a <pre class="term"> too, and is not framed. */
 #hero .term {
@@ -160,24 +183,78 @@ html[data-hero-paused] #hero .caret { animation: none; }
 /* the status pill too: a single-line pill is a 44 px target through padding and an equal negative margin */
 @media (max-width: 760px) { .hero .pill { padding-block: max(0px, (44px - 1lh) / 2); margin-block: min(0px, (1lh - 44px) / 2); } }
 
-/* Phones: the 16:10 poster cannot fill a tall box without cropping the word, so the whole poster sits
-   at the top (contain, full width) and the console, status pill, headline and subline start below it. */
+/* Phones and narrow tablets: console, clean art band, then the page copy. */
 @media (max-width: 899px) {
-  .hero { --poster-h: calc(100vw * 1800 / 2880); }
+  .hero {
+    --poster-h: calc(100vw * 1800 / 2880);
+    display: block;
+    overflow: clip;
+  }
+  .hero-inner { display: block; padding-block-start: 0; }
+  .hero-intro-track { display: block; margin-inline: calc(-1 * var(--gutter)); }
+  .hero-intro { display: block; padding-block-start: 0.5rem; background: oklch(0.165 0.004 270); }
+  .hero-art {
+    position: relative;
+    isolation: isolate;
+    display: block;
+    height: var(--poster-h);
+  }
+  #hero .term { width: calc(100% - 2 * var(--gutter)); margin-inline: auto; }
+  #hero .term-bar { padding-block: 2px; }
+  #hero .console {
+    display: grid;
+    padding: 0.5rem 0.65rem 0.6rem;
+    min-height: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+  #console-sr,
+  #console-typed { grid-area: 1 / 1; min-width: 0; }
+  /* Reserve the complete transcript's height so the artwork stays put as the lines type. */
+  #console-sr.sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: inherit;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #console-sr > :last-child::after {
+    content: '';
+    display: inline-block;
+    width: 0.6em;
+    margin-inline-start: 2px;
+  }
   .hero-poster,
   .hero-poster img,
+  .hero-opening,
   .hero-canvas {
     inset: 0 0 auto 0;
     height: var(--poster-h);
     object-fit: contain;
     object-position: center 40%;
   }
-  .hero-inner { padding-block-start: calc(var(--poster-h) + 1rem); }
-  /* the text starts below the picture, so the scrim does too: over the picture it only greyed the blacks */
-  .hero::after { inset-block-start: var(--poster-h); }
-  /* the four lines wrap to nine rows at 390 px; never more than a third of a short (landscape) screen, but always
-     the four unwrapped lines (a landscape phone fits each on one row) */
-  .console { min-height: max(calc(4 * 1.7em + 30px), min(calc(9 * 1.7em + 30px), calc((100svh - var(--header-h)) / 3 - 2.5rem))); font-size: max(12px, 0.75rem); }
+  .hero-opening { background-size: contain; background-position: center 40%; }
+  .hero-copy { padding-block-start: 1rem; }
+  .hero h1 { margin-block-start: 0.75rem; }
+  .hero::after { display: none; }
+}
+
+@media (max-width: 899px) and (min-height: 620px) and (orientation: portrait) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  /* Set the scroll distance on first paint. The fit check only controls stickiness. */
+  html:not(.static) #hero .hero-intro-track::after {
+    content: '';
+    display: block;
+    height: clamp(96px, 16svh, 150px);
+  }
+  html:not(.static) #hero[data-mobile-hold] .hero-intro {
+    position: sticky;
+    inset-block-start: var(--header-live, var(--header-h));
+    z-index: 1;
+  }
 }
 
 /* Landscape phones: a full-width 16:10 band is taller than the screen and the word sat at the fold. The band is
@@ -188,6 +265,7 @@ html[data-hero-paused] #hero .caret { animation: none; }
   .hero-poster,
   .hero-poster img,
   .hero-canvas { object-fit: cover; object-position: 50% 50%; }
+  .hero-opening { background-size: cover; background-position: 50% 50%; }
 }
 
 /* Desktop: console on top, the word clear in the middle, the headline block below it, all of the h1 inside the
@@ -196,17 +274,22 @@ html[data-hero-paused] #hero .caret { animation: none; }
    The word's letters end at 73.5% of the 16:10 picture (measured from the scene's letter boxes): --poster-scaled is the picture's height as
    covered, so the copy starts 27% of it below the box's centre, just under the word. */
 @media (min-width: 900px) {
+  .hero::after {
+    background: linear-gradient(to bottom, oklch(0.165 0.004 270 / 0.38), transparent 34% 89%, oklch(0.165 0.004 270 / 0.48));
+  }
   .hero {
     --poster-h: min(max(calc(100vw * 1800 / 2880), 44rem), calc(100svh - var(--header-h)));
     --poster-scaled: max(var(--poster-h), calc(100vw * 1800 / 2880));
   }
   .hero-poster,
   .hero-poster img,
+  .hero-opening,
   .hero-canvas {
     inset: 0 0 auto 0;
     height: var(--poster-h);
     object-position: 50% 50%;
   }
+  .hero-opening { background-position: 50% 50%; }
   /* The headline is one line here: it takes the hero's full width, and its type follows that
      width (cqi) so the headline always fits on one line (sized for a 14.2 em one); the subline keeps a reading measure. */
   .hero-copy { max-width: none; container-type: inline-size; }
@@ -263,7 +346,7 @@ html[data-hero-paused] #hero .caret { animation: none; }
         animation-timeline: --hero;
         animation-range: contain 8% contain 55%;
       }
-      html:not(.static) .hero-pin:not(.story--flow) :is(img.hero-poster, .hero-canvas) {
+      html:not(.static) .hero-pin:not(.story--flow) :is(img.hero-poster, .hero-opening, .hero-canvas) {
         transform: translateY(calc(var(--hero-lift) * var(--rise-y))) scale(calc(1 - var(--hero-lift) * (1 - var(--rise-s))));
         /* the risen, smaller picture's edges fade into the stage : the scene's
            black would otherwise end in a hard box; none at rest (--hero-lift 0) */
@@ -356,18 +439,6 @@ html[data-hero-paused] #hero .caret { animation: none; }
 @keyframes heroCueOut { to { opacity: 0; visibility: hidden; } }
 
 
-@media (max-width: 899px) {
-  .hero-inner { padding-block-start: 1.25rem; justify-content: flex-start; gap: 1rem; }
-  .hero-copy { display: contents; }
-  .hero-copy .pill { order: 0; }
-  .hero-copy h1 { order: 1; }
-  .hero-copy .subline { order: 3; }
-  .hero-copy .hero-chips { order: 4; }
-  /* the console closes the first screen: on a tall screen (a tablet) it starts below the picture, clear of the word */
-  #hero .term { order: 5; margin-block-start: auto; }
-  .hero::after { inset-block-start: 0; background: oklch(0.165 0.004 270 / .8); }
-}
-
 html.analytics-notice-visible:not(.static) .hero-pin:not(.story--flow) .hero-cue { inset-block-end: calc(4vh + var(--analytics-clearance, 0px)); }
 
 @media (min-width: 900px) and (max-height: 760px) {
@@ -377,4 +448,27 @@ html.analytics-notice-visible:not(.static) .hero-pin:not(.story--flow) .hero-cue
 
 @media (min-width: 900px) and (max-width: 1365px) and (max-height: 660px) {
   html:not(.static) .hero-pin:not(.story--flow) h1 { margin-block-end: 0; }
+}
+
+/* On laptop-height desktops, give the letters room to settle below the console. */
+@media (min-width: 900px) and (720px < height <= 820px) {
+  #hero .term { margin-block-start: -0.5rem; }
+}
+
+/* Give the taller plinth room between the terminal and the scroll cue on short desktops. */
+@media (min-width: 900px) and (max-height: 720px) {
+  #hero .term-bar { padding-block: 4px; }
+  #hero .console {
+    padding-block: 10px;
+    font-size: min(1rem, (100cqi - 36px) / 55);
+    line-height: 1.5;
+    min-height: calc(6em + 20px);
+  }
+  .hero :is(.hero-poster, .hero-opening, .hero-canvas) {
+    translate: 0 clamp(0px, (665px - 100svh) * 0.55, 42px);
+  }
+  html:not(.static) .hero-pin:not(.story--flow) .hero-cue { inset-block-end: 1.25vh; }
+  html.analytics-notice-visible:not(.static) .hero-pin:not(.story--flow) .hero-cue {
+    inset-block-end: calc(1.25vh + var(--analytics-clearance, 0px));
+  }
 }

@@ -13,6 +13,7 @@ import { getImage } from 'astro:assets';
 import Section from './Section.astro';
 import Art from './Art.astro';
 import Text from './Text.astro';
+import PhoneBeat from './PhoneBeat.astro';
 import '../../styles/story/rust.css';
 import rustArt from '../../assets/story/rust.png';
 import rustOnly from '../../assets/story/rust-only.png';
@@ -41,6 +42,7 @@ const fill = await getImage({ src: rustOnly, format: 'webp', width: 800, quality
     <h2 id="rust-h" tabindex="-1">{rust.heading}</h2>
     <p class="lede">{share.lede}</p>
   </div>
+  <PhoneBeat>
   <div class="ph ph1" data-stat={share.id}>
     <div class="readout" aria-hidden="true">
       <span class="num">{share.bars.map((bar, i) => <span class={`rv rv${i + 1}`}>{bar.value}</span>)}</span>
@@ -53,6 +55,7 @@ const fill = await getImage({ src: rustOnly, format: 'webp', width: 800, quality
     </ol>
     <p class="cap">{share.what} · {share.sourcesLead}{share.sources.map((link, i) => <>{i > 0 ? ',' : ''} <a class="source" href={link.href}>{link.label}</a></>)}</p>
   </div>
+  </PhoneBeat>
 
   <div class="rphase t2">
     <h3 class="phase-h">{density.heading}</h3>
@@ -61,11 +64,13 @@ const fill = await getImage({ src: rustOnly, format: 'webp', width: 800, quality
   <div class="ph ph2">
     <div class="dblock" data-stat={density.id}>
       <p class="lbl">{density.what}</p>
+      <PhoneBeat>
       <figure class="dens" data-illustrative="dots">
         <div class="side"><span class="who">{density.cLabel}</span><div class="field" aria-hidden="true"></div><span class="val cval">{density.cValue}</span></div>
         <div class="side"><span class="who">{density.rustLabel}</span><div class="onedot" aria-hidden="true"><i></i></div><span class="val rustval">{density.value}</span></div>
         <figcaption class="cap dkey">{density.illustration}</figcaption>
       </figure>
+      </PhoneBeat>
       <p class="cap">{density.sourceLead} · <a class="source" href={density.source.href}>{density.source.label}</a> · {density.note}</p>
     </div>
     <ul class="chips">
@@ -82,6 +87,6 @@ const fill = await getImage({ src: rustOnly, format: 'webp', width: 800, quality
   // pinned only while the word, the claim and both phases fit the stage (fit.ts), set snug if they need it; otherwise
   // the base layer, where the CSS word stands at its final state: the 3D word runs only while pinned
   const section = document.getElementById('rust');
-  const guard = section ? guardFit(section, rustFits, undefined, true) : undefined;
+  const guard = section ? guardFit(section, rustFits, { snug: true }) : undefined;
   for (const host of document.querySelectorAll<HTMLElement>('#rust .rust-word[data-3d-host]')) startRustWordWhenNear(host, guard);
 </script>

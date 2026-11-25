@@ -40,9 +40,13 @@ export function initMenu(doc: Document): void {
   // The visible section marks its link: a thin band across the middle of the viewport.
   const links = Array.from(doc.querySelectorAll<HTMLAnchorElement>('.site-nav a'));
   const byId = new Map(links.map(a => [new URL(a.href).hash.slice(1), a]));
-  const sections = Array.from(byId.keys()).map(id => doc.getElementById(id)).filter((el): el is HTMLElement => !!el);
+  const menuSections = Array.from(dialog?.querySelectorAll<HTMLAnchorElement>('.menu-paths a') ?? []).map(link => ({
+    link, id: new URL(link.href).hash.slice(1),
+  }));
+  const destinations = new Set([...byId.keys(), ...menuSections.map(({ id }) => id)]);
+  const sections = Array.from(destinations, id => doc.getElementById(id)).filter((el): el is HTMLElement => !!el);
+  let current = '';
   if (sections.length && 'IntersectionObserver' in win) {
-    let current = '';
     const mark = (id: string) => {
       current = id;
       for (const [key, a] of byId) {
@@ -104,6 +108,11 @@ export function initMenu(doc: Document): void {
 
     button.addEventListener('click', () => {
       if (dialog.open) return;
+      // Freeze the last observed location for this opening, without forcing layout during the tap.
+      for (const { link, id } of menuSections) {
+        if (id === current) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      }
       if (win.history.state?.ironafsMenu) win.history.replaceState(null, ''); // a stale menu entry, e.g. after Forward
       win.history.pushState({ ironafsMenu: ++token }, '');
       dialog.showModal();

@@ -10,6 +10,7 @@
 //   never off screen. The mapping is the CSS's: the slide runs over `contain 4%` to `contain 96%` of the section's
 //   view timeline (inset 0), translating the track by --pf-d (a registered <length>, read here in px).
 import { boxIn, guardFit, stageBand, type Box, type FitGuard } from './fit';
+import { TABLET_STORY_QUERY } from './mode';
 
 /** The slide's animation-range in platforms.css, as fractions of the section's contain range. */
 const RANGE: [number, number] = [0.04, 0.96];
@@ -22,6 +23,7 @@ const overlap = (a: Box, b: Box) => a.left < b.right - SLACK && b.left < a.right
 /** Every card inside its lane's row and clear of the next card in its lane, the IronAFS card clear of every lane card;
  *  the head and the track inside the stage. */
 export function platformsFits(section: HTMLElement): boolean {
+  if (matchMedia(TABLET_STORY_QUERY).matches) return false;
   const stage = section.querySelector<HTMLElement>(':scope > .stage');
   const tl = stage?.querySelector<HTMLElement>('.tl');
   if (!stage || !tl) return true;

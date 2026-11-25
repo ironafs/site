@@ -1,0 +1,171 @@
+/* SPDX-FileCopyrightText: 2026 Adrian Ana <adrian@adrianana.com> */
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+.phone-beat { display: contents; }
+
+@property --phone-beat-viewport {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+@supports (animation-timeline: view()) {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 320px) and (max-width: 760px) and (min-height: 560px) and (orientation: portrait),
+    (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (max-width: 1100px) and (min-height: 620px) and (pointer: coarse) {
+    html:not(.static)[data-phone-story] {
+      --phone-beat-viewport: 100svh;
+      --phone-beat-top: calc(var(--header-live, var(--header-h)) + 8px);
+    }
+    html:not(.static)[data-phone-story] :where([data-compact-scenes="phone"], #cost[data-compact-scenes], .story--flow[data-compact-scenes]) .phone-beat[data-hold] {
+      --phone-beat-distance: clamp(118px, 19svh, 160px);
+      display: block;
+      min-width: 0;
+    }
+    html:not(.static)[data-phone-story] :where([data-compact-scenes="phone"], #cost[data-compact-scenes], .story--flow[data-compact-scenes]) .phone-beat[data-hold]::after {
+      content: '';
+      display: block;
+      height: var(--phone-beat-distance);
+    }
+    html:not(.static)[data-phone-story] :is(#cost[data-compact-scenes], #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]), #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes])) .phone-beat[data-hold] > * {
+      position: sticky;
+      top: var(--phone-beat-top);
+    }
+
+    /* The diagram is a single request path, with the explanatory copy and disclosures above it. */
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .phone-beat { margin-top: 1rem; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .phone-beat[data-hold] .scene { margin: 0; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .how-os { padding-inline: 0.75rem; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .scene { row-gap: 12px; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .kband { margin-inline: 0; padding: 7px 8px 8px; row-gap: 5px; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .nd { padding: 6px 9px; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .nd.inner { margin-top: 5px; }
+    /* macOS hands off to the separate FSKit extension, then across to ironafsd. */
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .scene[data-os="macos"] {
+      --diagram-gap: 10px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+      column-gap: var(--diagram-gap);
+    }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .scene[data-os="macos"] > :not(.g-layer, .g-daemon) { grid-column: 1 / -1; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .scene[data-os="macos"] > :is(.g-layer, .g-daemon) {
+      align-self: start;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .scene[data-os="macos"] .g-daemon::before {
+      bottom: 50%;
+      left: calc(-1 * var(--diagram-gap));
+      width: var(--diagram-gap);
+      height: 2px;
+    }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .nd .chip { margin-top: 3px; padding-block: 1px; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .nd b { margin-bottom: 1px; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .scene :is(.g-prog, .g-layer, .g-daemon, .g-cells)::before,
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .scene .g-prog::after { height: 12px; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .g-prog { --beat-start: 0; --beat-end: 0.2; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .g-os { --beat-start: 0.2; --beat-end: 0.4; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .g-layer { --beat-start: 0.4; --beat-end: 0.6; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .g-daemon { --beat-start: 0.6; --beat-end: 0.8; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .scene:not(:has(.g-layer)) .g-daemon { --beat-start: 0.4; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .g-cells { --beat-start: 0.8; --beat-end: 1; }
+
+    /* Scroll an individual chart or workflow while its original labels and sources remain readable. */
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .ph1 {
+      padding: 0.9rem;
+      margin-bottom: 1.25rem;
+    }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .phone-beat[data-hold] {
+      --phone-beat-distance: clamp(96px, 15svh, 126px);
+    }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .chart { height: clamp(155px, 30svh, 235px); }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) .dens { padding: 0.75rem; background: var(--story-card-panel); border-radius: 14px; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .col:nth-child(1) { --beat-start: 0; --beat-end: 0.22; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .col:nth-child(2) { --beat-start: 0.22; --beat-end: 0.44; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .col:nth-child(3) { --beat-start: 0.44; --beat-end: 0.66; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .col:nth-child(4) { --beat-start: 0.66; --beat-end: 0.88; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .onedot { --beat-start: 0.18; --beat-end: 0.72; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .b { animation-name: rs-barUp; transform-origin: bottom; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .onedot i { animation-name: rs-dotIn; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] .ph1:focus-within .b { animation: none; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold][data-chart-step] .readout :where(.rv, .yr span) { display: none; }
+    html:not(.static)[data-phone-story] #rust:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] :is(
+      [data-chart-step="1"] .readout :is(.rv1, .y1), [data-chart-step="2"] .readout :is(.rv2, .y2),
+      [data-chart-step="3"] .readout :is(.rv3, .y3), [data-chart-step="4"] .readout :is(.rv4, .y4)
+    ) { display: block; }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] .phone-beat[data-hold]:has(> .afs) {
+      --phone-beat-distance: clamp(70px, 11svh, 100px);
+    }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] .afs {
+      padding: 0.65rem 0.8rem;
+      border: 1px solid var(--story-line);
+      border-radius: 12px;
+      background: #111215;
+    }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] [data-hold] .mac .doff { opacity: 1; animation-name: cs-dotOff; }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] [data-hold] .mac .don { animation-name: cs-dotOn; }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] [data-hold] .mac .c { animation-name: cs-tick; }
+    html:not(.static)[data-phone-story] #design:where([data-compact-scenes="phone"], .story--flow[data-compact-scenes]) [data-hold] :is(.g-prog, .g-os, .g-layer, .g-daemon, .g-cells) { animation-name: compact-request-step; }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] [data-hold] .vis .on { animation-name: phone-active-step; }
+    html:not(.static)[data-phone-story] :where([data-compact-scenes="phone"], #cost[data-compact-scenes], .story--flow[data-compact-scenes]) .phone-beat[data-hold] :is(.g-prog, .g-os, .g-layer, .g-daemon, .g-cells, .b, .onedot i, [data-step]):not(.afs *) {
+      animation-duration: 1s;
+      animation-fill-mode: both;
+      animation-play-state: paused;
+      animation-delay: calc(-1s * clamp(0, (var(--phone-beat-progress, 0) - var(--beat-start)) / (var(--beat-end) - var(--beat-start)), 1));
+    }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] .afs:is([data-terminal="waiting"], [data-terminal="playing"]) .typed {
+      width: 0;
+      overflow: hidden;
+    }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] .afs[data-terminal="waiting"] .bigout > span { opacity: 0; }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] .afs[data-terminal="playing"] .typed {
+      animation: cs-type 640ms steps(10) both;
+    }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] .afs[data-terminal="playing"] .bigout > span {
+      animation: compact-terminal-output 150ms 690ms ease-out both;
+    }
+    html:not(.static)[data-phone-story] #cost[data-compact-scenes] .afs[data-terminal="playing"] .bigout .design {
+      animation-delay: 850ms;
+    }
+
+    /* Platform events keep their chronological list and sources while the lane label stays in view. */
+    html:not(.static)[data-phone-story] #platforms[data-compact-scenes] .lane > h3 {
+      position: sticky;
+      top: calc(var(--phone-beat-top) - 8px);
+      z-index: 1;
+      padding-block: 0.65rem;
+      background: var(--story-bg);
+      border-bottom: 1px solid var(--story-line);
+    }
+    html:not(.static)[data-phone-story] #platforms[data-compact-scenes] .card {
+      animation-name: compact-timeline-event;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-timeline: view(block var(--phone-beat-top) var(--analytics-clearance, 0px));
+      animation-range: entry 35% exit 65%;
+    }
+
+    @media (min-width: 900px) and (min-height: 700px) {
+      html:not(.static)[data-phone-story] #design.story--flow[data-compact-scenes="tablet"] .how-os {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+        column-gap: 1.5rem;
+        align-items: start;
+      }
+      html:not(.static)[data-phone-story] #design.story--flow[data-compact-scenes="tablet"] .osname { grid-column: 1 / -1; }
+      html:not(.static)[data-phone-story] #design.story--flow[data-compact-scenes="tablet"] .phone-beat,
+      html:not(.static)[data-phone-story] #design.story--flow[data-compact-scenes="tablet"] .scene {
+        margin-top: 0;
+        grid-column: 2;
+        grid-row: 2;
+      }
+    }
+  }
+}
+
+@keyframes phone-active-step {
+  25%, 75% { box-shadow: inset 2px 0 var(--rust); }
+}
+@keyframes compact-request-step {
+  25%, 75% { border-color: var(--rust); box-shadow: inset 0 0 0 1px var(--rust), 0 0 14px #d8662a32; }
+}
+@keyframes compact-terminal-output { from { opacity: 0; } to { opacity: 1; } }
+@keyframes compact-timeline-event { 30%, 65% { border-color: #97613e; } }

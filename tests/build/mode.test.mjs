@@ -2,8 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-// The mode predicate: enhanced only with scroll-driven animation, no reduced motion,
-// more than 760 px, and no `.static` on <html>. A fake window drives it.
+// The mode predicates require scroll-driven animation, no reduced motion and no .static. A fake window drives them.
 function fakeWindow({ supports = true, matches = true, isStatic = false } = {}) {
   const classes = new Set(isStatic ? ['static'] : []);
   const mqListeners = [];
@@ -25,6 +24,8 @@ const { storyEnhanced, onModeChange } = await import('../../src/scripts/story/mo
 
 // The enhancement's media query, verbatim.
 const GATE = '@media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px)';
+const PHONE = '(scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 320px) and (max-width: 760px) and (min-height: 560px) and (orientation: portrait)';
+const TABLET = '(scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (max-width: 1100px) and (min-height: 620px) and (pointer: coarse)';
 
 test('enhanced only when all three hold', () => {
   fakeWindow();
@@ -41,6 +42,8 @@ test('the media query is the enhancement selector\'s', () => {
   const w = fakeWindow();
   storyEnhanced();
   assert.equal(w.query.media, GATE.slice('@media '.length));
+  storyEnhanced(true);
+  assert.equal(w.query.media, `${GATE.slice('@media '.length)}, ${PHONE}`);
 });
 
 test('onModeChange reports each change once, from the media query and from .static', () => {
@@ -90,7 +93,7 @@ function splitList(list) {
 }
 
 // Check every enhanced sheet, not just motion.css (the hero's hand-off block is in hero.css).
-const ENHANCED = ['story/motion.css', 'story/crash.css', 'story/how.css', 'story/rust.css', 'story/cost.css', 'story/platforms.css', 'hero.css'];
+const ENHANCED = ['story/motion.css', 'story/crash.css', 'story/how.css', 'story/rust.css', 'story/cost.css', 'story/platforms.css', 'story/phone-beats.css', 'hero.css'];
 
 for (const sheet of ENHANCED) {
   test(`${sheet}: every enhanced block opens with the selector verbatim, and every rule in it is under html:not(.static)`, () => {
@@ -98,13 +101,23 @@ for (const sheet of ENHANCED) {
     const all = blocks(css);
     const enhanced = all.filter(b => b.prelude === '@supports (animation-timeline: view())');
     assert.ok(enhanced.length > 0, 'no enhanced block');
-    for (const block of enhanced) {
+    if (sheet === 'story/crash.css') assert.equal(enhanced.length, 2, 'shared phases and phone layout');
+    for (const [index, block] of enhanced.entries()) {
       const inner = blocks(block.body);
       assert.equal(inner.length, 1, 'one @media inside each @supports');
-      assert.equal(inner[0].prelude, GATE);
+      const gate = splitList(inner[0].prelude);
+      if (sheet === 'story/crash.css') {
+        assert.deepEqual(gate, index === 0 ? [GATE, PHONE] : [`@media ${PHONE}`]);
+      } else if (sheet === 'story/phone-beats.css') assert.deepEqual(gate, [`@media ${PHONE}`, TABLET]);
+      else assert.deepEqual(gate, [GATE]);
       const selectors = selectorsIn(inner[0].body);
       assert.ok(selectors.length > 0);
-      for (const list of selectors) for (const s of splitList(list)) assert.match(s, /^html:not\(\.static\) /, s);
+      for (const list of selectors) for (const s of splitList(list)) {
+        assert.match(s, sheet === 'story/phone-beats.css' ? /^html:not\(\.static\)\[data-phone-story\]/ : /^html:not\(\.static\) /, s);
+        if (sheet === 'story/crash.css') {
+          assert.match(s, /^html:not\(\.static\) (?:#why|#numbers|:is\(#why, #numbers\)):not\(\.story--flow\)/, s);
+        }
+      }
     }
     // nothing scroll-driven escapes the gate: animation-timeline is set only inside an enhanced block
     const outside = all.filter(b => !enhanced.includes(b)).map(b => b.body).join('\n');

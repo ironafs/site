@@ -1,10 +1,17 @@
 import { test, expect } from '@playwright/test';
+import { noticeKey } from '../../src/data/analytics.ts';
 
-// Phones and tablets (below 900 px): the headline block leads over the picture under a scrim, the console closes the
-// first screen. Every hero text line keeps its contrast against the backdrop actually behind it (the picture under the
-// scrim, read from a screenshot with the text made transparent), no text box overlaps another or the console, and the
-// console's replay control is in the first viewport.
-async function overlayProblems(page) {
+// The console opens in the first viewport. Scroll to the copy below the art and check every text line against
+// its actual backdrop. These checks run with the analytics notice dismissed so the screenshot samples the hero.
+async function heroCopyProblems(page) {
+  const replay = await page.locator('#replay').boundingBox();
+  await page.evaluate(async () => {
+    const copy = document.querySelector('.hero-copy');
+    const header = document.getElementById('site-header');
+    const top = scrollY + copy.getBoundingClientRect().top - header.getBoundingClientRect().height - 8;
+    scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
   const texts = await page.evaluate(() => [...document.querySelectorAll('.hero .pill, .hero h1, .hero .subline')].flatMap(t => {
     const walker = document.createTreeWalker(t, NodeFilter.SHOW_TEXT);
     const out = [];
@@ -22,7 +29,7 @@ async function overlayProblems(page) {
   const layout = await page.evaluate(() => {
     const box = el => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom }; };
     const parts = ['.hero .pill', '.hero h1', '.hero .subline', '.hero .hero-chips', '#hero .term'].map(s => ({ name: s, ...box(document.querySelector(s)) }));
-    return { parts, replay: box(document.getElementById('replay')), vh: innerHeight, vw: innerWidth };
+    return { parts, vh: innerHeight, vw: innerWidth };
   });
   // the backdrop alone: the copy made transparent through the CSSOM (the CSP refuses a <style> tag), layout kept
   await page.evaluate(() => {
@@ -69,36 +76,42 @@ async function overlayProblems(page) {
     const a = parts[i], b = parts[j];
     if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5) overlaps.push(`${a.name} overlaps ${b.name}`);
   }
-  return { contrast, overlaps, layout };
+  return { contrast, overlaps, layout, replay, lineCount: texts.length };
 }
 
-function expectOverlay({ contrast, overlaps, layout }) {
+function expectReadableHero({ contrast, overlaps, layout, replay, lineCount }) {
   expect(new Set(contrast.map(t => t.name)), 'the pill, the h1 and the subline were measured').toEqual(new Set(['pill', 'h1', 'subline']));
+  expect(contrast, 'every hero copy line was sampled').toHaveLength(lineCount);
   for (const t of contrast) expect(t.ratio, `${t.name}: ${t.ratio} over its backdrop`).toBeGreaterThanOrEqual(t.need);
   expect(overlaps).toEqual([]);
-  const { replay, vh, vw } = layout;
-  expect(replay.top, 'replay in the first viewport').toBeGreaterThanOrEqual(0);
-  expect(replay.bottom, 'replay in the first viewport').toBeLessThanOrEqual(vh);
-  expect(replay.left).toBeGreaterThanOrEqual(0);
-  expect(replay.right).toBeLessThanOrEqual(vw);
+  const { vh, vw } = layout;
+  expect(replay.y, 'replay in the first viewport').toBeGreaterThanOrEqual(0);
+  expect(replay.y + replay.height, 'replay in the first viewport').toBeLessThanOrEqual(vh);
+  expect(replay.x).toBeGreaterThanOrEqual(0);
+  expect(replay.x + replay.width).toBeLessThanOrEqual(vw);
 }
 
 for (const width of [360, 390, 430]) {
-  test(`phone hero at ${width}: the poster shows its full width, and the headline block over it is legible and clear of the console`, async ({ page }) => {
+  test(`phone hero at ${width}: the console, uncropped poster and readable copy appear in order`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addInitScript(key => sessionStorage.setItem(key, '1'), noticeKey);
     await page.goto('/');
     const m = await page.evaluate(() => {
       const img = document.querySelector('img.hero-poster') ?? document.querySelector('.hero-poster img');
       const box = img.getBoundingClientRect();
-      return { fit: getComputedStyle(img).objectFit, ratio: img.naturalWidth / img.naturalHeight, boxW: box.width, boxH: box.height, shownW: Math.min(box.width, box.height * (img.naturalWidth / img.naturalHeight)), left: box.left, vw: window.innerWidth };
+      const consoleBottom = document.querySelector('#hero .term').getBoundingClientRect().bottom;
+      const copyTop = document.querySelector('#hero .hero-copy').getBoundingClientRect().top;
+      return { fit: getComputedStyle(img).objectFit, ratio: img.naturalWidth / img.naturalHeight, boxW: box.width, shownW: Math.min(box.width, box.height * (img.naturalWidth / img.naturalHeight)), left: box.left, vw: window.innerWidth, artTop: box.top, artBottom: box.bottom, consoleBottom, copyTop };
     });
     expect(m.ratio).toBeGreaterThan(1.5);
     expect(m.fit).toBe('contain');
     expect(m.left).toBeGreaterThanOrEqual(0);
     expect(m.boxW).toBeGreaterThanOrEqual(m.vw - 1);
     expect(m.shownW, 'no horizontal crop').toBeGreaterThanOrEqual(m.boxW - 1);
-    expectOverlay(await overlayProblems(page));
+    expect(m.consoleBottom, 'the console ends above the artwork').toBeLessThanOrEqual(m.artTop + 1);
+    expect(m.copyTop, 'the copy follows the artwork').toBeGreaterThanOrEqual(m.artBottom - 1);
+    expectReadableHero(await heroCopyProblems(page));
   });
 }
 
@@ -178,6 +191,7 @@ for (const [width, height] of sizes) {
   test(`hero at ${width}x${height}: console, word, then status pill and h1 with no overlap${wholeH1.includes(`${width}x${height}`) ? ', the whole h1 in the first viewport' : ''}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     await page.emulateMedia({ reducedMotion: 'reduce' });
+    if (width < 900) await page.addInitScript(key => sessionStorage.setItem(key, '1'), noticeKey);
     await page.goto('/');
     const m = await page.evaluate(() => {
       const img = document.querySelector('img.hero-poster') ?? document.querySelector('.hero-poster img');
@@ -194,10 +208,9 @@ for (const [width, height] of sizes) {
       expect(m.status.top, 'status pill below the word').toBeGreaterThanOrEqual(wordBottom);
       expect(m.h1.top, 'h1 below the word').toBeGreaterThanOrEqual(wordBottom);
     } else {
-      // below 900 px the headline block leads over the picture (the phone layout): the console still starts below
-      // the picture, and the text over the picture is legible and clear of the console
-      expect(m.term.top, 'phones: the console starts below the picture').toBeGreaterThanOrEqual(m.posterTop + m.posterH - 1);
-      expectOverlay(await overlayProblems(page));
+      expect(m.term.bottom, 'the console ends above the artwork').toBeLessThanOrEqual(m.posterTop + 1);
+      expect(m.status.top, 'the status pill follows the artwork').toBeGreaterThanOrEqual(m.posterTop + m.posterH - 1);
+      expectReadableHero(await heroCopyProblems(page));
     }
     if (wholeH1.includes(`${width}x${height}`)) expect(m.h1.bottom, 'the whole h1 is in the first viewport').toBeLessThanOrEqual(m.fold);
   });

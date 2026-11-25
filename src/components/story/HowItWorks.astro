@@ -10,6 +10,7 @@
 import Section from './Section.astro';
 import Text from './Text.astro';
 import OsDiagram from './OsDiagram.astro';
+import PhoneBeat from './PhoneBeat.astro';
 import '../../styles/story/how.css';
 import { story } from '../../content/story';
 
@@ -23,7 +24,7 @@ const { how } = story;
     ))}
     <span class="tabs-cue">{how.scrollCue}</span>
   </div>
-  <p class="step-progress" aria-live="off">{how.stepLabel} 1 {how.stepOf} 4</p>
+  <p class="step-progress" aria-live="off">{how.stepLabel} <span data-step-current>1</span> {how.stepOf} 4</p>
   <div class="how-oses">
     {how.os.map((os, i) => (
       <div class="how-os" data-os={os.os}>
@@ -41,7 +42,7 @@ const { how } = story;
           </details>
           <p class="cite">{os.cite} · <span>{os.status}</span></p>
         </div>
-        <OsDiagram os={os} index={i} />
+        <PhoneBeat><OsDiagram os={os} index={i} /></PhoneBeat>
       </div>
     ))}
   </div>
@@ -58,11 +59,14 @@ const { how } = story;
     const tablist = section.querySelector<HTMLElement>('[role="tablist"]');
     // Pinned only while everything fits (fit.ts), set snug if it needs it; the measurement needs the tabs' row, which
     // flow hides.
-    const guard = guardFit(section, designFits, () => {
-      if (!tablist?.hidden) return () => {};
-      tablist.hidden = false;
-      return () => { tablist.hidden = true; };
-    }, true);
+    const guard = guardFit(section, designFits, {
+      snug: true,
+      prepare: () => {
+        if (!tablist?.hidden) return () => {};
+        tablist.hidden = false;
+        return () => { tablist.hidden = true; };
+      },
+    });
     // the tabs and the lines follow the layout: pinned, or the base layer (phones, reduced motion, .story--flow)
     const setTabs = initOsTabs(section, guard.pinned());
     if (guard.pinned()) scenes.forEach(drawConnectors);

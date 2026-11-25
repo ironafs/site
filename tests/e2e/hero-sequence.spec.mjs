@@ -2,10 +2,11 @@ import { test, expect } from '@playwright/test';
 
 // The intro sequence, asserted on the scene clock (data-t, the ?test hook), never wall-clock:
 // software GL is slow, the scene clock only runs as fast as the frames do.
-const CHIP_ALONE = 3.4;
+const CHIP_ALONE = 1.05;
 const LETTER_GAP = 0.24;
 const FALL = 1.35;
-const MELT_AT = CHIP_ALONE + 6 * LETTER_GAP + FALL + 0.35;
+const HEAT_AT = CHIP_ALONE + 6 * LETTER_GAP + FALL;
+const WARM_UP = 1.96;
 
 const noWebgl = () => test.info().project.name === 'chromium-nowebgl';
 const hero = page => page.locator('#hero');
@@ -23,7 +24,7 @@ test.beforeEach(() => {
   test.skip(noWebgl(), 'needs WebGL');
 });
 
-test('phases run chip, drop, melt in order; drop and melt land on the spec times (scene clock)', async ({ page }) => {
+test('phases run chip, drop, heating, melt in order on the scene clock', async ({ page }) => {
   test.setTimeout(SLOW + 30_000);
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
@@ -42,9 +43,11 @@ test('phases run chip, drop, melt in order; drop and melt land on the spec times
   const attr = async name => Number(await hero(page).getAttribute(name));
   expect(await attr('data-t-chip')).toBeLessThan(0.5);
   expect(Math.abs((await attr('data-t-drop')) - CHIP_ALONE)).toBeLessThan(0.5);
-  expect(Math.abs((await attr('data-t-melt')) - MELT_AT)).toBeLessThan(0.7);
+  const heatAt = await attr('data-t-heating');
+  expect(Math.abs(heatAt - HEAT_AT)).toBeLessThan(0.35);
+  expect(Math.abs((await attr('data-t-melt')) - heatAt - WARM_UP)).toBeLessThan(0.2);
   const phases = await page.evaluate(() => window.__phases);
-  expect(phases.slice(0, 3)).toEqual(['chip', 'drop', 'melt']);
+  expect(phases.slice(0, 4)).toEqual(['chip', 'drop', 'heating', 'melt']);
   expect(errors).toEqual([]);
 });
 

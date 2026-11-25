@@ -209,6 +209,7 @@ test.describe('desktop, enhanced', () => {
   });
 
   test('each platform maps four scroll steps to one current bullet and progress marker', async ({ page }) => {
+    const markerText = await page.locator('#design [data-step-current]').evaluateHandle(el => el.firstChild);
     for (const [i, os] of OSES.entries()) {
       for (let step = 1; step <= 4; step++) {
         await pinnedAt(page, (i + (step - 0.5) / 4) / 3);
@@ -216,6 +217,7 @@ test.describe('desktop, enhanced', () => {
         await expect(design).toHaveAttribute('data-step', String(step));
         await expect(design).toHaveAttribute('data-platform', String(i));
         await expect(design.locator('.step-progress')).toHaveText(`step ${step} of 4`);
+        expect(await markerText.evaluate(node => node.isConnected), 'the scroll step updates the same progress text node').toBe(true);
         const current = design.locator('.short > li.is-current');
         await expect(current).toHaveCount(step === 1 ? 0 : 1);
         if (step > 1) await expect(page.locator(`#panel-${os} .short > li`).nth(step - 2)).toHaveClass(/is-current/);

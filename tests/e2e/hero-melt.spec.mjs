@@ -8,13 +8,14 @@ const clock = async page => Number(await hero(page).getAttribute('data-t'));
 // Wall-clock waits are generous: on a 2-core CI runner software GL runs a 1440x900 scene at ~0.1 s of scene time per
 // second. The assertions themselves are on the scene clock.
 const SLOW = 240_000;
+const TRAY_TOP = 1.22;
 const embers = async page => JSON.parse(await hero(page).getAttribute('data-embers')); // [opacity, mean stir speed]
 
 test.beforeEach(() => {
   test.skip(noWebgl(), 'needs WebGL');
 });
 
-test('no embers and an empty console (the caret only) before the melt; after cooling no pool is drawn and every letter stands on the floor', async ({ page }) => {
+test('no embers and an empty console before the melt; after cooling no pool is drawn and each letter rests on the tray', async ({ page }) => {
   test.setTimeout(3 * SLOW);
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
@@ -40,7 +41,7 @@ test('no embers and an empty console (the caret only) before the melt; after coo
   // with a live scene the console types when the melt starts
   expect(await page.evaluate(() => window.__typedBeforeMelt)).toBe(0);
   expect(await page.evaluate(() => window.__caretBeforeMelt)).toBe(true);
-  // the embers fade in over 2.5 s from the melt
+  // The embers gradually become visible once the melt starts.
   const meltT = Number(await hero(page).getAttribute('data-t-melt'));
   await expect.poll(() => clock(page), { timeout: SLOW }).toBeGreaterThan(meltT + 2.6);
   expect((await embers(page))[0]).toBeGreaterThan(0.5);
@@ -56,7 +57,7 @@ test('no embers and an empty console (the caret only) before the melt; after coo
   expect(await hero(page).getAttribute('data-pool')).toBe('0');
   const bases = JSON.parse(await hero(page).getAttribute('data-base'));
   expect(bases).toHaveLength(7);
-  for (const y of bases) expect(Math.abs(y), `letter base ${bases}`).toBeLessThanOrEqual(0.01);
+  for (const y of bases) expect(Math.abs(y - TRAY_TOP), `letter base ${bases}`).toBeLessThanOrEqual(0.01);
   // the scene stays live at rest
   await expect(hero(page)).toHaveAttribute('data-scene', 'live');
   expect(errors).toEqual([]);

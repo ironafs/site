@@ -180,24 +180,25 @@ test('the poster carries width and height (no layout shift) and the console stay
 
 const lcpObserver = () => {
   window.__lcp = [];
-  // the element is recorded by what it is in the hero copy (its h1 id or the subline class), not only by its tag
   const role = el => !el ? '?' : el.id === 'headline' && el.closest('#hero .hero-copy') ? 'hero h1'
-    : el.matches('#hero .hero-copy p.subline') ? 'hero subline' : el.tagName;
+    : el.matches('#hero .hero-copy p.subline') ? 'hero subline'
+    : el.matches('#hero .hero-art .hero-opening') ? 'hero opening' : el.tagName;
   new PerformanceObserver(list => { for (const e of list.getEntries()) window.__lcp.push({ tag: e.element?.tagName ?? '?', role: role(e.element), t: e.startTime }); })
     .observe({ type: 'largest-contentful-paint', buffered: true });
 };
 const phoneOnly = (browserName, info) => browserName !== 'chromium' || info.project.name !== 'chromium-phone';
 
-// The first screen's largest paint is the hero's text, never the 3D canvas, the poster or anything outside the hero
-// copy. With the headline block first on phones, the subline can be larger than the h1: either one is right.
-test('first visit: the largest contentful paint on the phone profile is the hero text (h1 or subline)', async ({ page, browser, browserName }, info) => {
+test('first visit: the largest contentful paint on the phone profile is the opening artwork or headline copy', async ({ page, browser, browserName }, info) => {
   test.skip(phoneOnly(browserName, info), 'LCP API: chromium phone');
   await warmUp(browser, info.project.use);
   await page.addInitScript(lcpObserver);
   await page.goto('/');
+  const opening = page.locator('#hero .hero-opening');
+  const openingPath = await opening.evaluate(el => new URL(getComputedStyle(el).backgroundImage.slice(5, -2)).pathname);
+  await expect(page.locator('head link[rel="preload"][as="image"][href*="opening-phone"]')).toHaveAttribute('href', openingPath);
   await page.waitForTimeout(3000);
   await page.evaluate(() => document.body.click());
-  expect(['hero h1', 'hero subline']).toContain((await page.evaluate(() => window.__lcp)).at(-1).role);
+  expect(['hero opening', 'hero h1', 'hero subline']).toContain((await page.evaluate(() => window.__lcp)).at(-1).role);
 });
 
 for (const mode of ['return visit', 'reduced motion']) {
@@ -207,6 +208,10 @@ for (const mode of ['return visit', 'reduced motion']) {
     if (mode === 'return visit') await page.addInitScript(seenFlag);
     else await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.addInitScript(lcpObserver);
+    const openingRequests = [];
+    page.on('request', request => {
+      if (/\/_astro\/opening-phone\.[^/]+\.webp$/.test(new URL(request.url()).pathname)) openingRequests.push(request.url());
+    });
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
     await cdp.send('Network.enable');
@@ -216,6 +221,7 @@ for (const mode of ['return visit', 'reduced motion']) {
     await page.evaluate(() => document.body.click());
     const last = (await page.evaluate(() => window.__lcp)).at(-1);
     console.log(`${mode} LCP: ${last.tag} at ${Math.round(last.t)} ms`);
+    expect(openingRequests, 'a visit that skips the intro only needs the cooled artwork').toEqual([]);
     expect(last.t).toBeLessThanOrEqual(2000);
   });
 }

@@ -16,6 +16,16 @@ const PINS_PER_SIDE = 14;
 
 /** The label's fonts, as CSS font shorthands: the page's own JetBrains Mono, loaded before the texture is drawn. */
 export const LABEL_FONTS = ['700 210px "JetBrains Mono"', '500 64px "JetBrains Mono"'];
+const FONT_WAIT_MS = 2500;
+
+export async function preloadLabelFonts(): Promise<void> {
+  try {
+    const loads = Promise.all(LABEL_FONTS.map(font => document.fonts.load(font, ui.chip)));
+    await Promise.race([loads, new Promise(resolve => setTimeout(resolve, FONT_WAIT_MS))]);
+  } catch {
+    // The label falls back to the system monospace.
+  }
+}
 
 export type Chip = SceneModule & {
   halfWidth: number;
@@ -43,7 +53,7 @@ function mulberry(a: number): () => number {
  * 2.2x wider than the texture, so on the phone tier the one line is drawn twice as tall (and the sub-line,
  * unreadable at that size, is left out).
  */
-function labelTexture(maxAnisotropy: number, phone: boolean): CanvasTexture {
+function labelTexture(maxAnisotropy: number, phone: boolean, faceSize?: { width: number; height: number }): CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 2048;
   canvas.height = 520;
@@ -57,7 +67,22 @@ function labelTexture(maxAnisotropy: number, phone: boolean): CanvasTexture {
   x.textBaseline = 'middle';
   x.fillStyle = '#ece8e2';
   x.font = `${LABEL_FONTS[0]}, monospace`;
-  if (phone) {
+  if (faceSize) {
+    // Match the type to the shallow panel in world space instead of stretching the atlas.
+    const aspectCorrection = (faceSize.height / canvas.height) * (canvas.width / faceSize.width);
+    x.save();
+    x.translate(1024, 0);
+    x.scale(aspectCorrection * (phone ? 1.5 : 1.4), 1);
+    x.fillStyle = '#e8e4dc';
+    x.font = `700 ${phone ? 302 : 244}px "JetBrains Mono", monospace`;
+    x.fillText(ui.chip, 0, phone ? 265 : 196);
+    if (!phone) {
+      x.fillStyle = '#dedad4';
+      x.font = '500 117px "JetBrains Mono", monospace';
+      x.fillText(ui.chipPlatforms, 0, 389);
+    }
+    x.restore();
+  } else if (phone) {
     x.save();
     x.translate(1024, 262);
     x.scale(1, 1.9);
@@ -83,10 +108,10 @@ function labelTexture(maxAnisotropy: number, phone: boolean): CanvasTexture {
 }
 
 /** `halfWidth`: the word's half-width + 0.4, so every letter lands on the chip. */
-export function createChip(ctx: SceneContext, halfWidth: number): Chip {
+export function createChip(ctx: SceneContext, halfWidth: number, faceSize?: { width: number; height: number }): Chip {
   const width = halfWidth * 2;
   const group = new Group();
-  const label = labelTexture(ctx.renderer.capabilities.getMaxAnisotropy(), ctx.tier === 'phone');
+  const label = labelTexture(ctx.renderer.capabilities.getMaxAnisotropy(), ctx.tier === 'phone', faceSize);
 
   const dark = new MeshStandardMaterial({ color: 0x1a1c20, metalness: 0.6, roughness: 0.45 });
   const front = new MeshBasicMaterial({ map: label, toneMapped: false });
@@ -94,7 +119,7 @@ export function createChip(ctx: SceneContext, halfWidth: number): Chip {
   body.position.y = CHIP_HEIGHT / 2 + CHIP_LIFT;
   body.castShadow = body.receiveShadow = true;
   group.add(body);
-  const face = new Mesh(new PlaneGeometry(width * 0.94, CHIP_HEIGHT * 0.82, 96, 12), front);
+  const face = new Mesh(new PlaneGeometry(faceSize?.width ?? width * 0.94, faceSize?.height ?? CHIP_HEIGHT * 0.82, 96, 12), front);
   face.position.set(0, CHIP_HEIGHT / 2 + CHIP_LIFT, CHIP_DEPTH / 2 + 0.003);
   group.add(face);
 

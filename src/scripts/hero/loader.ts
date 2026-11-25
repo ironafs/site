@@ -94,6 +94,7 @@ function whenIdle(run: () => void): void {
  * and never builds a scene.
  */
 export function startHeroWhenIdle(hero: HTMLElement): void {
+  const art = hero.querySelector<HTMLElement>('.hero-art') ?? hero;
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const testHook = new URLSearchParams(window.location.search).has('test'); // the spec hook, never otherwise
   let current: Live | null = null;
@@ -148,10 +149,10 @@ export function startHeroWhenIdle(hero: HTMLElement): void {
     const stamps: Record<string, number> = {};
     const stamp = (name: string) => { if (testHook) { stamps[name] = Math.round(performance.now() - started); hero.dataset.timings = JSON.stringify(stamps); } };
     let mod: typeof import('./scene');
-    let stage: typeof import('./stage');
+    let recessed: typeof import('./recessed');
     try {
-      [mod, stage] = await Promise.all([import('./scene'), import('./stage')]);
-      await stage.preloadLabelFonts();
+      [mod, recessed] = await Promise.all([import('./scene'), import('./recessed')]);
+      await recessed.preloadLabelFonts();
       stamp('loaded');
     } catch {
       if (mine === token && awaited) fallBack(); // the chunk failed to load: the poster and a complete console
@@ -164,7 +165,14 @@ export function startHeroWhenIdle(hero: HTMLElement): void {
     const canvas = document.createElement('canvas');
     canvas.className = 'hero-canvas';
     canvas.setAttribute('aria-hidden', 'true');
-    hero.prepend(canvas);
+    art.prepend(canvas);
+    // Context creation is synchronous. Give pending input a frame to run and another to present its result.
+    if (!document.hidden) {
+      await new Promise<void>(resolve => {
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => window.setTimeout(resolve, 0)));
+      });
+    }
+    if (mine !== token) { canvas.remove(); return; }
     watchdog.watch(canvas); // the first frame can come only while the canvas itself is on screen
     const live: Live = { scene: null, canvas, released: false };
     const tier = tierFor(window);
@@ -186,7 +194,7 @@ export function startHeroWhenIdle(hero: HTMLElement): void {
             hero.dispatchEvent(new CustomEvent('hero:melt')); // the console types now
           }
         },
-        modules: [stage.createStage(testHook ? hero : undefined)],
+        modules: [recessed.createRecessedStage(testHook ? hero : undefined)],
         onEnd: () => {
           const building = current !== live && mine === token && !live.released;
           release(live);

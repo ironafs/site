@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import openingPhone from '../assets/hero/opening-phone.webp?url';
 import Hero from '../components/Hero.astro';
 import Built from '../components/Built.astro';
 import Follow from '../components/Follow.astro';
@@ -16,7 +17,7 @@ import StatusSection from '../components/story/StatusSection.astro';
 
 // The story in page order.
 ---
-<Base>
+<Base phoneOpening={openingPhone}>
   <main id="main">
     <Hero />
 

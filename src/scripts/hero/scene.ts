@@ -11,8 +11,10 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 
-export type Phase = 'chip' | 'drop' | 'melt' | 'cooled';
+export type Phase = 'chip' | 'drop' | 'heating' | 'melt' | 'cooled';
 export type Tier = 'desktop' | 'phone';
 /** 'intro': the whole sequence from the chip alone; 'finished': straight to the cooled word at rest (a return visit). */
 export type StartAt = 'intro' | 'finished';
@@ -190,6 +192,11 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
   const phoneTier = opts.tier === 'phone';
 
   await pause(); // the renderer and its context
+  if (phoneTier && !document.hidden) {
+    // Creating the environment draws synchronously. Give controls a frame to paint before that work starts.
+    await new Promise<void>(resolve => window.requestAnimationFrame(() => window.setTimeout(resolve, 0)));
+    await pause();
+  }
   const scene = new Scene();
   scene.background = new Color(BG);
   scene.fog = new Fog(BG, 16, 34);
@@ -233,6 +240,8 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
   const bloom = new UnrealBloomPass(new Vector2(1, 1), phoneTier ? 0.36 : 0.5, phoneTier ? 0.22 : 0.35, 0.85);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
+  const edgeSmoothing = phoneTier ? null : new ShaderPass(FXAAShader);
+  if (edgeSmoothing) composer.addPass(edgeSmoothing);
   await pause();
 
   let wordWidth = DEFAULT_WORD_WIDTH;
@@ -297,6 +306,10 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
     const h = Math.max(1, canvas.clientHeight);
     renderer.setSize(w, h, false); // false: the stylesheet sizes the canvas (no inline style under the CSP)
     composer.setSize(w, h);
+    if (edgeSmoothing) {
+      const dpr = renderer.getPixelRatio();
+      edgeSmoothing.uniforms.resolution.value.set(1 / (w * dpr), 1 / (h * dpr));
+    }
     bloom.setSize(phoneTier ? w / 2 : w, phoneTier ? h / 2 : h); // phones: bloom at half resolution
     camera.aspect = w / h;
     frame();
@@ -384,22 +397,17 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
     const idle = (run: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(run, { timeout: 1000 }) : window.setTimeout(run, 50));
     return new Promise<void>(resolve => idle(() => {
       if (ended) return resolve();
-      const hidden: Object3D[] = [];
-      scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
-      if (!hidden.length) return resolve();
-      // compile() reads visibility now, synchronously: no frame is drawn before it is restored. A throw (compileAsync
-      // compiles before it returns its promise) or a rejection is a failed compile: the next frame ends the scene.
-      let warmed: Promise<unknown>;
-      try {
-        warmed = renderer.compileAsync(scene, camera).catch(() => { shaderFailed = true; });
-      } catch {
-        shaderFailed = true;
-        warmed = Promise.resolve();
-      } finally {
-        for (const o of hidden) o.visible = false;
-      }
-      window.setTimeout(resolve, WARM_TIMEOUT_MS);
-      void warmed.then(() => resolve());
+      const deadline = window.setTimeout(resolve, WARM_TIMEOUT_MS);
+      void (async () => {
+        if (phoneTier) {
+          await compilePhoneMaterials(false);
+        } else {
+          await renderer.compileAsync(scene, camera);
+        }
+      })().catch(() => { if (!ended) shaderFailed = true; }).finally(() => {
+        window.clearTimeout(deadline);
+        resolve();
+      });
     }));
   }
 
@@ -414,6 +422,23 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
   function disposeModules() {
     for (const m of modules) m.dispose?.();
     modules.length = 0;
+  }
+
+  async function compilePhoneMaterials(visible: boolean): Promise<void> {
+    // Three's compileAsync includes hidden meshes. Select the meshes first and compile each material with
+    // the scene's lighting, yielding between them so touch input can paint during the warm-up.
+    const shown = new Set<Object3D>();
+    scene.traverseVisible(object => { shown.add(object); });
+    const objects = new Map<Mesh['material'], Object3D>();
+    scene.traverse(object => {
+      const mesh = object as Mesh;
+      if (mesh.material && shown.has(object) === visible) objects.set(mesh.material, object);
+    });
+    for (const object of objects.values()) {
+      await pause();
+      await renderer.compileAsync(object, camera, scene);
+      if (shaderFailed) throw new Error('A hero shader failed to compile');
+    }
   }
 
   function dispose() {
@@ -465,15 +490,14 @@ async function build(canvas: HTMLCanvasElement, opts: SceneOptions, renderer: We
       if (running || ended) return;
       running = true;
       ctx.setPhase(ctx.startAt === 'finished' ? 'cooled' : 'chip');
-      // compile what the first frame shows before it, so the intro never starts with a hitch (the rest: warmLater).
-      // compileAsync compiles synchronously before it returns its promise: a throw there, or a rejection, ends the
-      // scene; the loop starts only once it has settled.
+      // The phone warms hidden materials after the first frame. The desktop prepares the scene together.
       const failed = (error: unknown) => {
         console.warn('IronAFS hero: the 3D scene failed to compile; showing the poster instead.', error);
         dispose();
       };
       try {
-        renderer.compileAsync(scene, camera).then(() => { compiled = true; sync(); }, failed);
+        const firstFrame = phoneTier ? compilePhoneMaterials(true) : renderer.compileAsync(scene, camera);
+        void firstFrame.then(() => { compiled = true; sync(); }, error => { if (!ended) failed(error); });
       } catch (error) {
         failed(error);
       }

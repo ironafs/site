@@ -25,3 +25,12 @@ const { numbers } = story;
   </div>
   <div class="dots" aria-hidden="true"><i></i><i></i></div>
 </Section>
+
+<script>
+  import { guardFit, phoneStoryFits } from '../../scripts/story/fit';
+
+  for (const id of ['why', 'numbers']) {
+    const section = document.getElementById(id);
+    if (section) guardFit(section, phoneStoryFits, { phone: true });
+  }
+</script>

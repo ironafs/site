@@ -8,7 +8,7 @@
 // the element's --r, and the dim hold before it (from the stack's arrival to the beat) into --d (style.setProperty;
 // cost.css reads them as animation ranges), and recomputed whenever the
 // stack's size or the viewport changes. Nothing here runs when the enhancement is off: the base layer is static.
-import { storyEnhanced, onModeChange } from './mode';
+import { storyEnhanced, onModeChange, TABLET_STORY_QUERY } from './mode';
 
 /** Of a card's pinned window, the share before its first beat starts and after its last beat ends. */
 const LEAD = 0.08;
@@ -91,10 +91,11 @@ function stackFits(stack: HTMLElement, cards: HTMLElement[], vh: number): boolea
 export function initStacks(root: ParentNode = document): void {
   const stacks = [...root.querySelectorAll<HTMLElement>('.stack[data-stack]')];
   if (!stacks.length) return;
+  const tablet = matchMedia(TABLET_STORY_QUERY);
   let queued = false;
   const run = () => {
     queued = false;
-    if (storyEnhanced()) for (const stack of stacks) phaseStack(stack);
+    if (storyEnhanced() && !tablet.matches) for (const stack of stacks) phaseStack(stack);
   };
   const schedule = () => {
     if (queued) return;
@@ -105,6 +106,7 @@ export function initStacks(root: ParentNode = document): void {
   const observer = new ResizeObserver(schedule);
   for (const stack of stacks) observer.observe(stack);
   addEventListener('resize', schedule);
+  tablet.addEventListener('change', schedule);
   onModeChange(schedule);
 
   // A command cursor blinks for five seconds (cost.css), then holds still: each time it comes into view, it blinks

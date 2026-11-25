@@ -124,7 +124,19 @@ for (const mode of ['static', 'default']) {
       await expect(bars).toHaveCount(4);
       await expect(bars.locator('.bv')).toHaveText(VALUES);
       await expect(bars.locator('.yr')).toHaveText(YEARS);
-      await pinnedAt(page, 'rust', 0.4);
+      const compactChart = page.locator('#rust .phone-beat[data-hold]:has(> .ph1)');
+      if (await compactChart.count()) {
+        // The compact chart has its own scroll distance inside the longer Rust section.
+        await compactChart.evaluate(beat => {
+          const panel = beat.firstElementChild;
+          const top = parseFloat(getComputedStyle(panel).top);
+          const travel = beat.offsetHeight - panel.offsetHeight;
+          scrollTo({ top: Math.round(scrollY + beat.getBoundingClientRect().top - top + 0.95 * travel), behavior: 'instant' });
+        });
+        await expect.poll(() => compactChart.evaluate(beat => Number(beat.style.getPropertyValue('--phone-beat-progress')))).toBe(1);
+      } else {
+        await pinnedAt(page, 'rust', 0.4);
+      }
       const heights = await bars.locator('.b').evaluateAll(bs => bs.map(b => b.getBoundingClientRect().height));
       expect(heights, 'a bar per value').toHaveLength(4);
       expect(heights[0]).toBeGreaterThan(50);
@@ -205,7 +217,9 @@ for (const mode of ['static', 'default']) {
   });
 }
 
-test('phone: the phases are stacked at their final state, the cards in one column', async ({ page }) => {
+test('phone with reduced motion: the phases are stacked at their final state, the cards in one column', async ({ page }) => {
+  test.skip(page.viewportSize().width > 760, 'phone projects');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   test.skip(await enhanced(page), 'the phone and base layout');
   // both phases' text and panels, in reading order: phase 1 text, bars, phase 2 text, density

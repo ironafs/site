@@ -20,6 +20,8 @@ export const ui = {
   "wordEnd": "AFS",
   "chip": "kernel module",
   "chipPlatforms": "linux module · macOS kext · windows driver",
+  "kernelDeck": "OS KERNEL",
+  "userSpaceTray": "USER SPACE",
   "wordmark": "IronAFS",
   "footerNotices": "Third-party notices",
   "githubChip": "GitHub ·",

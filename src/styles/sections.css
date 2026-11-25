@@ -301,17 +301,36 @@
 #what .what-status span { padding: 3px 10px; border: 1px solid #ffffff2b; border-radius: 99px; background: #ffffff08; }
 #what .what-status span:first-child::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: var(--story-amber); vertical-align: middle; }
 @media (max-width: 69.999rem) {
-  #what .what-diagram { grid-template-columns: minmax(0, 1fr) 24px; grid-template-rows: auto 52px auto auto auto auto; min-height: 0; margin-bottom: 2rem; }
+  #what .stage { padding-block-start: clamp(1.5rem, 5vw, 2.25rem); }
+  #what .what-diagram { margin-bottom: 1.5rem; }
+}
+@media (max-width: 47.5rem) {
+  #what .what-diagram { grid-template-columns: minmax(0, 1fr) 24px; grid-template-rows: auto 44px auto auto auto auto; min-height: 0; padding: 14px 12px; }
   #what :is(.what-client, .what-cells) small { white-space: normal; }
-  #what .what-kernel { grid-area: 2 / 1 / 4; margin-top: 22px; }
+  #what .what-kernel { grid-area: 2 / 1 / 4; margin: 20px 0 0 -12px; }
+  #what .what-kernel span { left: 12px; }
+  #what .what-user-label { bottom: calc(100% + 3px); }
+  #what .what-kernel-label { top: 3px; }
   #what .what-open { grid-area: 3 / 1; margin-top: 0; }
   #what .what-branch-iron { grid-area: 1 / 2 / 3; }
   #what .what-branch-open { grid-area: 3 / 2; }
   #what .what-branch-open::before { bottom: 50%; }
   #what .what-branch-open::after { content: ''; position: absolute; right: 0; top: 50%; bottom: -3px; width: 3px; background: var(--story-green); }
   #what .what-wire { grid-area: 4 / 1 / 5 / 3; flex-direction: column; align-items: center; }
-  #what .what-track-start { flex: none; width: 50%; height: 18px; align-self: flex-end; border: solid var(--story-green); border-width: 3px 0 0 3px; border-radius: 10px 0 0; background: transparent; }
-  #what .what-track-end { flex: none; width: 3px; height: 18px; }
+  #what .what-track-start { flex: none; width: 50%; height: 12px; align-self: flex-end; border: solid var(--story-green); border-width: 3px 0 0 3px; border-radius: 8px 0 0; background: transparent; }
+  #what .what-track-end { flex: none; width: 3px; height: 12px; }
   #what .what-cells { grid-area: 5 / 1 / 6 / 3; }
-  #what .what-status { grid-area: 6 / 1 / 7 / 3; }
+  #what .what-status { grid-area: 6 / 1 / 7 / 3; gap: 6px; padding-top: 10px; }
+}
+@media (max-width: 69.999rem) and (prefers-reduced-motion: no-preference) {
+  #what [data-compact-entry='entered'] .what-branch-iron::before { animation: what-route-glow 560ms ease-out; }
+  #what [data-compact-entry='entered'] .what-track-start { animation: what-route-glow 560ms 180ms ease-out; }
+  #what [data-compact-entry='entered'] .what-track-end { animation: what-route-glow 560ms 340ms ease-out; }
+  #what [data-compact-entry='entered'] .what-cells { animation: what-cells-glow 650ms 500ms ease-out; }
+}
+@keyframes what-route-glow {
+  40% { filter: brightness(1.55) drop-shadow(0 0 5px currentColor); }
+}
+@keyframes what-cells-glow {
+  40% { box-shadow: 0 0 18px #7ccf8055; border-color: var(--story-green); }
 }

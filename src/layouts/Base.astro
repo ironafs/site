@@ -19,8 +19,9 @@ interface Props {
   canonical?: boolean;
   canonicalUrl?: string;
   jsonLd?: boolean;
+  phoneOpening?: string;
 }
-const { title = site.title, description = site.tagline, canonical = true, canonicalUrl = site.url, jsonLd = true } = Astro.props;
+const { title = site.title, description = site.tagline, canonical = true, canonicalUrl = site.url, jsonLd = true, phoneOpening } = Astro.props;
 ---
 <!doctype html>
 <html lang="en">
@@ -34,7 +35,7 @@ const { title = site.title, description = site.tagline, canonical = true, canoni
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <script is:inline src="/intro-gate.js"></script>
+    <script is:inline src="/intro-gate.js" data-phone-opening={phoneOpening}></script>
     <meta name="theme-color" content="#0d0e10" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.name} />

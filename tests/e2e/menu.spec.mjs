@@ -124,6 +124,18 @@ test.describe('phone menu', () => {
     test.skip((page.viewportSize()?.width ?? 0) >= 900, 'phone only');
   });
 
+  test('GitHub is inside the phone menu and the current section has a steady marker', async ({ page }) => {
+    await page.goto('/#design');
+    await expect(page.locator('html')).toHaveAttribute('data-menu-ready', '');
+    await expect(page.locator('.header-inner > a.github')).toBeHidden();
+    const button = await page.locator('#menu-button').boundingBox();
+    // A direct touch preserves the reading position. Playwright's locator scrolls the sticky button into view.
+    await page.touchscreen.tap(button.x + button.width / 2, button.y + button.height / 2);
+    await expect(page.locator('#menu .menu-primary a')).toHaveText(/GitHub/);
+    await expect(page.locator('#menu .menu-paths [aria-current="location"]')).toHaveAttribute('href', '/#design');
+    await expect(page.locator('#menu .menu-primary a')).toHaveAttribute('href', /github\.com/);
+  });
+
   test('the button is a 44 px target; tapping opens a focus-contained sheet; Escape closes it', async ({ page, browserName }) => {
     await ready(page);
     const button = page.locator('#menu-button');

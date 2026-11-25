@@ -73,6 +73,8 @@ path = [
   "tests/content/**",
   "src/assets/story/**",
   "src/assets/hero/poster.png",
+  "src/assets/hero/opening.webp",
+  "src/assets/hero/opening-phone.webp",
 ]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Adrian Ana <adrian@adrianana.com>"
