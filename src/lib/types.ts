@@ -184,7 +184,28 @@ export type Story = {
     /** The lanes' events, each lane in date order, then IronAFS: the reading order of the list. */
     events: TimelineEvent[];
   };
-  speed: SectionHead & { study: { before: string; source: Link; after: string }; body: string[] };
+  speed: SectionHead & {
+    lede: string;
+    read: {
+      label: string;
+      heading: string;
+      controlsLabel: string;
+      stepsLabel: string;
+      steps: { title: string; text: string }[];
+      reply: { title: string; text: string };
+      scope: string;
+      paths: Record<'cache' | 'server', { control: string; node: string; location: string; title: string; text: string }>;
+    };
+    choices: { title: string; text: string }[];
+    sources: Link[];
+    measurements: {
+      heading: string;
+      counted: { title: string; text: string; targetBefore: string; target: string; targetAfter: string };
+      timed: { title: string; text: string };
+      source: Link;
+    };
+    study: { summary: string; text: string; source: Link };
+  };
   statusSection: SectionHead & {
     lede: string;
     nowLabel: string;

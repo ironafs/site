@@ -322,18 +322,46 @@ export const story = {
     ],
   },
   speed: {
-    eyebrow: '/design · honest about speed',
-    heading: 'How fast will it be?',
-    study: {
-      before: 'FUSE can add overhead. In a ',
-      source: { label: '2017 study', href: 'https://www.usenix.org/conference/fast17/technical-sessions/presentation/vangoor' },
-      after: ', a FUSE file system on top of ext4 ran from no noticeable slowdown to 83% slower in the worst case, depending on the workload.',
+    eyebrow: '/design · performance',
+    heading: 'Where a file read spends time',
+    lede: 'A read can stay on your machine when IronAFS already has valid data and knows you can read it. We’ll measure the cost of local and network reads once the read-only Linux client is running.',
+    read: {
+      label: 'Illustration · planned Linux client',
+      heading: 'Follow a Linux file read',
+      controlsLabel: 'Choose a read scenario',
+      stepsLabel: 'Read request through the local machine',
+      steps: [
+        { title: 'App', text: 'Read file' },
+        { title: 'Linux FUSE', text: 'Forward read' },
+        { title: 'IronAFS daemon', text: 'Check caller’s access' },
+      ],
+      reply: { title: 'Bytes back to the app', text: 'The daemon rechecks the caller’s grant before returning data.' },
+      scope: 'Ordinary reads only. Renewing a read grant may still contact the server, even with the bytes cached.',
+      paths: {
+        cache: { control: 'Valid cached copy', node: 'Local cache', location: 'On this machine', title: 'This read stays local', text: 'The daemon has the requested bytes, a valid server callback, and a current read grant for this caller.' },
+        server: { control: 'Fetch from server', node: 'AFS fileserver', location: 'Over the network', title: 'This read reaches the fileserver', text: 'The daemon asks the AFS fileserver for the requested bytes when they’re missing or stale.' },
+      },
     },
-    body: [
-      "On Linux, IronAFS will start with the kernel's caching of lookups and file attributes turned off, so the kernel doesn't reuse one user's permission check for another. That means more trips to the daemon for programs that look up or list many files. These settings change only after tests show users stay isolated.",
-      "IronAFS also won't use FUSE passthrough at first. Passthrough lets reads skip the daemon, which is where access is checked. Going through the daemon means that if you lose access to a file, your next read fails.",
-      "Every pull request will run simulator tests that count the network calls, packets and bytes for set tasks, such as listing a large directory, so extra work shows up as a number. Timed benchmarks start by hand on one machine, then run every night on fixed hardware. There's no working client to benchmark yet.",
+    choices: [
+      { title: 'Why lookups make more trips to the daemon', text: 'On Linux, IronAFS will start with the kernel’s lookup and attribute caches off so the daemon can check each user’s AFS rights. That means more daemon calls for work that looks up lots of files.' },
+      { title: 'How IronAFS reduces waits', text: 'IronAFS will request file details in batches after a directory listing. It will also adjust how far ahead it fetches so sequential reads can have bytes ready sooner.' },
     ],
+    sources: [
+      { label: 'Linux cache design', href: `${repo}/blob/main/docs/adr/0004-architecture-2-os-layers.md#l5-linux-kernel-caches-start-off-and-relax-only-with-evidence` },
+      { label: 'Read access design', href: `${repo}/blob/main/docs/adr/0004-architecture-1-core.md#c22-grants-per-file-from-the-readers-own-status-reply` },
+      { label: 'Performance choices', href: `${repo}/blob/main/docs/adr/0004-architecture-1-core.md#c36-performance-choices-made-at-the-start` },
+    ],
+    measurements: {
+      heading: 'How we’ll measure it',
+      counted: { title: 'Count work in pull requests', text: 'Simulator tests will count calls for directory listings, packets per MiB at 1% packet loss, and bytes fetched after a restart with a warm cache.', targetBefore: 'The repeat-read test targets ', target: 'zero remote procedure calls', targetAfter: ' while the callback and read grant are valid.' },
+      timed: { title: 'Time workloads on one machine', text: 'We’ll run timed benchmarks by hand first. Once dedicated hardware is available, we’ll run them nightly on that machine.' },
+      source: { label: 'Benchmark plan', href: `${repo}/blob/main/docs/specs/testing.md#56-benchmarks` },
+    },
+    study: {
+      summary: 'What the 2017 FUSE study found',
+      text: 'Many workloads in the study were within 5% of native ext4 with an optimized FUSE layer. In one test that created small files on an SSD, throughput was about 83% lower. The study measured a local file system built on ext4.',
+      source: { label: 'Read the FAST ’17 study', href: 'https://www.usenix.org/conference/fast17/technical-sessions/presentation/vangoor' },
+    },
   },
 
   statusSection: {

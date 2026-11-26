@@ -1,10 +1,4 @@
-/* Speed and status. Normal flow in every mode: these
-   sections close the story at reading pace, so nothing here is under the enhancement selector. Dark in both
-   themes, as the whole story. */
-
-/* ---------- #speed: one reading column under the head, on the container's edge ---------- */
-#speed h2 { font-size: clamp(1.75rem, 3.4vw, 3rem); line-height: 1.1; }
-#speed .speed-body p { font-size: 1.125rem; line-height: 1.65; max-width: 68ch; margin: 0 0 1rem; }
+/* Status closes the story in normal flow, dark in both themes. */
 
 /* ---------- #status ---------- */
 #status { --ms-line: #3a3d44; }

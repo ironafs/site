@@ -1,16 +1,75 @@
 ---
-// Honest about speed (#speed): plain text in normal flow, one reading column under the head, on the container's edge
-// as #built and #follow. No motion: the change of pace after #rust-cards is the point.
-import '../../styles/story/status.css';
+import '../../styles/story/speed.css';
 import Section from './Section.astro';
 import { story } from '../../content/story';
 
 const { speed } = story;
-const { study } = speed;
+const { read, measurements, study } = speed;
+const paths = Object.entries(read.paths);
 ---
-<Section id="speed" eyebrow={speed.eyebrow} heading={speed.heading}>
-  <div class="speed-body">
-    <p>{study.before}<a class="source" href={study.source.href}>{study.source.label}</a>{study.after}</p>
-    {speed.body.map(text => <p>{text}</p>)}
+<Section id="speed" labelledby="speed-h">
+  <div class="speed-grid">
+    <div class="speed-intro">
+      <p class="eyebrow">{speed.eyebrow}</p>
+      <h2 id="speed-h" tabindex="-1">{speed.heading}</h2>
+      <p class="lede">{speed.lede}</p>
+    </div>
+    <div class="speed-read-track" data-read-track>
+      <section class="speed-read" data-read-path="cache" aria-labelledby="speed-read-h">
+        <p class="speed-read-label">{read.label}</p>
+        <h3 id="speed-read-h" tabindex="-1">{read.heading}</h3>
+        <fieldset class="speed-read-controls">
+          <legend class="sr-only">{read.controlsLabel}</legend>
+          {paths.map(([id, path]) => <label><input type="radio" name="speed-read-path" value={id} checked={id === 'cache'} /><span>{path.control}</span></label>)}
+        </fieldset>
+        <ol class="speed-read-steps" role="list" aria-label={read.stepsLabel}>
+          {read.steps.map(step => <li><b>{step.title}</b><span>{step.text}</span></li>)}
+        </ol>
+        <div class="speed-read-branch" aria-hidden="true"></div>
+        <div class="speed-read-destinations" aria-hidden="true">
+          {paths.map(([id, path]) => <div data-destination={id}><b>{path.node}</b><span>{path.location}</span></div>)}
+        </div>
+        <div class="speed-read-return">
+          <span class="speed-read-arrow" aria-hidden="true">←</span>
+          <span><b>{read.reply.title}</b><small>{read.reply.text}</small></span>
+          {paths.map(([id]) => <span class="speed-read-pulse" data-return-for={id} aria-hidden="true"></span>)}
+        </div>
+        <div class="speed-read-outcomes">
+          {paths.map(([id, path]) => <div data-read-case={id}><h4>{path.title}</h4><p>{path.text}</p></div>)}
+        </div>
+        <p class="speed-read-scope">{read.scope}</p>
+        <span class="sr-only" data-read-announcement role="status"></span>
+      </section>
+    </div>
+    <div class="speed-choices">
+      {speed.choices.map(choice => <div><h3>{choice.title}</h3><p>{choice.text}</p></div>)}
+      <div class="speed-sources">
+        {speed.sources.map(source => <a class="source" href={source.href}>{source.label} <span aria-hidden="true">↗</span></a>)}
+      </div>
+    </div>
+    <section class="speed-method" aria-labelledby="speed-method-h">
+      <h3 id="speed-method-h">{measurements.heading}</h3>
+      <div class="speed-measures">
+        <div>
+          <h4>{measurements.counted.title}</h4>
+          <p>{measurements.counted.text} {measurements.counted.targetBefore}<strong>{measurements.counted.target}</strong>{measurements.counted.targetAfter}</p>
+        </div>
+        <div>
+          <h4>{measurements.timed.title}</h4>
+          <p>{measurements.timed.text}</p>
+        </div>
+      </div>
+      <a class="source" href={measurements.source.href}>{measurements.source.label} <span aria-hidden="true">↗</span></a>
+    </section>
+    <details class="speed-study">
+      <summary>{study.summary}</summary>
+      <p>{study.text}</p>
+      <a class="source" href={study.source.href}>{study.source.label} <span aria-hidden="true">↗</span></a>
+    </details>
   </div>
 </Section>
+
+<script>
+  import { initSpeedRead } from '../../scripts/story/speed-read';
+  initSpeedRead();
+</script>

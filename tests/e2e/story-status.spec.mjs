@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { currentMilestone, milestoneCode, nextMilestone, parseMilestones, trackOrder } from '../../src/data/milestones.ts';
 import { milestoneCopy, story } from '../../src/content/story.ts';
 
-// Speed and status: #speed is plain text in normal flow; #status shows the now and next cards
+// Status shows the now and next cards
 // driven by the build-time milestones, the follow card, the milestone track (GitHub titles, code order, the current
 // one aria-current="step") and the forge picture below the text, never behind it. The fixture builds (the committed
 // snapshot, "M1 closed, M2a open") are in tests/build/milestones.test.mjs; here the served build may hold live data,
@@ -85,18 +85,6 @@ test('the forge picture sits below the text of #status, never behind it', async 
   expect(m.hits).toEqual([]);
 });
 
-test('#speed has four paragraphs and says there is no working client to benchmark', async ({ page }) => {
-  await expect(page.locator('#speed h2')).toHaveText('How fast will it be?');
-  const paragraphs = page.locator('#speed .speed-body > p');
-  await expect(paragraphs).toHaveCount(4);
-  await expect(paragraphs).toHaveText([
-    'FUSE can add overhead. In a 2017 study, a FUSE file system on top of ext4 ran from no noticeable slowdown to 83% slower in the worst case, depending on the workload.',
-    ...story.speed.body,
-  ]);
-  await expect(paragraphs.first().getByRole('link', { name: '2017 study' })).toHaveAttribute('href', story.speed.study.source.href);
-  await expect(paragraphs.last()).toContainText("There's no working client to benchmark yet.");
-});
-
 // the story stays dark in both themes; /built, /follow and the footer follow the visitor's theme.
 for (const scheme of ['light', 'dark']) {
   test(`${scheme} theme: #status stays dark; #built, #follow and the footer follow the theme`, async ({ page }) => {
@@ -122,3 +110,166 @@ for (const scheme of ['light', 'dark']) {
     }
   });
 }
+
+test.describe('performance section', () => {
+  const section = page => page.locator('#speed');
+  const track = page => section(page).locator('[data-read-track]');
+  const card = page => section(page).getByRole('region', { name: 'Follow a Linux file read' });
+  const cached = page => card(page).getByRole('heading', { name: 'This read stays local' });
+  const server = page => card(page).getByRole('heading', { name: 'This read reaches the fileserver' });
+
+  function scrollTrack(page, progress) {
+    return track(page).evaluate((el, progress) => {
+      const top = parseFloat(getComputedStyle(el.firstElementChild).top);
+      const travel = parseFloat(getComputedStyle(el, '::after').height);
+      const start = el.getBoundingClientRect().top + scrollY - top;
+      scrollTo({ top: Math.round(start + travel * progress), behavior: 'instant' });
+      return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }, progress);
+  }
+
+  async function open(page) {
+    await page.goto('/#speed');
+    await page.evaluate(() => document.fonts.ready);
+  }
+
+  test('the copy distinguishes the planned local read, server fetch, simulator target, and FUSE research', async ({ page }) => {
+    await open(page);
+    const speed = section(page);
+    await expect(speed.getByRole('heading', { name: 'Where a file read spends time' })).toBeVisible({ timeout: 2000 });
+    await expect(card(page).getByText('Bytes back to the app')).toBeVisible();
+    await expect(card(page)).toContainText('The daemon rechecks the caller’s grant before returning data.');
+    await expect(card(page)).toContainText('Renewing a read grant may still contact the server');
+    await expect(speed.getByText(/repeat-read test targets/)).toContainText('zero remote procedure calls');
+    await expect(speed.getByRole('link', { name: 'Benchmark plan' })).toHaveAttribute('href', /testing\.md#56-benchmarks$/);
+    await speed.getByText('What the 2017 FUSE study found').click();
+    await expect(speed.getByRole('link', { name: 'Read the FAST ’17 study' })).toBeVisible();
+    for (const link of await speed.getByRole('link').all()) {
+      expect((await link.boundingBox()).height).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test('the read holds across both phases and preserves a keyboard choice until the scene is left', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'Desktop hold and keyboard interaction');
+    await page.route('**/privacy/analytics-policy', route => route.fulfill({ json: { mode: 'opt-in' } }));
+    await open(page);
+    const notice = page.locator('[data-analytics-banner]');
+    await expect(notice).toBeVisible();
+    await expect(track(page)).toHaveAttribute('data-read-hold', '', { timeout: 2200 });
+    await scrollTrack(page, .18);
+    await expect(cached(page)).toBeVisible();
+    const bounds = await card(page).boundingBox();
+    const { y } = bounds;
+    const header = await page.locator('#site-header').boundingBox();
+    expect(y).toBeGreaterThanOrEqual(header.y + header.height);
+    expect(y + bounds.height).toBeLessThanOrEqual((await notice.boundingBox()).y);
+    const cacheRadio = card(page).getByRole('radio', { name: 'Valid cached copy' });
+    await cacheRadio.focus();
+    await scrollTrack(page, .82);
+    await expect(server(page)).toBeVisible();
+    await expect(cacheRadio).toBeFocused();
+    expect(Math.abs((await card(page).boundingBox()).y - y)).toBeLessThanOrEqual(2);
+    await expect(cached(page)).toHaveCount(0);
+    const radio = card(page).getByRole('radio', { name: 'Fetch from server' });
+    await expect(radio).toBeChecked();
+    const scroll = await page.evaluate(() => scrollY);
+    await radio.focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(cached(page)).toBeVisible();
+    await expect(cacheRadio).toBeFocused();
+    await expect(card(page).getByRole('status')).toContainText('current read grant');
+    expect(Math.abs(await page.evaluate(() => scrollY) - scroll)).toBeLessThanOrEqual(2);
+    await section(page).getByRole('heading', { level: 2 }).evaluate(el => el.focus({ preventScroll: true }));
+    await scrollTrack(page, .92);
+    await expect(cached(page)).toBeVisible();
+    await scrollTrack(page, 1.23);
+    await expect.poll(async () => (await card(page).boundingBox()).y).toBeLessThan(y - 30);
+    await scrollTrack(page, -4);
+    await expect.poll(() => track(page).evaluate(el => el.getBoundingClientRect().top >= innerHeight)).toBe(true);
+    await scrollTrack(page, .82);
+    await expect(server(page)).toBeVisible();
+    await expect(card(page).getByRole('status')).toBeEmpty();
+  });
+
+  test('both scenarios stay in normal flow on a short screen and with reduced motion', async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 610 });
+    await open(page);
+    await expect(cached(page)).toBeVisible({ timeout: 2200 });
+    await expect(server(page)).toBeVisible();
+    await expect(card(page).getByRole('radio')).toHaveCount(0);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(cached(page)).toBeVisible();
+    await expect(server(page)).toBeVisible();
+    await expect(track(page)).not.toHaveAttribute('data-read-hold', '');
+  });
+
+  test('switching to reduced motion keeps keyboard focus visible', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'Only enhanced viewports have focusable scenario controls');
+    await open(page);
+    await expect(track(page)).toHaveAttribute('data-read-hold', '');
+    await scrollTrack(page, .18);
+    await card(page).getByRole('radio', { name: 'Valid cached copy' }).focus();
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const heading = card(page).getByRole('heading', { name: 'Follow a Linux file read' });
+    await expect(heading).toBeFocused();
+    await expect(heading).toBeInViewport();
+    await expect(cached(page)).toBeVisible();
+    await expect(server(page)).toBeVisible();
+  });
+
+  test('the phone layout presents both scenarios without controls', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Phone normal-flow check');
+    await open(page);
+    await expect(cached(page)).toBeVisible();
+    await expect(server(page)).toBeVisible();
+    await expect(card(page).getByRole('radio')).toHaveCount(0);
+    expect(await card(page).evaluate(el => el.scrollWidth <= el.clientWidth + 2)).toBe(true);
+  });
+
+  test('a portrait tablet can tap a scenario while the diagram holds', async ({ browser, baseURL, isMobile }) => {
+    test.skip(isMobile, 'Tablet coverage runs once per browser engine');
+    const page = await browser.newPage({ baseURL, viewport: { width: 820, height: 1180 }, isMobile: true, hasTouch: true });
+    try {
+      await open(page);
+      await expect(track(page)).toHaveAttribute('data-read-hold', '', { timeout: 2200 });
+      await scrollTrack(page, -.4);
+      await expect(cached(page)).toBeVisible();
+      const label = card(page).locator('label', { hasText: 'Fetch from server' });
+      expect((await label.boundingBox()).height).toBeGreaterThanOrEqual(44);
+      await label.tap();
+      await expect(server(page)).toBeVisible();
+      await expect(card(page).getByRole('radio', { name: 'Fetch from server' })).toBeChecked();
+      const pulse = card(page).locator('[data-return-for=server]');
+      await expect(pulse).toHaveCSS('animation-name', 'speed-read-return');
+    } finally {
+      await page.close();
+    }
+  });
+
+  test('Back restores the fileserver example when scroll determines the selection', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'Only enhanced viewports have a scroll-selected example');
+    // Without a fragment, WebKit restores the scroll offset instead of re-anchoring.
+    await page.evaluate(() => document.fonts.ready);
+    await expect(track(page)).toHaveAttribute('data-read-hold', '');
+    await scrollTrack(page, .82);
+    await expect(server(page)).toBeVisible();
+    await page.goto('/privacy/');
+    await page.goBack();
+    await expect(server(page)).toBeVisible();
+    await expect(card(page).getByRole('radio', { name: 'Fetch from server' })).toBeChecked();
+  });
+
+  test('both scenarios remain available with JavaScript off', async ({ browser, baseURL, isMobile }) => {
+    test.skip(isMobile, 'No-script coverage runs once per browser engine');
+    const page = await browser.newPage({ baseURL, javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
+    try {
+      await page.goto('/#speed');
+      await expect(cached(page)).toBeVisible();
+      await expect(server(page)).toBeVisible();
+      await expect(card(page).getByRole('radio')).toHaveCount(0);
+    } finally {
+      await page.close();
+    }
+  });
+});
