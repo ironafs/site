@@ -51,7 +51,8 @@ for (const [mode, setup] of Object.entries(modes)) {
         const out = [];
         for (const id of story) {
           const section = document.getElementById(id);
-          const boxes = [...section.querySelectorAll(content)].map(el => el.getBoundingClientRect()).filter(r => r.height > 0);
+          // A closed disclosure still has a visible, tappable summary.
+          const boxes = [...section.querySelectorAll(`${content}, summary`)].map(el => el.getBoundingClientRect()).filter(r => r.height > 0);
           if (!boxes.length) boxes.push({ top: 0, bottom: 0 }); // a placeholder with no copy yet: at most 20vh
           const top = Math.min(...boxes.map(r => r.top));
           const bottom = Math.max(...boxes.map(r => r.bottom));
