@@ -314,6 +314,7 @@
 }
 #speed .speed-measures p, #speed .speed-study p { margin: 0; max-width: 52ch; font-size: 0.95rem; line-height: 1.52; }
 #speed .speed-study { margin: 0; }
+#speed .speed-study:not([open]) > :not(summary) { display: none; }
 #speed .speed-study summary { min-height: 44px; align-content: center; padding: 0; margin: 0; width: fit-content; }
 #speed .speed-study p { margin-top: 0.3rem; }
 @media (min-width: 980px) {

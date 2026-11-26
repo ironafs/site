@@ -133,7 +133,7 @@ for (const width of [360, 390, 1024, 1440, 1728]) {
       await page.setViewportSize({ width, height: 900 });
       await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
       await page.goto('/');
-      for (const selector of ['#what', '#built', '#follow', '#site-footer']) {
+      for (const selector of ['#what', '#speed', '#built', '#follow', '#site-footer']) {
         await expect(page.locator(selector)).toBeVisible();
         expect(await page.locator(selector).evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
       }
@@ -154,7 +154,7 @@ for (const width of [360, 390, 1024, 1440, 1728]) {
             const range = document.createRange();
             range.selectNodeContents(el);
             return range.getClientRects().length;
-          }), selector).toBe(1);
+          }), selector).toBe(selector === '#speed h2' ? 2 : 1);
         }
       }
       if (width >= 1440) {
@@ -165,8 +165,8 @@ for (const width of [360, 390, 1024, 1440, 1728]) {
           }));
         expect(Math.max(...edges) - Math.min(...edges)).toBeLessThan(1);
         if (width === 1728) expect(edges[0]).toBeLessThan(200);
-        // #speed reads as one column under its head and #status starts on the same edge
-        const starts = await page.evaluate(() => ['#speed h2', '#speed .speed-body p', '#status h2', '#status .lede', '#status .nownext']
+        // The performance intro and status content start on the shared editorial edge.
+        const starts = await page.evaluate(() => ['#speed h2', '#speed .speed-intro .lede', '#status h2', '#status .lede', '#status .nownext']
           .map(selector => [selector, document.querySelector(selector).getBoundingClientRect().left]));
         for (const [selector, left] of starts) expect(Math.abs(left - edges[0]), selector).toBeLessThan(1);
       }
