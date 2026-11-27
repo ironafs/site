@@ -29,6 +29,10 @@
 #design details.more ul { margin-top: 0.6rem; }
 #design details.more li { font-size: 0.9375rem; color: #aeb2b8; }
 #design .osp .cite { margin: 1rem 0 0; }
+#design .cite .evidence-link { max-inline-size: 100%; }
+@media (max-width: 760px) {
+  #design .cite .evidence-link { display: inline-flex; align-items: center; min-height: 44px; }
+}
 /* The plan closes the cite line. Green is kept for the line to the cells: peach. */
 #design .cite span, #design .ostat { color: var(--story-peach); }
 

@@ -11,7 +11,8 @@ const expectedPoints = ['2019, 76%', '2022, 35%', '2024, 24%', '2025, below 20%'
 async function openRust(page) {
   await withoutScene(page);
   await page.route('**/privacy/analytics-policy', route => route.fulfill({ json: { mode: 'opt-in' } }));
-  await page.goto('/#rust');
+  // Each check sets its own scroll position after the page loads.
+  await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
   await expect(page.locator('[data-analytics-banner]')).toBeVisible();
 }

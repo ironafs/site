@@ -314,6 +314,7 @@
   margin: 0;
   border-block-start: 1px solid var(--story-line);
 }
+:is(#rust, #rust-cards) .rust-disclosure:not([open]) > :not(summary) { display: none; }
 :is(#rust, #rust-cards) .rust-disclosure summary {
   align-content: center;
   width: fit-content;

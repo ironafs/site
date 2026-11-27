@@ -42,7 +42,7 @@ const { how } = story;
           </details>
           <p class="cite">
             {os.cite} · <span>{os.status}</span>
-            {'evidence' in os && os.evidence && <> · <a href={os.evidence.href}>{os.evidence.label}</a></>}
+            {'evidence' in os && os.evidence && <> · <a class="evidence-link" href={os.evidence.href}>{os.evidence.label}</a></>}
           </p>
         </div>
         <PhoneBeat><OsDiagram os={os} index={i} /></PhoneBeat>

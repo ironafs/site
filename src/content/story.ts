@@ -150,9 +150,10 @@ export const story = {
         points: [
           { lead: 'The traffic stays on the PC.', text: "IronAFS uses `\\\\afs` only where tests show a sign-in under that name can't leave the machine; elsewhere it uses `\\\\127.0.0.1` through a mapped drive or shortcut." },
           { lead: 'Your Windows sign-in decides.', text: 'The same IronAFS core as on Linux checks access for the account and logon session that SMB authenticated.' },
-          { lead: 'Local connection tested.', text: 'On Windows 10 22H2 and Windows 11 24H2 and 26H2, the built-in client reached a local listener while Windows file sharing kept working. The probe captured the first packet on each build. Full SMB sessions, including signing and per-user access, are next to test.' },
+          { lead: 'Local connection tested.', text: 'Windows sent its first SMB packet to a local listener on three builds and kept sharing files. Signed sessions and per-user access are next.' },
         ],
         details: [
+          'The probe ran on Windows 10 22H2 and Windows 11 24H2 and 26H2. The prototype will test full SMB 3.1.1 sessions, including authentication, signing and per-user access.',
           "The server is written from Microsoft's open specifications and captures from target Windows builds. It accepts only authenticated, signed SMB 3.1.1 sessions; guest, anonymous and unsigned sessions are refused.",
           '`ironafs-smbd` runs as its own process. It holds the keys for active SMB sessions, but no AFS tokens or file cache; `ironafsd` checks the sign-in through Windows.',
           'The server declines leases and oplocks and marks shares for no offline caching, so Windows keeps no stale copies of its own.',
