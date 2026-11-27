@@ -15,6 +15,36 @@ export function goToSection(doc: Document, id: string, { focus = true }: { focus
   if (focus) doc.getElementById(`${id}-h`)?.focus({ preventScroll: true });
 }
 
+function alignInitialStoryFragment(doc: Document, win: Window, header: HTMLElement): void {
+  const hash = win.location.hash;
+  const target = doc.getElementById(hash.slice(1));
+  const heading = target?.querySelector('h2');
+  const navigation = win.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+  if (navigation?.type !== 'navigate' || !target?.matches('main > .story') || !heading) return;
+
+  const pending = new AbortController();
+  const cancel = () => pending.abort();
+  for (const event of ['pointerdown', 'touchstart', 'wheel', 'keydown', 'hashchange', 'popstate', 'pagehide']) {
+    win.addEventListener(event, cancel, { capture: true, passive: true, signal: pending.signal });
+  }
+
+  const align = async () => {
+    await doc.fonts.ready;
+    // The pinned fit guard and compact scenes settle on successive frames after fonts load.
+    for (let frame = 0; frame < 3 && !pending.signal.aborted; frame++) {
+      await new Promise(resolve => win.requestAnimationFrame(resolve));
+    }
+    if (!pending.signal.aborted && win.location.hash === hash &&
+      heading.getBoundingClientRect().top < header.getBoundingClientRect().bottom - 1) {
+      target.scrollIntoView({ behavior: 'instant' });
+    }
+    cancel();
+  };
+
+  if (doc.readyState === 'complete') void align();
+  else win.addEventListener('load', align, { once: true, signal: pending.signal });
+}
+
 export function initMenu(doc: Document): void {
   const win = doc.defaultView as Window;
   const root = doc.documentElement;
@@ -35,6 +65,7 @@ export function initMenu(doc: Document): void {
       new win.ResizeObserver(measure).observe(header);
       measure();
     }
+    alignInitialStoryFragment(doc, win, header);
   }
 
   // The visible section marks its link: a thin band across the middle of the viewport.

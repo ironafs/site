@@ -467,3 +467,72 @@ test.describe('phone menu history', () => {
     expect(new URL(page.url()).origin).toBe(new URL(test.info().project.use.baseURL ?? page.url()).origin);
   });
 });
+
+async function tabletFragmentPage(page) {
+  await page.setViewportSize({ width: 820, height: 1050 });
+  await page.route('**/privacy/analytics-policy', route => route.fulfill({ json: { mode: 'opt-in' } }));
+  await page.addInitScript(() => {
+    window.fragmentScrolls = [];
+    const scrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (...args) {
+      if (this.matches('#rust, #speed')) window.fragmentScrolls.push(this.id);
+      return scrollIntoView.apply(this, args);
+    };
+  });
+}
+
+async function settleTabletLayout(page) {
+  await page.waitForLoadState('load');
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    for (let frame = 0; frame < 4; frame++) await new Promise(requestAnimationFrame);
+  });
+}
+
+test('fresh story fragments reach their headings after tablet layout settles', async ({ page }, info) => {
+  test.skip(info.project.name !== 'webkit-phone', 'portrait WebKit tablet layout');
+  await tabletFragmentPage(page);
+  for (const id of ['rust', 'speed']) {
+    await page.goto(`/#${id}`);
+    await settleTabletLayout(page);
+    await expect.poll(() => page.evaluate(id => {
+      const heading = document.querySelector(`#${id} h2`).getBoundingClientRect();
+      const header = document.getElementById('site-header').getBoundingClientRect();
+      return heading.top >= header.bottom - 1 && heading.bottom < innerHeight / 2;
+    }, id)).toBe(true);
+    await page.goto('/privacy/');
+  }
+});
+
+test('tablet fragment correction leaves native history and early touch scrolling alone', async ({ page }, info) => {
+  test.skip(info.project.name !== 'webkit-phone', 'portrait WebKit tablet layout');
+  await tabletFragmentPage(page);
+  await page.goto('/#rust');
+  await settleTabletLayout(page);
+  await page.evaluate(() => scrollBy({ top: 250, behavior: 'instant' }));
+  await page.reload();
+  await settleTabletLayout(page);
+  expect(await page.evaluate(() => window.fragmentScrolls)).toEqual([]);
+  await page.goto('/privacy/');
+  await page.goBack();
+  await settleTabletLayout(page);
+  expect(await page.evaluate(() => window.fragmentScrolls)).toEqual([]);
+
+  // Keep the initial layout pending while the reader touches and scrolls.
+  await page.goto('/privacy/');
+  let releaseFonts;
+  const fonts = new Promise(resolve => { releaseFonts = resolve; });
+  await page.route('**/*.woff2', async route => {
+    await fonts;
+    return route.continue();
+  });
+  try {
+    await page.goto('/#rust', { waitUntil: 'domcontentloaded' });
+    await page.touchscreen.tap(8, 70);
+    await page.evaluate(() => scrollBy({ top: 500, behavior: 'instant' }));
+  } finally {
+    releaseFonts();
+  }
+  await settleTabletLayout(page);
+  expect(await page.evaluate(() => window.fragmentScrolls)).toEqual([]);
+});
