@@ -123,7 +123,7 @@ test.describe('portrait phone holds', () => {
     const notice = page.locator('[data-analytics-banner]');
     await expect(notice).toBeVisible();
     const noticeTop = (await notice.boundingBox()).y;
-    const targets = ['#cost .vis', '#cost .afs', '#design .scene', '#rust .ph1', '#rust .dens'];
+    const targets = ['#cost .vis', '#cost .afs', '#design .scene'];
     for (const selector of targets) {
       for (const target of await page.locator(selector).all()) {
         await expect(target).toHaveCSS('position', 'sticky');
@@ -210,24 +210,22 @@ test.describe('portrait phone holds', () => {
     await expect(terminal.locator('.bigout .design')).toHaveCSS('opacity', '1');
   });
 
-  test('short tablets start the smaller Design and Rust scenes before they pin', async ({ page }) => {
+  test('short tablets start the smaller Design scenes before they pin', async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
     const notice = page.locator('[data-analytics-banner]');
     await expect(notice).toBeVisible();
-    for (const id of ['design', 'rust']) await expect(page.locator(`#${id}`)).toHaveAttribute('data-compact-scenes', 'tablet');
-    for (const selector of ['#design .scene[data-os="linux"]', '#rust .ph1']) {
-      const panel = page.locator(selector);
-      await expect(panel).toHaveCSS('position', 'sticky');
-      await panel.evaluate(el => {
-        const top = parseFloat(getComputedStyle(el).top);
-        scrollTo({ top: el.parentElement.getBoundingClientRect().top + scrollY - top - 30, behavior: 'instant' });
-      });
-      await expect.poll(() => panel.evaluate(el => Number(el.parentElement.style.getPropertyValue('--phone-beat-progress')))).toBeGreaterThan(0.1);
-      const art = await panel.boundingBox();
-      const top = parseFloat(await panel.evaluate(el => getComputedStyle(el).top));
-      expect(art.y).toBeGreaterThan(top + 20);
-      expect(art.y + art.height).toBeLessThan((await notice.boundingBox()).y);
-    }
+    await expect(page.locator('#design')).toHaveAttribute('data-compact-scenes', 'tablet');
+    const panel = page.locator('#design .scene[data-os="linux"]');
+    await expect(panel).toHaveCSS('position', 'sticky');
+    await panel.evaluate(el => {
+      const top = parseFloat(getComputedStyle(el).top);
+      scrollTo({ top: el.parentElement.getBoundingClientRect().top + scrollY - top - 30, behavior: 'instant' });
+    });
+    await expect.poll(() => panel.evaluate(el => Number(el.parentElement.style.getPropertyValue('--phone-beat-progress')))).toBeGreaterThan(0.1);
+    const art = await panel.boundingBox();
+    const top = parseFloat(await panel.evaluate(el => getComputedStyle(el).top));
+    expect(art.y).toBeGreaterThan(top + 20);
+    expect(art.y + art.height).toBeLessThan((await notice.boundingBox()).y);
     await expect(page.locator('#platforms .lane > h3').first()).toHaveCSS('position', 'sticky');
   });
 });
@@ -299,7 +297,7 @@ test.describe('enhancement', () => {
 
   test('#why counts and holds, switches off to a line and dot, then holds the centred explanation', async ({ page }) => {
     const sectionHeight = await page.locator('#why').evaluate(el => el.offsetHeight / innerHeight);
-    expect(sectionHeight).toBeCloseTo(1.6, 2);
+    expect(sectionHeight).toBeCloseTo(2.2, 2);
     await pinnedAt(page, 'why', 0.05);
     expect(await shown(page, '#why .msg')).toBeGreaterThan(0.95);
     const box = await page.locator('#why .msg').boundingBox();
@@ -307,7 +305,6 @@ test.describe('enhancement', () => {
     expect(box.y + box.height).toBeLessThanOrEqual(await page.evaluate(() => innerHeight));
 
     const pct = () => page.evaluate(() => Number(getComputedStyle(document.querySelector('#why .pct-n')).getPropertyValue('--p')));
-    // The count finishes in the first 20vh of the 60vh sticky range.
     await pinnedAt(page, 'why', -0.2);
     expect(await pct(), 'before the hold').toBe(0);
     await pinnedAt(page, 'why', 0);
@@ -316,9 +313,11 @@ test.describe('enhancement', () => {
     const p = await pct();
     expect(p).toBeGreaterThan(0);
     expect(p).toBeLessThan(100);
-    await pinnedAt(page, 'why', 0.35);
+    await pinnedAt(page, 'why', 0.42);
+    expect(await pct(), 'still counting after a third of the hold').toBeLessThan(100);
+    await pinnedAt(page, 'why', 0.45);
     expect(await pct(), 'after the count').toBe(100);
-    await pinnedAt(page, 'why', 0.43);
+    await pinnedAt(page, 'why', 0.54);
     expect(await pct(), 'just before the collapse').toBe(100);
     expect(await page.evaluate(() => Number(getComputedStyle(document.querySelector('#why .bsod')).opacity))).toBeGreaterThan(0.95);
 
@@ -327,20 +326,22 @@ test.describe('enhancement', () => {
     const line = page.locator('#why .crt-line');
     const point = page.locator('#why .crash-point');
     await expect(page.locator('#why .flash')).toHaveCount(0);
-    await pinnedAt(page, 'why', 0.52);
+    await pinnedAt(page, 'why', 0.60);
     const screen = await bsod.boundingBox();
     expect(screen.height).toBeLessThan(fullScreen.height / 2);
     expect(screen.width).toBeCloseTo(fullScreen.width, 0);
-    await pinnedAt(page, 'why', 0.58);
+    await pinnedAt(page, 'why', 0.66);
     const longLine = await line.boundingBox();
     expect(longLine.height).toBeLessThanOrEqual(2);
     expect(longLine.width).toBeGreaterThan(box.width);
-    expect(await shown(page, '#why .crt-line')).toBeGreaterThan(0.95);
+    expect(await shown(page, '#why .crt-line')).toBeGreaterThan(0.85);
     expect(await shown(page, '#why .crash-point')).toBe(0);
-    await pinnedAt(page, 'why', 0.70);
+    await pinnedAt(page, 'why', 0.77);
     expect((await line.boundingBox()).width).toBeLessThan(longLine.width / 10);
-    await pinnedAt(page, 'why', 0.76);
+    expect(await shown(page, '#why .crt-line')).toBeGreaterThan(0.5);
+    await pinnedAt(page, 'why', 0.81);
     expect(await shown(page, '#why .crt-line')).toBe(0);
+    await pinnedAt(page, 'why', 0.85);
     const fadingIn = await shown(page, '#why .crash-point');
     expect(fadingIn).toBeGreaterThan(0);
     expect(fadingIn).toBeLessThan(0.95);
@@ -354,6 +355,10 @@ test.describe('enhancement', () => {
     await pinnedAt(page, 'why', 1);
     const opacity = await page.evaluate(() => Number(getComputedStyle(document.querySelector('#why .bsod')).opacity));
     expect(opacity).toBeLessThan(0.1);
+    await pinnedAt(page, 'why', 0.17);
+    expect(await pct()).toBe(p);
+    expect(await shown(page, '#why .msg')).toBeGreaterThan(0.95);
+    expect(await shown(page, '#why .crash-point')).toBe(0);
   });
 
   test('#numbers: the readouts only ever show the real values', async ({ page }) => {

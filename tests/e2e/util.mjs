@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 export const widths = [360, 390, 430, 768, 1024, 1280, 1440, 1920];
 
@@ -106,10 +106,10 @@ export async function axeSerious(page) {
 export const order = ['hero', 'why', 'numbers', 'cost', 'platforms', 'what', 'design', 'rust', 'rust-cards', 'speed', 'status', 'built', 'follow'];
 /** The scroll story's sections, #why to #status. */
 export const storySections = order.slice(1, order.indexOf('status') + 1);
-// Content includes text and blocks that carry no p or heading of their own (the Rust word, its panels, the cards,
-// the #cost cards including their padding, #status's forge picture below the text, and the Rust examples'
+// Content includes text and blocks that carry no p or heading of their own (the Android panels, file-client
+// rules, #cost cards including their padding, #status's forge picture below the text, and the examples'
 // one panel, whose padding is part of the panel).
-export const content = 'h2, h3, p, li, dt, dd, .val, .big, figcaption, pre, .rust-word, #rust .ph, .fact, #rust-cards .facts, #cost .scard, #status .forge';
+export const content = 'h2, h3, h4, p, li, dt, dd, .val, .big, figcaption, pre, #rust .android-card, #rust-cards .rust-context, #cost .scard, #status .forge';
 
 /** Every problem with every content element under `root` (scrolled into view one by one), as strings.
  *  `frames: false` reads each element straight after its scroll, without waiting for frames: with JavaScript
@@ -188,12 +188,14 @@ export const enhanced = page => page.evaluate(() => CSS.supports('animation-time
 
 /** Scrolls to `f` (0..1) of #design's pinned scroll: its top at the viewport's top to its bottom at the bottom. */
 export async function pinnedAt(page, f) {
-  await page.evaluate(async f => {
-    const s = document.getElementById('design');
-    const top = s.getBoundingClientRect().top + scrollY;
-    scrollTo({ top: top + f * (s.offsetHeight - innerHeight), behavior: 'instant' });
+  // A fit check above #design can switch to flow after a viewport resize and move the target.
+  await expect.poll(() => page.evaluate(async f => {
+    const section = document.getElementById('design');
+    const target = () => section.getBoundingClientRect().top + scrollY + f * (section.offsetHeight - innerHeight);
+    scrollTo({ top: target(), behavior: 'instant' });
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  }, f);
+    return Math.abs(scrollY - target());
+  }, f), { message: `scroll to ${f * 100}% of #design`, timeout: 20_000 }).toBeLessThanOrEqual(1);
 }
 
 export const settle = page => page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 50)))));

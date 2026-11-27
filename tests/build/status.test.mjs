@@ -102,7 +102,7 @@ test('every milestone M1 to M7 has a milestone card body', () => {
 
 test('every story section carries the SectionHead fields', async () => {
   const { story } = await import('../../src/content/story.ts');
-  for (const key of ['crash', 'numbers', 'how', 'rust', 'cards', 'cost', 'platforms', 'speed', 'statusSection']) {
+  for (const key of ['crash', 'numbers', 'how', 'cost', 'platforms', 'speed', 'statusSection']) {
     assert.equal(typeof story[key].eyebrow, 'string', `${key}.eyebrow`);
     assert.equal(typeof story[key].heading, 'string', `${key}.heading`);
   }

@@ -52,6 +52,7 @@ const desktop = info => info.project.name === 'chromium-desktop';
 
 /** The story's pictures (the art masters' builds), not the hero's poster: their files are named after the masters. */
 const STORY_ART = /\/_astro\/(chip|forge|drops|rust|rust-only)\.[^/]*\.(avif|webp|png|jpe?g)$/;
+const STORY_PICTURES = ['chip', 'drops', 'forge'];
 const SOFTWARE_GL = /swiftshader|llvmpipe|softpipe|software|basic render/i;
 // The GPUs the hardware gate knows, as whole words: an Apple M-series chip, NVIDIA, AMD, Intel's integrated and Arc
 // graphics, and the phone GPUs. A masked value ("Apple GPU", "WebKit WebGL") names no device and matches none. A GPU
@@ -238,9 +239,12 @@ test.describe('phone profile (chromium-phone, 4x CPU, Fast 4G, first visit, 3D i
   test('the story pictures are lazy, and none is requested before the load event', async ({ page }) => {
     await phoneProfile(page);
     await page.goto('/', { waitUntil: 'load' });
-    const loading = await page.evaluate(() => [...document.querySelectorAll('main .story picture img')].map(img => img.getAttribute('loading')));
-    expect(loading.length).toBeGreaterThanOrEqual(4);
-    for (const l of loading) expect(l).toBe('lazy');
+    const pictures = await page.evaluate(() => [...document.querySelectorAll('main .story picture img')].map(img => ({
+      name: new URL(img.src).pathname.split('/').at(-1).split('.')[0],
+      loading: img.loading,
+    })));
+    expect(pictures.map(({ name }) => name).sort()).toEqual(STORY_PICTURES);
+    for (const { name, loading } of pictures) expect(loading, name).toBe('lazy');
     await page.waitForTimeout(2000);
     const early = await page.evaluate(art => {
       const load = performance.getEntriesByType('navigation')[0].loadEventStart;
@@ -267,8 +271,8 @@ test('1440 profile: after scrolling the whole page, the story pictures transferr
     .map(r => ({ file: new URL(r.name).pathname, bytes: r.transferSize })), STORY_ART.source);
   const total = art.reduce((sum, a) => sum + a.bytes, 0);
   console.log(`story pictures at 1440: ${(total / 1024).toFixed(1)} KB (${art.map(a => `${a.file.replace('/_astro/', '')} ${(a.bytes / 1024).toFixed(1)}`).join(', ')})`);
-  // every master is drawn somewhere on the page
-  for (const name of ['chip', 'forge', 'drops', 'rust', 'rust-only']) expect(art.some(a => a.file.startsWith(`/_astro/${name}.`)), name).toBe(true);
+  for (const name of STORY_PICTURES) expect(art.some(a => a.file.startsWith(`/_astro/${name}.`)), name).toBe(true);
+  expect(art.filter(a => /\/_astro\/rust(?:-only)?\./.test(a.file))).toEqual([]);
   for (const a of art) expect(a.bytes, `${a.file} was transferred (not 0 bytes)`).toBeGreaterThan(0);
   expect(total).toBeLessThanOrEqual(300 * 1024);
 });

@@ -46,7 +46,7 @@ test('the statistic blocks are exactly the StatId union, each with an https sour
   }
 });
 
-test('the illustrations are exactly the IllustrationId union, each visibly labelled', () => {
+test('the illustrations are exactly the IllustrationId union, each labelled', () => {
   const figures = marked('data-illustrative');
   const expected = unionMembers(storySource, 'IllustrationId');
   assert.deepEqual([...new Set(figures.map(f => f.value))].sort(), [...expected].sort());
@@ -54,10 +54,11 @@ test('the illustrations are exactly the IllustrationId union, each visibly label
   for (const figure of figures) {
     // visible: not inside a screen-reader-only or aria-hidden span
     const shown = figure.html.replace(/<(\w+)\b[^>]*(?:class="sr-only"|aria-hidden="true")[^>]*>[\s\S]*?<\/\1>/g, '');
-    if (figure.value === 'debian') {
-      assert.match(shown, /^<pre\b[^>]*><span\b[^>]*>Debian, DKMS and Secure Boot<\/span>/, 'Debian workflow starts with its visible label');
+    if (figure.value === 'dots') {
+      assert.match(shown, /^<figure\b[^>]*\baria-label="Illustrative scale"/);
+      assert.match(visibleText(shown), /Historical C and C\+\+.*Rust/);
     } else {
-      assert.match(visibleText(shown), /illustrative|Illustration/, `${figure.value}: labelled`);
+      assert.match(visibleText(shown), /Illustrative Debian workflow/);
     }
   }
 });

@@ -1,345 +1,478 @@
-/* Rust (#rust) and the two cards (#rust-cards). Base first (normal flow, final state), then the enhancement under motion.css's selector, verbatim.
-   Animations are written as longhands: the minifier folds an `animation` shorthand and its `animation-timeline`
-   into one shorthand, where a timeline is not allowed, and the browser then drops the whole declaration
-   (see crash.css). Colour: steel grey for C and C++ and the bars, --rust for Rust; no green here.
-   Every enhanced #rust rule skips #rust.story--flow (fit.ts: the window is too short for it pinned): the base layer. */
+/* The fixture, two Android charts, and their file-client context are complete in normal flow. */
+#rust {
+  background: #101114;
+  --rust-ember: #ffb491;
+  --rust-cite: #bbb6b6;
+  --rust-column-gap: clamp(1.2rem, 4vw, 4.4rem);
+  --android-card-bg: linear-gradient(151deg, #222123, #19191d 65%, #15161a);
+  --android-card-radius: clamp(17px, 2vw, 26px);
+  --android-card-shadow: inset 0 1px #ffffff0b, 0 20px 48px #0004;
+}
+:is(#rust, #rust-cards) > .stage { max-width: calc(1360px + 2 * var(--gutter)); }
+#rust > .stage { padding-block: clamp(1.8rem, 5vw, 4rem) clamp(2.75rem, 6vw, 5rem); }
 
-/* The rust spread's four radii (registered so the keyframes interpolate them). */
-@property --r1 { syntax: "<length-percentage>"; initial-value: 0%; inherits: false; }
-@property --r2 { syntax: "<length-percentage>"; initial-value: 0%; inherits: false; }
-@property --r3 { syntax: "<length-percentage>"; initial-value: 0%; inherits: false; }
-@property --r4 { syntax: "<length-percentage>"; initial-value: 0%; inherits: false; }
+#rust .rust-project {
+  display: grid;
+  grid-template-areas: "intro" "fixture" "notes";
+  gap: var(--rust-column-gap);
+  padding-block: clamp(0.35rem, 1.6vw, 1.45rem) clamp(2rem, 5vw, 4.2rem);
+}
+#rust .rust-intro { grid-area: intro; }
+#rust .rust-intro h2 {
+  font-size: clamp(1.88rem, 1.27rem + 2.15vw, 3rem);
+  max-width: 20ch;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  margin: 0 0 0.82rem;
+}
+#rust .heading-accent { color: var(--rust-ember); }
+#rust .heading-tail { display: block; }
+#rust .rust-intro p, #rust .android-intro p {
+  font: 400 clamp(1rem, 0.94rem + 0.33vw, 1.15rem)/1.55 var(--font-body);
+  max-width: 43ch;
+  margin: 0;
+}
+#rust .rust-intro p + p { margin-top: 0.68rem; }
+#rust .rust-intro strong { color: var(--story-fg); font-weight: 650; }
+#rust .rust-notes { grid-area: notes; }
+#rust .rust-notes > p { margin: 0; max-width: 43ch; color: #c1b9bc; font-size: 0.94rem; line-height: 1.5; }
+#rust .rust-notes .rust-name { margin-top: 0.52rem; font-size: 0.82rem; color: var(--rust-cite); }
+#rust [data-rust-track="fixture"] { grid-area: fixture; min-width: 0; }
 
-/* ---------- #rust, base: word, claim, then each phase's text above its panel, at the final state ---------- */
-#rust .rustart {
-  position: absolute; z-index: -1; inset: 0 0 auto; height: min(100%, 34rem); overflow: hidden; pointer-events: none;
-  opacity: 0.3;
-  -webkit-mask-image: linear-gradient(180deg, #000, #0000);
-  mask-image: linear-gradient(180deg, #000, #0000);
+#rust .xdr-fixture {
+  margin: 0;
+  min-width: 0;
+  padding: clamp(0.9rem, 2.5vw, 1.6rem);
+  border: 1px solid #e9aa8c48;
+  border-radius: clamp(14px, 2vw, 23px);
+  background: radial-gradient(ellipse at top left, #3f282254, transparent 65%), linear-gradient(145deg, #1f1b1f, #18191f 82%);
+  box-shadow: inset 0 1px #ffffff13, 0 18px 54px #08090c70;
 }
-#rust .rustart picture, #rust .rustart img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 30% 50%; }
-#rust .panel { display: none; }
+#rust .xdr-label {
+  color: #ffbb9e;
+  margin: 0 0 0.34rem;
+  font: 500 0.69rem/1.35 var(--font-mono);
+  letter-spacing: 0.035em;
+}
+#rust .xdr-fixture h3 {
+  color: #f5edeb;
+  font: 700 clamp(1.43rem, 1.14rem + 1.06vw, 2.04rem)/1.08 var(--font-display);
+  letter-spacing: -0.04em;
+  margin: 0;
+  text-transform: none;
+}
+#rust .xdr-readout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.1rem 0 0.9rem;
+}
+#rust .xdr-readout div { display: grid; gap: 0.26rem; }
+#rust .xdr-readout strong {
+  color: #f2e9e7;
+  font: 700 clamp(1.43rem, 1.05rem + 1vw, 1.98rem)/1.05 var(--font-display);
+  letter-spacing: -0.045em;
+}
+#rust .xdr-readout div:last-child strong { color: #ffc2a6; }
+#rust .xdr-readout span, #rust .xdr-group > span {
+  font: 500 0.68rem/1.3 var(--font-mono);
+  color: #d4cbcd;
+}
+#rust .xdr-wire {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.58fr);
+  gap: 0.62rem;
+  padding: 0.63rem;
+  border: 1px solid #ffffff1d;
+  border-radius: 9px;
+  background: #101216bd;
+}
+#rust .xdr-group { display: grid; gap: 0.42rem; }
+#rust .xdr-group code {
+  display: grid;
+  place-items: center;
+  min-height: 32px;
+  padding-inline: 2px;
+  background: #30343d;
+  color: #f0e8e9;
+  border: 1px solid #ffffff31;
+  border-radius: 5px;
+  font: 600 clamp(0.62rem, 0.48rem + 0.46vw, 0.91rem)/1 var(--font-mono);
+  white-space: nowrap;
+}
+#rust .xdr-group > code { display: block; align-content: center; text-align: center; }
+#rust .xdr-group code b { color: #ffc4a9; }
+#rust .xdr-bytes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; }
+#rust .xdr-bytes > span { border: 1px dashed #a87a68; border-radius: 5px; }
+#rust .xdr-result {
+  margin-top: 0.83rem;
+  padding-top: 0.63rem;
+  border-top: 1px solid #ffffff23;
+}
+#rust .xdr-result p { margin: 0; color: #e4dadd; font-size: 0.87rem; line-height: 1.36; }
+#rust .xdr-result code { color: #ffc0a4; }
 
-/* the CSS word: steel, a sheen (enhancement only), and rust over rust-only through four radial masks */
-#rust .rust-word { position: relative; width: fit-content; max-width: 100%; margin: 0 0 1.5rem; }
-/* the 3D word (src/scripts/rustword): its canvas covers the CSS word's box with room around it for the letters' lean
-   and the light; while it is drawn (.has-3d) the CSS word keeps its place, unseen. */
-#rust .rust-word .rw-canvas {
-  position: absolute; left: -8%; top: -25%; width: 116%; height: 150%; display: block; pointer-events: none;
+#rust .android-evidence {
+  display: grid;
+  gap: clamp(1rem, 2.5vw, 1.65rem) var(--rust-column-gap);
+  padding-top: clamp(1.35rem, 3.3vw, 3rem);
+  border-top: 1px solid #ffffff26;
 }
-#rust .rust-word.has-3d .rw-css { visibility: hidden; }
-#rust .rw-css {
-  position: relative; display: inline-block; padding-top: 0.06em;
-  /* clamp(90px, 11vw, 190px), never wider than a narrow (or 200% zoomed) phone allows */
-  font: 700 min(23vw, clamp(90px, 11vw, 190px))/0.86 var(--font-display); letter-spacing: -0.06em; color: #c4c9cf;
-  filter: drop-shadow(0 10px 40px #d8662a33);
+#rust .android-intro { align-self: start; }
+#rust .android-intro h3 {
+  margin: 0 0 0.65rem;
+  color: #f1eeee;
+  font: 700 clamp(1.52rem, 1.16rem + 1.55vw, 2.53rem)/1.1 var(--font-display);
+  text-transform: none;
+  letter-spacing: -0.03em;
+  max-width: 18ch;
 }
-#rust .rw-css::before, #rust .rw-css::after { content: none; }
-#rust .rw-css::before {
-  position: absolute; inset: 0; z-index: 1; padding-top: inherit; pointer-events: none; color: transparent;
-  background: linear-gradient(105deg, #0000 40%, #ffffff55 50%, #0000 60%) no-repeat; background-size: 250% 100%;
-  -webkit-background-clip: text; background-clip: text;
+#rust .android-intro p { max-width: 36ch; }
+
+#rust .android-panels, #rust [data-rust-track="android"] { min-width: 0; }
+#rust .android-card {
+  min-width: 0;
+  padding: clamp(0.95rem, 2.6vw, 1.85rem);
+  border: 1px solid #ffffff24;
+  border-radius: var(--android-card-radius);
+  background: var(--android-card-bg);
+  box-shadow: var(--android-card-shadow);
 }
-@supports ((background-clip: text) or (-webkit-background-clip: text)) {
-  #rust .rw-css {
-    color: transparent;
-    background: linear-gradient(180deg, #e2e5e9, #7d848c 45%, #c4c9cf 55%, #5d636a);
-    -webkit-background-clip: text; background-clip: text;
+#rust .android-label {
+  color: var(--rust-ember);
+  margin: 0 0 0.4rem;
+  font: 500 0.68rem/1.25 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+#rust .android-card h4 {
+  margin: 0;
+  font: 700 clamp(1.6rem, 1.05rem + 1.7vw, 2.42rem)/1.02 var(--font-display);
+  color: var(--story-fg);
+  letter-spacing: -0.045em;
+}
+#rust .android-unit { margin: 0.48rem 0 0; font-size: 0.92rem; line-height: 1.4; color: #dfd9db; }
+
+#rust .chart-plot {
+  position: relative;
+  height: clamp(11.7rem, 22vw, 15.5rem);
+  margin-block: 0.78rem 0.6rem;
+  padding-inline-start: 1.52rem;
+}
+#rust .chart-guides { position: absolute; inset: 0 0 0 1.52rem; pointer-events: none; }
+#rust .chart-guides span {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  border-bottom: 1px solid #ffffff1f;
+  color: var(--rust-cite);
+  font: 0.625rem/1 var(--font-mono);
+  text-indent: -1.35rem;
+  padding-bottom: 3px;
+}
+#rust .chart-guides span:nth-child(1) { bottom: 75%; }
+#rust .chart-guides span:nth-child(2) { bottom: 50%; }
+#rust .chart-guides span:nth-child(3) { bottom: 25%; }
+#rust .chart-bars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(3px, 1.45vw, 0.8rem);
+  position: relative;
+  margin: 0;
+  padding: 0 0.16rem;
+  height: 100%;
+  list-style: none;
+}
+#rust .chart-column { display: flex; justify-content: center; align-items: end; min-width: 0; }
+#rust .chart-h76 { --bar-height: 76%; }
+#rust .chart-h35 { --bar-height: 35%; }
+#rust .chart-h24 { --bar-height: 24%; }
+#rust .chart-h20 { --bar-height: 20%; }
+#rust .chart-bar { position: relative; height: var(--bar-height); width: 86%; }
+#rust .chart-fill {
+  display: block;
+  height: 100%;
+  border-radius: 7px 7px 0 0;
+  border-top: 1px solid #b6b5bb;
+  background: linear-gradient(180deg, #92939c, #62656f 50%, #3c404a);
+}
+#rust .chart-h20 .chart-fill {
+  border-top: 1px dashed #ecab8e;
+  border-radius: 0;
+  background: repeating-linear-gradient(135deg, #e39b7e59 0 2px, #9b5a4e19 2px 6px);
+}
+#rust .chart-point {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  translate: -50% 0;
+  display: grid;
+  gap: 1px;
+  justify-items: center;
+  min-width: max-content;
+  padding: 3px 5px 4px;
+  border-radius: 7px;
+  font: 500 0.69rem/1.1 var(--font-mono);
+  color: #dbd6d8;
+}
+#rust .chart-point strong {
+  color: #f7f3f2;
+  font: 700 clamp(1.17rem, 0.8rem + 1.5vw, 2.12rem)/0.98 var(--font-display);
+  letter-spacing: -0.048em;
+  font-variant-numeric: tabular-nums;
+}
+#rust .chart-bound {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--rust-cite);
+  font-size: 0.79rem;
+  line-height: 1.35;
+}
+#rust .chart-bound > span {
+  flex: 0 0 13px;
+  height: 10px;
+  border-top: 1px dashed #ecab8e;
+  background: repeating-linear-gradient(135deg, #e39b7e80 0 1px, transparent 1px 4px);
+}
+#rust .android-sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.4rem;
+  margin-top: 0.7rem;
+  padding-top: 0.33rem;
+  border-top: 1px solid #ffffff1c;
+  font: 0.73rem/1.15 var(--font-mono);
+  color: #d2cbcd;
+}
+#rust .android-sources > span { margin-inline-end: 0.15rem; }
+#rust .android-sources a.source { justify-content: center; padding-inline: 0.25rem; white-space: nowrap; }
+
+#rust [data-rust-track="density"] { margin-top: 1.65rem; }
+#rust .android-transition {
+  border-inline-start: 1px solid #985d48;
+  padding-inline-start: 0.86rem;
+  margin: 0 0 1rem;
+  color: #e0d6d4;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 42ch;
+}
+#rust .density-scale {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 0.8rem;
+  margin: 1rem 0 0;
+}
+#rust .density-side {
+  display: grid;
+  grid-template-rows: minmax(2em, auto) auto minmax(0, 1fr);
+  align-items: start;
+  min-width: 0;
+  padding: 0.6rem;
+  border: 1px solid #ffffff20;
+  border-radius: 10px;
+  background: #10111677;
+  color: #d8d4d6;
+}
+#rust .density-side > span { font: 500 0.72rem/1.22 var(--font-mono); }
+#rust .density-side strong {
+  color: #eeebef;
+  margin-block: 3px 9px;
+  font: 700 clamp(1.53rem, 0.8rem + 2.7vw, 3rem)/1 var(--font-display);
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+}
+#rust .density-side:nth-child(2) strong { color: var(--rust-ember); }
+#rust :is(.density-field, .density-dot) { aspect-ratio: 40 / 25; width: 100%; max-height: 8.15rem; }
+#rust .density-field { background: radial-gradient(circle, #c5c4ce 0 32%, transparent 44%) 0 0 / 2.5% 4%; }
+#rust .density-dot { display: grid; place-items: center; border: 1px dashed #ffffff33; border-radius: 5px; }
+#rust .density-dot i { width: 3px; height: 3px; border-radius: 100%; background: #ffa880; box-shadow: 0 0 9px #f29066; }
+#rust .density-caveat { margin: 0.7rem 0 0; color: #d9d4d5; font-size: 0.87rem; line-height: 1.46; }
+#rust .density-caveat strong { color: #f0e9e8; }
+
+:is(#rust, #rust-cards) a.source {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  color: #ffc3a8;
+  text-underline-offset: 0.2em;
+}
+:is(#rust, #rust-cards) :is(a.source, summary):focus-visible {
+  outline: 2px solid #ffc0a4;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+:is(#rust, #rust-cards) .rust-disclosure {
+  min-width: 0;
+  margin: 0;
+  border-block-start: 1px solid var(--story-line);
+}
+:is(#rust, #rust-cards) .rust-disclosure:not([open]) > :not(summary) { display: none; }
+:is(#rust, #rust-cards) .rust-disclosure summary {
+  align-content: center;
+  width: fit-content;
+  min-height: 44px;
+  padding: 0;
+  margin: 0;
+}
+:is(#rust, #rust-cards) .rust-disclosure > p { margin: 0.25rem 0 0; font-size: 0.94rem; line-height: 1.55; }
+#rust .rust-notes .rust-disclosure { margin-bottom: 0.4rem; max-width: 44ch; }
+#rust .rust-links { display: flex; flex-wrap: wrap; column-gap: 0.9rem; }
+#rust .xdr-result a.source { font-size: 0.86rem; }
+
+#rust-cards h2 {
+  max-width: 21ch;
+  margin: 0 0 0.7rem;
+  font-size: clamp(1.85rem, 1.15rem + 2.3vw, 3rem);
+  color: #f0ebed;
+  letter-spacing: -0.037em;
+  text-wrap: balance;
+}
+#rust-cards .rust-context { display: grid; gap: clamp(1.05rem, 3.2vw, 2.5rem); align-items: start; }
+#rust-cards .rust-context h3 {
+  margin: 0 0 0.53rem;
+  color: #f3ebeb;
+  font: 700 clamp(1.14rem, 0.91rem + 1vw, 1.58rem)/1.15 var(--font-display);
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
+#rust-cards .rust-context p { margin: 0; font-size: 0.94rem; line-height: 1.52; }
+#rust-cards .client-rules { min-width: 0; }
+#rust-cards .client-rules .lede { max-width: 45ch; font-size: clamp(1rem, 0.94rem + 0.33vw, 1.15rem); }
+#rust-cards .client-rules dl { margin: 1rem 0 0; }
+#rust-cards .client-rules dl > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.45fr) 1.55fr;
+  gap: 0.35rem 1rem;
+  padding: 0.69rem 0;
+  border-top: 1px solid #ffffff20;
+}
+#rust-cards .client-rules dt { color: #ffc1a6; font-weight: 650; }
+#rust-cards .client-rules dd { margin: 0; color: #e1dadc; line-height: 1.42; font-size: 0.93rem; }
+#rust-cards .client-reference { min-width: 0; padding-top: 0.85rem; border-top: 1px solid #ffffff28; }
+#rust-cards .unsafe-note { margin-top: 0.4rem; padding-top: 0.9rem; border-top: 1px solid #ffffff20; }
+#rust-cards .rust-disclosure { margin-top: 0.18rem; padding-top: 0.1rem; }
+
+@media (min-width: 850px) {
+  #rust-cards .rust-context { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+  #rust-cards .client-reference {
+    padding: 0.45rem 0 0 clamp(1rem, 2.3vw, 1.7rem);
+    border-top: 0;
+    border-left: 1px solid #ffffff28;
   }
-  #rust .rw-css::after {
-    content: "Rust" / ""; position: absolute; inset: 0; padding-top: inherit; color: transparent;
-    background: var(--rw-fill, none) center / cover;
-    -webkit-background-clip: text; background-clip: text;
-    --r1: 80%; --r2: 70%; --r3: 70%; --r4: 60%;
-    -webkit-mask-image:
-      radial-gradient(circle at 18% 70%, #000 var(--r1), #0000 calc(var(--r1) + 8%)),
-      radial-gradient(circle at 46% 30%, #000 var(--r2), #0000 calc(var(--r2) + 8%)),
-      radial-gradient(circle at 70% 75%, #000 var(--r3), #0000 calc(var(--r3) + 8%)),
-      radial-gradient(circle at 90% 35%, #000 var(--r4), #0000 calc(var(--r4) + 8%));
-    mask-image:
-      radial-gradient(circle at 18% 70%, #000 var(--r1), #0000 calc(var(--r1) + 8%)),
-      radial-gradient(circle at 46% 30%, #000 var(--r2), #0000 calc(var(--r2) + 8%)),
-      radial-gradient(circle at 70% 75%, #000 var(--r3), #0000 calc(var(--r3) + 8%)),
-      radial-gradient(circle at 90% 35%, #000 var(--r4), #0000 calc(var(--r4) + 8%));
+}
+@media (min-width: 980px) {
+  #rust :is(.rust-project, .android-evidence) { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.35fr); }
+  #rust .rust-project {
+    grid-template-areas: "intro fixture" "notes fixture";
+    grid-template-rows: min-content 1fr;
+    row-gap: 0.8rem;
+  }
+  #rust .rust-project > :is(.rust-intro, [data-rust-track="fixture"]) { align-self: start; }
+  #rust #android-engineering { grid-column: 2; }
+}
+@media (max-width: 760px) {
+  #rust .density-scale { margin-top: 0.65rem; row-gap: 0.48rem; }
+  #rust .density-side { padding-block: 0.45rem; }
+  #rust :is(.density-field, .density-dot) { max-height: 5rem; }
+  #rust .density-caveat { margin-top: 0.48rem; }
+}
+@media (max-width: 520px) {
+  #rust-cards .client-rules dl > div { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 430px) {
+  #rust .android-sources { column-gap: 0.22rem; }
+  #rust .android-sources a.source { padding-inline: 0.14rem; }
+  #rust .density-side { padding-inline: 0.45rem; }
+}
+@media (max-width: 359px) {
+  #rust .xdr-wire { gap: 0.4rem; padding-inline: 0.42rem; }
+  #rust .xdr-bytes { gap: 2px; }
+}
+
+/* JS adds a hold only after measuring the actual panel and its clearance. */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.static) #rust [data-sticky]::after { content: ''; display: block; height: var(--rust-travel); }
+  html:not(.static) #rust [data-sticky] > :first-child { position: sticky; top: var(--rust-hold-top); }
+  #rust [data-rust-track="project"] { --rust-travel: clamp(260px, 38svh, 370px); }
+  #rust [data-rust-track="fixture"] { --rust-travel: clamp(170px, 27svh, 245px); }
+  #rust [data-rust-track="android"] { --rust-travel: clamp(920px, 137svh, 1350px); }
+
+  html:not(.static) #rust .xdr-fixture [data-xdr-reveal] { transition: opacity 160ms ease-out, translate 160ms ease-out; }
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="0"]:not(:has(:focus-visible)) [data-xdr-reveal],
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="1"]:not(:has(:focus-visible)) :is([data-xdr-reveal="2"], [data-xdr-reveal="3"], [data-xdr-reveal="4"]),
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="2"]:not(:has(:focus-visible)) :is([data-xdr-reveal="3"], [data-xdr-reveal="4"]),
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="3"]:not(:has(:focus-visible)) [data-xdr-reveal="4"] {
+    opacity: 0;
+    translate: 0 4px;
+  }
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="0"] .xdr-group > code,
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="1"] .xdr-bytes > code:first-child,
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="2"] .xdr-bytes > code:nth-child(2) {
+    border-color: #d38d70;
+    background: #48322c;
+  }
+  html:not(.static) #rust .xdr-fixture:is([data-xdr-step="3"], [data-xdr-step="4"]) .xdr-bytes > code:nth-child(2) {
+    box-shadow: 1px 0 0 #e6a082;
+  }
+
+  html:not(.static) #rust [data-rust-track="android"][data-sticky] .android-panels {
+    display: grid;
+    border-radius: var(--android-card-radius);
+    background: var(--android-card-bg);
+    box-shadow: var(--android-card-shadow), inset 0 0 0 1px #ffffff24;
+  }
+  html:not(.static) #rust [data-rust-track="android"][data-sticky] .android-card {
+    border-color: transparent;
+    background: none;
+    box-shadow: none;
+  }
+  html:not(.static) #rust [data-rust-track="android"][data-sticky] .android-panels > div {
+    grid-area: 1 / 1;
+    min-width: 0;
+    margin: 0;
+    transition: opacity 145ms ease-out, translate 145ms ease-out;
+  }
+  html:not(.static) #rust [data-rust-track="android"][data-sticky] .android-transition { display: none; }
+  /* Keep both panels' source links in keyboard order while only one panel is painted. */
+  html:not(.static) #rust [data-android-phase="share"] .android-panels:not(:has([data-rust-track="density"] :focus-visible)) > [data-rust-track="density"],
+  html:not(.static) #rust [data-android-phase="density"] .android-panels:not(:has([data-rust-track="share"] :focus-visible)) > [data-rust-track="share"],
+  html:not(.static) #rust [data-android-phase] .android-panels:has([data-rust-track="share"] :focus-visible) > [data-rust-track="density"],
+  html:not(.static) #rust [data-android-phase] .android-panels:has([data-rust-track="density"] :focus-visible) > [data-rust-track="share"] {
+    opacity: 0;
+    translate: 0 6px;
+    pointer-events: none;
+    transition: none;
+  }
+  html:not(.static) #rust [data-sticky] [data-rust-track="share"]:not(:has(:focus-visible)) .chart-bar {
+    height: calc(var(--bar-height) * var(--bar-growth, 1));
+  }
+  html:not(.static) #rust [data-rust-track="share"]:not(:has(:focus-visible)) :is([data-awaiting-label] .chart-point, [data-pending] .chart-fill) {
+    visibility: hidden;
+  }
+  html:not(.static) #rust .chart-column[data-active]:not(.chart-h20) .chart-fill {
+    border-color: #ffc3a5;
+    background: linear-gradient(180deg, #bc775d, #754a42 75%, #523c39);
+  }
+  html:not(.static) #rust .chart-column[data-active] .chart-point { background: #3f2a27; outline: 1px solid #e59d826e; color: #ffd4c2; }
+  html:not(.static) #rust .chart-column[data-active] .chart-point strong { color: #ffd4c2; }
+  html:not(.static) #rust [data-sticky] [data-rust-track="density"]:not(:has(:focus-visible)) .density-field {
+    clip-path: inset(0 calc(100% * (1 - var(--density-progress, 1))) 0 0);
+  }
+  html:not(.static) #rust [data-sticky] [data-rust-track="density"]:not(:has(:focus-visible)) .density-dot i {
+    opacity: clamp(0, calc((var(--density-progress, 1) - 0.35) * 3), 1);
   }
 }
-#rust .rw-intro { min-width: 0; margin-bottom: 2rem; }
-#rust .rwname { font-size: 0.875rem; color: var(--story-muted); max-width: 46ch; margin: 0 0 0.5rem; }
-#rust .rwclaim { font-size: clamp(1rem, 0.9rem + 0.35vw, 1.1875rem); line-height: 1.55; color: var(--story-text); max-width: 46ch; margin: 0; }
-#rust .rwclaim b { color: var(--rust); }
-@media (max-width: 1100px) {
-  #rust .rustart {
-    opacity: 0.16;
-    -webkit-mask-image: linear-gradient(180deg, #000, #0008 42%, #0000 78%);
-    mask-image: linear-gradient(180deg, #000, #0008 42%, #0000 78%);
-  }
-  #rust .rwname { color: var(--story-cite); }
-}
-
-/* Use the same steel, sheen, and patina as the pinned chapter when the word arrives in normal flow. */
-@media (max-width: 69.999rem) and (prefers-reduced-motion: no-preference) {
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    #rust .rust-word[data-compact-entry='waiting'] .rw-css::after { opacity: 0; }
-    #rust .rust-word[data-compact-entry='entered'] .rw-css::before {
-      content: "Rust" / "";
-      animation: rs-sheen 650ms ease-out both;
-    }
-    #rust .rust-word[data-compact-entry='entered'] .rw-css::after {
-      animation: rs-rwSpread 950ms 120ms ease-out both;
-    }
+@media (min-width: 980px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
+  html:not(.static) #rust .android-evidence:has([data-sticky]) .android-intro {
+    position: sticky;
+    top: var(--rust-rail-top);
   }
 }
-
-#rust .rphase h2, #rust .rphase .phase-h {
-  font: 700 clamp(1.5rem, 1rem + 1.6vw, 2.375rem)/1.06 var(--font-display); letter-spacing: -0.03em;
-  text-transform: none; color: var(--story-fg); margin: 0 0 1rem; max-width: 24ch;
-}
-#rust .rphase .lede { max-width: 44ch; margin: 0; }
-
-/* the panels: each phase its own card in the base, one shared card (.panel) in the enhancement */
-#rust .ph {
-  border-radius: 22px; border: 1px solid var(--story-card-border); background: var(--story-card-panel);
-  box-shadow: inset 0 1px 0 #ffffff12; padding: 1.25rem; margin: 1.5rem 0 2.5rem; max-width: 46rem;
-}
-#rust .ph2 { margin-bottom: 0; }
-#rust .ph p { max-width: none; }
-#rust .cap { font: 0.75rem/1.5 var(--font-mono); color: var(--story-cite); margin: 1rem 0 0; }
-/* phones: the four-character year links are 44 px wide as well as tall (story/base.css), their lines unmoved */
-@media (max-width: 760px) { #rust .cap a.source { display: inline-block; min-width: 44px; text-align: center; margin-block: -14px; } }
-#rust .ph .lbl { font: 0.8125rem/1.5 var(--font-mono); color: var(--story-muted); margin: 0 0 1rem; }
-
-/* phase 1: the readout (decorative: the bars carry the values) and the bars */
-#rust .readout { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 16px; margin-bottom: 1rem; }
-#rust .readout .num {
-  display: grid; min-width: 3.2ch; min-height: 1em;
-  font: 700 clamp(3.25rem, 7vw, 7.5rem)/1 var(--font-display); letter-spacing: -0.05em; color: #f6efe9; text-shadow: 0 0 40px #d8662a66;
-}
-#rust .readout .rv { grid-area: 1 / 1; }
-#rust .readout .yr { position: relative; margin-left: auto; width: 7ch; height: 1.4em; font: 0.9375rem var(--font-mono); color: var(--story-muted); }
-#rust .readout .yr span { position: absolute; left: 0; }
-#rust .readout :is(.rv1, .rv2, .rv3, .y1, .y2, .y3) { display: none; }
-#rust .chart {
-  list-style: none; margin: 0; padding: 0; height: 14rem;
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
-}
-#rust .chart .col { display: grid; grid-template-rows: 1fr auto; max-width: none; min-width: 0; }
-#rust .chart .track { display: flex; align-items: flex-end; height: 100%; padding-inline: 0.8vw; border-bottom: 1px solid var(--story-line); }
-#rust .chart .b {
-  position: relative; display: flex; justify-content: center; width: 100%;
-  border-radius: 12px 12px 0 0; background: linear-gradient(180deg, #b7bdc4, #7d848c 35%, #3b3f45); transform-origin: bottom;
-}
-/* heights: story.ts rust.share.bars[].height, in percent */
-#rust .chart .b.h-76 { height: 76%; }
-#rust .chart .b.h-35 { height: 35%; }
-#rust .chart .b.h-24 { height: 24%; }
-#rust .chart .b.h-20 { height: 20%; }
-/* The hatched range ends at a dashed upper bound. */
-#rust .chart .b.threshold { background: none; border-radius: 0; border-block-start: 1px dashed #b7bdc4; }
-#rust .chart .b.threshold::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit;
-  background: repeating-linear-gradient(135deg, #9aa0a7 0 6px, #5d636a 6px 12px);
-  -webkit-mask-image: linear-gradient(#0000, #000 35%); mask-image: linear-gradient(#0000, #000 35%);
-}
-/* the value sits on a dark plate: the bar's light steel top is too pale for white text on its own */
-#rust .chart .bv {
-  font: normal 700 clamp(1rem, 1.7vw, 1.75rem)/1 var(--font-display); letter-spacing: -0.02em; color: #fff;
-  margin-top: 14px; white-space: nowrap; align-self: flex-start;
-  padding: .2em .35em; border-radius: 6px; background: #1b1d20e6; box-shadow: 0 2px 10px #0006;
-}
-/* the <20% value sits above its short, faded bar */
-#rust .chart .b.threshold .bv { position: absolute; bottom: 100%; margin: 0 0 6px; }
-#rust .chart .yr { font: 0.8125rem var(--font-mono); color: var(--story-muted); text-align: center; margin-top: 10px; }
-
-/* phase 2: density */
-#rust .dens { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 2.4vw; align-items: start; margin: 0; }
-#rust .dens .side { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; min-width: 0; }
-#rust .dens .who { font: 500 0.875rem var(--font-mono); color: var(--story-muted); }
-#rust .dens .val { font: 700 clamp(2.25rem, 4vw, 4.25rem)/1 var(--font-display); letter-spacing: -0.04em; }
-#rust .dens .cval { color: #aeb4bb; }
-#rust .dens .rustval { color: var(--rust); }
-#rust .dens .dkey { grid-column: 1 / -1; margin: 0; }
-/* 40 x 25 = 1,000 steel dots, and one faint rust dot in a box of the same size */
-#rust .field {
-  width: 100%; max-width: 320px; aspect-ratio: 40 / 25;
-  background: radial-gradient(circle at center, var(--story-steel) 0 32%, #0000 40%) 0 0 / 2.5% 4%;
-}
-#rust .onedot { width: 100%; max-width: 320px; aspect-ratio: 40 / 25; display: grid; place-items: center; border: 1px dashed #3a3d44; border-radius: 10px; }
-#rust .onedot i { width: 8px; height: 8px; border-radius: 50%; background: var(--rust); box-shadow: 0 0 22px var(--rust); opacity: 0.35; }
-#rust .chips { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 1rem 0 0; padding: 0; }
-#rust .chips li {
-  max-width: 100%; font: 0.8125rem/1.4 var(--font-mono); padding: 7px 12px; border-radius: 99px;
-  border: 1px solid #6a3a22; color: var(--story-peach); background: #1d120c;
-}
-
-/* The examples share one panel. */
-#rust-cards > .stage { max-width: calc(1360px + 2 * var(--gutter)); }
-#rust-cards > .stage > h2 { max-width: none; text-align: left; }
-#rust-cards .facts { display: grid; gap: 2rem; padding: clamp(1.5rem, 3vw, 2.5rem); border: 1px solid var(--story-card-border); border-radius: 26px; background: var(--story-card-panel); }
-#rust-cards .fact { min-width: 0; }
-#rust-cards .fact h3 { margin: 0 0 .75rem; font: 700 1.125rem/1.3 var(--font-display); }
-#rust-cards .fact p { margin: 0 0 .75rem; font-size: 1.03rem; line-height: 1.55; max-width: 46ch; }
-#rust-cards .fact .s { font: 0.75rem/1.4 var(--font-mono); color: var(--story-cite); }
-@media (min-width: 761px) {
-  #rust-cards .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@supports (animation-timeline: view()) {
-  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px) {
-    /* ---------- #rust: pinned; the word rusts, the bars rise, then the density phase ---------- */
-    /* view-timeline-inset: 0, as in crash.css: otherwise html's scroll-padding-top starts the contain range early.
-       The timeline is --rust-tl, not --rust: that is the colour token. */
-    html:not(.static) #rust:not(.story--flow) { view-timeline: --rust-tl block; view-timeline-inset: 0; }
-    html:not(.static) #rust:not(.story--flow) > .stage {
-      max-width: none; display: grid; grid-template-columns: 1fr 1.15fr; grid-template-rows: 1fr auto auto auto 1fr;
-      column-gap: 5vw; row-gap: 2.4vh; padding-inline: 8vw; padding-bottom: 3vh;
-    }
-    /* a short window (1366x657): tighter rows keep the density phase's text inside the stage */
-    @media (max-height: 680px) { html:not(.static) #rust:not(.story--flow) > .stage { row-gap: 1.2vh; } }
-    /* snug (fit.ts: the text wraps to more lines than the stage holds): tighter rows, and the word sized by the
-       window's height as well as its width (the density panel's snug rules are with its own, below) */
-    html:not(.static) #rust.story--snug:not(.story--flow) > .stage { row-gap: 1.2vh; }
-    html:not(.static) #rust.story--snug:not(.story--flow) .rw-css { font-size: clamp(90px, min(11vw, 16vh), 190px); }
-    html:not(.static) #rust:not(.story--flow) .rust-word { grid-area: 2 / 1; margin: 0; }
-    html:not(.static) #rust:not(.story--flow) .rw-intro { grid-area: 3 / 1; margin: 0; }
-    html:not(.static) #rust:not(.story--flow) .rwclaim { font-size: clamp(16px, 1.25vw, 19px); }
-    /* the two phases' texts share one cell */
-    html:not(.static) #rust:not(.story--flow) .rphase { grid-area: 4 / 1; align-self: start; }
-    html:not(.static) #rust:not(.story--flow) .rphase h2, html:not(.static) #rust:not(.story--flow) .rphase .phase-h { font-size: clamp(24px, min(2.4vw, 4vh), 38px); max-width: none; }
-    html:not(.static) #rust:not(.story--flow) .rphase .lede { font-size: clamp(17px, 1.4vw, 20px); }
-
-    html:not(.static) #rust:not(.story--flow) .rustart {
-      inset: 0; height: auto; opacity: 0.42;
-      -webkit-mask-image: linear-gradient(90deg, #000 0, #0008 50%, #0000); mask-image: linear-gradient(90deg, #000 0, #0008 50%, #0000);
-      animation-name: rs-rustBg; animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
-      animation-timeline: --rust-tl; animation-range: contain 0% contain 100%;
-    }
-    /* the panel: 66vh, taller where a short window would not fit the density phase */
-    html:not(.static) #rust:not(.story--flow) .panel,
-    html:not(.static) #rust:not(.story--flow) .ph {
-      grid-column: 2; grid-row: 1 / -1; align-self: center;
-      height: max(66vh, min(100vh - var(--header-h) - 9vh, 40rem));
-    }
-    html:not(.static) #rust:not(.story--flow) .panel {
-      display: block; border-radius: 28px; border: 1px solid var(--story-card-border);
-      background: linear-gradient(160deg, oklch(0.22 0.006 270 / 0.9), oklch(0.17 0.005 270 / 0.9));
-      box-shadow: 0 40px 120px #000a, inset 0 1px 0 #ffffff12;
-      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    }
-    html:not(.static) #rust:not(.story--flow) .ph {
-      position: relative; z-index: 1; margin: 0; max-width: none; border: 0; border-radius: 0; background: none; box-shadow: none;
-      display: flex; flex-direction: column; overflow: hidden; padding: 4vh 3vw 3vh;
-      animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --rust-tl;
-    }
-    /* the phases follow one another: phase 1 is gone at contain 47%, phase 2 starts at 48% (never both on screen) */
-    html:not(.static) #rust:not(.story--flow) .ph1, html:not(.static) #rust:not(.story--flow) .t1 {
-      animation-name: rs-phaseOut; animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
-      animation-timeline: --rust-tl; animation-range: contain 42% contain 47%;
-    }
-    html:not(.static) #rust:not(.story--flow) .ph2, html:not(.static) #rust:not(.story--flow) .t2 {
-      animation-name: rs-phaseIn; animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
-      animation-timeline: --rust-tl; animation-range: contain 48% contain 53%;
-    }
-
-    /* the word: a sheen over the steel, then rust breaking out in four spots and spreading */
-    html:not(.static) #rust:not(.story--flow) .rw-css::before {
-      content: "Rust" / "";
-      animation-name: rs-sheen; animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
-      animation-timeline: --rust-tl; animation-range: contain 0% contain 18%;
-    }
-    html:not(.static) #rust:not(.story--flow) .rw-css::after {
-      animation-name: rs-rwSpread; animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both;
-      animation-timeline: --rust-tl; animation-range: contain 4% contain 44%;
-    }
-
-    /* phase 1: the readout flips to each real value in turn (ranges end where the next starts: never two at once) */
-    html:not(.static) #rust:not(.story--flow) .readout { margin-bottom: 2vh; }
-    html:not(.static) #rust:not(.story--flow) .readout .num { font-size: clamp(60px, 7vw, 120px); }
-    html:not(.static) #rust:not(.story--flow) .readout :is(.rv, .yr span) {
-      display: block; opacity: 0;
-      animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --rust-tl;
-    }
-    html:not(.static) #rust:not(.story--flow) .readout .rv { animation-name: rs-flipInOut; }
-    html:not(.static) #rust:not(.story--flow) .readout .yr span { animation-name: rs-yshow; }
-    html:not(.static) #rust:not(.story--flow) .readout :is(.rv1, .y1) { animation-range: contain 6% contain 16%; }
-    html:not(.static) #rust:not(.story--flow) .readout :is(.rv2, .y2) { animation-range: contain 16% contain 26%; }
-    html:not(.static) #rust:not(.story--flow) .readout :is(.rv3, .y3) { animation-range: contain 26% contain 34%; }
-    html:not(.static) #rust:not(.story--flow) .readout .rv4 { animation-name: rs-flipIn; animation-range: contain 34% contain 38%; }
-    html:not(.static) #rust:not(.story--flow) .readout .yr .y4 { animation-name: rs-yshowEnd; animation-range: contain 34% contain 38%; }
-    html:not(.static) #rust:not(.story--flow) .chart { flex: 1; height: auto; min-height: 0; }
-    html:not(.static) #rust:not(.story--flow) .chart .b {
-      animation-name: rs-barUp; animation-duration: auto; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.2);
-      animation-fill-mode: both; animation-timeline: --rust-tl;
-    }
-    html:not(.static) #rust:not(.story--flow) .chart .bv {
-      animation-name: rs-bvIn; animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --rust-tl;
-    }
-    html:not(.static) #rust:not(.story--flow) .chart .col:nth-child(1) .b { animation-range: contain 0% contain 8%; }
-    html:not(.static) #rust:not(.story--flow) .chart .col:nth-child(2) .b { animation-range: contain 10% contain 18%; }
-    html:not(.static) #rust:not(.story--flow) .chart .col:nth-child(3) .b { animation-range: contain 20% contain 28%; }
-    html:not(.static) #rust:not(.story--flow) .chart .col:nth-child(4) .b { animation-range: contain 30% contain 36%; }
-    html:not(.static) #rust:not(.story--flow) .chart .col:nth-child(1) .bv { animation-range: contain 7% contain 10%; }
-    html:not(.static) #rust:not(.story--flow) .chart .col:nth-child(2) .bv { animation-range: contain 17% contain 20%; }
-    html:not(.static) #rust:not(.story--flow) .chart .col:nth-child(3) .bv { animation-range: contain 27% contain 30%; }
-    html:not(.static) #rust:not(.story--flow) .chart .col:nth-child(4) .bv { animation-range: contain 35% contain 38%; }
-
-    /* phase 2: the field fills in, C and C++'s value, then the one dot and Rust's value, then the chips */
-    html:not(.static) #rust:not(.story--flow) .ph2 { justify-content: center; gap: 1.4vh; padding: 2.5vh 2.4vw 1.5vh; }
-    /* snug: closer set, and the two dot fields sized by the window's height as well */
-    html:not(.static) #rust.story--snug:not(.story--flow) .ph2 { gap: 0.8vh; padding-block: 1.5vh 1vh; }
-    html:not(.static) #rust.story--snug:not(.story--flow) :is(.field, .onedot) { max-width: min(320px, 30vh); }
-    html:not(.static) #rust:not(.story--flow) .ph2 .cap { margin-top: 1vh; }
-    /* the panel's gap already spaces the chips from the density block */
-    html:not(.static) #rust:not(.story--flow) .ph2 .chips { margin-top: 0; }
-    html:not(.static) #rust:not(.story--flow) :is(.field, .cval, .onedot i, .rustval, .chips li) {
-      animation-duration: auto; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --rust-tl;
-    }
-    html:not(.static) #rust:not(.story--flow) .field { animation-name: rs-reveal; animation-range: contain 53% contain 70%; }
-    html:not(.static) #rust:not(.story--flow) .cval { animation-name: rs-swapIn; animation-range: contain 62% contain 68%; }
-    html:not(.static) #rust:not(.story--flow) .onedot i { animation-name: rs-dotIn; animation-range: contain 72% contain 76%; }
-    html:not(.static) #rust:not(.story--flow) .rustval { animation-name: rs-swapIn; animation-range: contain 72% contain 76%; }
-    html:not(.static) #rust:not(.story--flow) .chips li:nth-child(1) { animation-name: rs-linkIn; animation-range: contain 86% contain 90%; }
-    html:not(.static) #rust:not(.story--flow) .chips li:nth-child(2) { animation-name: rs-linkIn; animation-range: contain 90% contain 94%; }
-
-    /* Every source stays in the tab order, in reading order. The phase whose link has keyboard focus shows whole,
-       with its text, and the other phase steps aside, whatever the scroll position; a focused chip shows whole. */
-    html:not(.static) #rust:not(.story--flow) > .stage:has(.ph1 :focus-visible) :is(.ph1, .t1),
-    html:not(.static) #rust:not(.story--flow) > .stage:has(.ph2 :focus-visible) :is(.ph2, .t2) {
-      animation: none; opacity: 1; translate: none; filter: none; pointer-events: auto;
-    }
-    html:not(.static) #rust:not(.story--flow) > .stage:has(.ph1 :focus-visible) :is(.ph2, .t2),
-    html:not(.static) #rust:not(.story--flow) > .stage:has(.ph2 :focus-visible) :is(.ph1, .t1) {
-      animation: none; opacity: 0; pointer-events: none;
-    }
-    html:not(.static) #rust:not(.story--flow) .ph1:has(:focus-visible) :is(.b, .bv),
-    html:not(.static) #rust:not(.story--flow) .ph2:has(:focus-visible) :is(.field, .cval, .rustval, .chips li) { animation: none; }
-
-
-  }
-}
-
-@keyframes rs-rustBg { 0% { opacity: 0.42; transform: scale(1.12); } 100% { opacity: 0.1; transform: scale(1); } }
-@keyframes rs-sheen { from { background-position: 120% 0; } to { background-position: -20% 0; } }
-@keyframes rs-rwSpread {
-  0% { --r1: 0%; --r2: 0%; --r3: 0%; --r4: 0%; }
-  25% { --r1: 14%; --r2: 0%; --r3: 4%; --r4: 0%; }
-  55% { --r1: 34%; --r2: 18%; --r3: 22%; --r4: 8%; }
-  100% { --r1: 80%; --r2: 70%; --r3: 70%; --r4: 60%; }
-}
-/* The two phases share one place: a phase takes pointer input only while it is (nearly) shown, so a faded one never
-   covers the other's links. Their links stay in the tab order; keyboard focus shows its phase (above). */
-@keyframes rs-phaseOut { 0%, 84.9% { pointer-events: auto; } 85% { pointer-events: none; } to { pointer-events: none; opacity: 0; translate: 0 -30px; filter: blur(6px); } }
-@keyframes rs-phaseIn { from { pointer-events: none; opacity: 0; translate: 0 30px; filter: blur(6px); } 15% { pointer-events: none; } 15.1%, to { pointer-events: auto; } }
-@keyframes rs-flipIn { from { opacity: 0; rotate: x 80deg; translate: 0 -20px; } to { opacity: 1; } }
-@keyframes rs-flipInOut {
-  0% { opacity: 0; rotate: x 80deg; translate: 0 -20px; }
-  18%, 82% { opacity: 1; rotate: x 0deg; translate: 0 0; }
-  100% { opacity: 0; rotate: x -80deg; translate: 0 20px; }
-}
-@keyframes rs-yshow { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
-@keyframes rs-yshowEnd { 0% { opacity: 0; } 10%, 100% { opacity: 1; } }
-@keyframes rs-barUp { from { transform: scaleY(0); opacity: 0.2; } }
-@keyframes rs-bvIn { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
-@keyframes rs-reveal { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
-@keyframes rs-swapIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes rs-linkIn { from { pointer-events: none; opacity: 0; } 15% { pointer-events: none; } 15.1% { pointer-events: auto; } to { pointer-events: auto; opacity: 1; } }
-@keyframes rs-dotIn { from { opacity: 0; scale: 3; } to { opacity: 0.35; scale: 1; } }

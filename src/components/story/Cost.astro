@@ -15,8 +15,6 @@ import { story } from '../../content/story';
 const { cost } = story;
 const { windows, macos, linux, ironafs } = cost;
 const { dialog } = macos;
-// macOS: shut down, Recovery, (the switch, the tick), admin password, restart
-const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }));
 ---
 <Section id="cost" eyebrow={cost.eyebrow} heading={cost.heading}>
   <div class="stack" data-stack>
@@ -25,33 +23,36 @@ const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }
         <p class="os">{windows.os}</p>
         <h3 id="cost-windows">{windows.heading}</h3>
         <p class="lede">{windows.lede}</p>
-        <p class="foot">{windows.foot}</p>
+        <p class="cost-context">{windows.context}</p>
+        <div class="foot">{windows.sources.map(link => <a href={link.href}>{link.label}</a>)}</div>
       </div>
       <PhoneBeat><div class="vis">
-        <ol class="pipe">
-          {windows.steps.map((s, i) => <li class:list={['on', { warn: s.warn, branch: s.branch }]} data-step={i}>{s.mark && <><b aria-hidden="true">{s.mark}</b>{' '}</>}{s.text}</li>)}
+        <p class="cost-panel-title">{windows.signing}</p>
+        <ol class="pipe" role="list">
+          {windows.steps.map((step, i) => <li class="on" data-step={i}><b aria-hidden="true">{i + 1}</b> {step}</li>)}
         </ol>
+        <p class="cost-panel-note on" data-step={windows.steps.length}>
+          <strong>{windows.testing.title}</strong> {windows.testing.before}<a href={windows.testing.link.href}>{windows.testing.link.label}</a>{windows.testing.after}
+        </p>
       </div></PhoneBeat>
     </article>
 
     <article class="scard" aria-labelledby="cost-macos">
       <div class="copy">
-        <p class="os">{macos.os}</p>
+        <p class="os">{macos.os} <span>{macos.platform}</span></p>
         <h3 id="cost-macos">{macos.heading}</h3>
         <p class="lede">{macos.lede}</p>
-        <p class="foot">{macos.foot}</p>
+        <p class="cost-context">{macos.context}</p>
+        <div class="foot">{macos.sources.map(link => <a href={link.href}>{link.label}</a>)}</div>
       </div>
       <PhoneBeat><div class="vis">
+        <p class="cost-panel-title">{dialog.title}<span>{dialog.label}</span></p>
         <div class="mac">
-          <p class="t">{dialog.title}</p>
-          <p class="opt"><span class="r" aria-hidden="true"><i class="dot doff" data-step="2"></i></span>{dialog.full}</p>
-          <p class="opt"><span class="r" aria-hidden="true"><i class="dot don" data-step="2"></i></span>{dialog.reduced}</p>
-          <p class="opt sub"><span class="c" aria-hidden="true" data-step="3">✓</span>{dialog.allow}</p>
-          <p class="btns" aria-hidden="true"><span>{dialog.cancel}</span><span class="ok">{dialog.ok}</span></p>
+          <p class="opt on" data-step="0"><span class="r" aria-hidden="true"><i class="dot doff" data-step="1"></i></span>{dialog.full}</p>
+          <p class="opt on" data-step="1"><span class="r" aria-hidden="true"><i class="dot don" data-step="1"></i></span>{dialog.reduced}</p>
+          <p class="opt sub on" data-step="2"><span class="c" aria-hidden="true" data-step="2">✓</span>{dialog.allow}</p>
         </div>
-        <ol class="steps">
-          {macSteps.map(s => <li class="on" data-step={s.step}>{s.text}</li>)}
-        </ol>
+        <p class="cost-panel-note">{macos.steps.map((step, i) => <>{i > 0 && <span aria-hidden="true"> → </span>}{i === 0 ? <strong>{step}</strong> : step}</>)}</p>
       </div></PhoneBeat>
     </article>
 
@@ -60,12 +61,18 @@ const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }
         <p class="os">{linux.os}</p>
         <h3 id="cost-linux">{linux.heading}</h3>
         <p class="lede">{linux.lede}</p>
-        <p class="foot">{linux.foot}</p>
+        <p class="cost-context">{linux.context}</p>
+        <div class="foot">{linux.sources.map(link => <a href={link.href}>{link.label}</a>)}</div>
       </div>
-      <PhoneBeat><div class="vis">
-        <pre class="term" data-illustrative="debian"><span class="ln on d" data-step="0">{linux.workflow.label}</span>{linux.workflow.lines.map((line, i) => (
-          <span class:list={['ln', 'on', { 'e branch': line.tone === 'error', d: line.tone === 'dim' }]} data-step={i + 1}>{line.n && <><span class="p">{line.n}</span>{' '}</>}{line.text}</span>
-        ))}</pre>
+      <PhoneBeat><div class="vis" data-illustrative="debian">
+        <p class="cost-panel-title">{linux.workflow.title}<span>{linux.workflow.label}</span></p>
+        <ol class="cost-terminal" role="list">
+          {linux.workflow.lines.map((line, i) => (
+            <li class:list={['on', { 'cost-panel-note': 'note' in line }]} data-step={i}>
+              {'note' in line ? <><strong>{line.text}</strong> {linux.workflow.failure}</> : <><b aria-hidden="true">›</b>{line.text}</>}
+            </li>
+          ))}
+        </ol>
       </div></PhoneBeat>
     </article>
 
@@ -77,7 +84,7 @@ const macSteps = macos.steps.map((text, i) => ({ text, step: i < 2 ? i : i + 2 }
         <p class="os">{ironafs.os}</p>
         <h3 id="cost-ironafs">{ironafs.heading}</h3>
         <p class="lede">{ironafs.lede}</p>
-        {ironafs.foot && <p class="foot">{ironafs.foot}</p>}
+        <div class="foot">{ironafs.sources.map(link => <a href={link.href}>{link.label}</a>)}</div>
         <PhoneBeat><div class="afs">
           <p class="bigcmd"><span class="p">{ironafs.prompt} </span><span class="typed" data-step="0" data-span="3">{ironafs.command}</span><span class="cur" aria-hidden="true"></span></p>
           <p class="bigout">

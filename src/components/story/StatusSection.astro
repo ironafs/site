@@ -42,7 +42,7 @@ const parts = (title: string) => {
     ))}
     <article class="nn follow" data-card="follow">
       <p class="k">{s.follow.label}</p>
-      <h3 class="nn-title">{s.follow.title}</h3>
+      <h3 class="nn-title"><a href={s.follow.href}>{s.follow.title} <span aria-hidden="true">↗</span></a></h3>
       <p class="nn-body">{s.follow.links.map((link, i) => <>{i > 0 && ' · '}<a href={link.href}>{link.label}</a></>)}</p>
     </article>
   </div>

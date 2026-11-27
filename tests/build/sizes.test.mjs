@@ -7,7 +7,7 @@ import { BUDGET_BYTES, heroBundleGzip } from '../../tools/bundle-size.mjs';
 import { allFiles, dist, read } from './lib.mjs';
 
 // The size budgets, gzip via node:zlib: the page (index.html and the stylesheets it links) within
-// 60 KB; all the 3D (the hero's chunks, the Rust word's chunk and the glyph file, three.js once) within 300 KB.
+// 60 KB; all the 3D (the hero's chunks and the glyph file, three.js once) within 300 KB.
 // The 3D chunks are counted by tools/bundle-size.mjs, which CI also runs on its own.
 const PAGE_BUDGET = 60 * 1024;
 const gzip = buffer => gzipSync(buffer, { level: 9 }).length;
@@ -28,10 +28,9 @@ test('index.html and its CSS: within 60 KB gzip', () => {
   assert.ok(total <= PAGE_BUDGET, `page ${total} bytes gzip (${files.map(f => `${f.file} ${f.gzip}`).join(', ')}) is over ${PAGE_BUDGET}`);
 });
 
-test('all the 3D: within 300 KB gzip, the Rust word\'s chunk and the glyph file counted', () => {
+test('all the 3D: within 300 KB gzip, the glyph file counted', () => {
   const { chunks, total } = heroBundleGzip();
   assert.equal(BUDGET_BYTES, 300 * 1024);
-  assert.ok(chunks.some(c => c.roots.includes('rustword') && !c.roots.includes('hero')), 'the Rust word\'s own chunk is counted');
   // The glyph file is bundled into a JS chunk, never a separate asset; that chunk is one of the counted ones.
   const typeface = JSON.parse(readFileSync(new URL('../../src/assets/hero/letters.typeface.json', import.meta.url), 'utf8'));
   assert.ok(!allFiles().some(f => /typeface|\.json$/.test(f) && f.startsWith('_astro/')), 'no glyph file outside the chunks');
@@ -44,7 +43,7 @@ test('all the 3D: within 300 KB gzip, the Rust word\'s chunk and the glyph file 
   for (const file of holders) {
     const chunk = chunks.find(c => c.file === file);
     assert.ok(chunk, `${file} (the glyphs) is counted`);
-    assert.deepEqual([...chunk.roots].sort(), ['hero', 'rustword'], 'both 3D loaders reach the glyphs');
+    assert.deepEqual(chunk.roots, ['hero'], 'the hero loader reaches the glyphs');
   }
   assert.ok(total <= BUDGET_BYTES, `3D ${total} bytes gzip is over ${BUDGET_BYTES}`);
 });

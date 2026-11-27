@@ -22,9 +22,8 @@ import '../styles/hero.css';
           <div class="term-bar">
             <i></i><i></i><i></i>
             <span class="term-title">{ui.termTitle}</span>
-            <span class="term-label">{ui.console}</span>
             <button id="hero-pause" class="replay hero-pause" type="button" aria-label={motion.pause} hidden><span class="hero-pause-icon" aria-hidden="true"></span></button>
-            <button id="replay" class="replay" type="button" aria-label={ui.replay}><span aria-hidden="true">↻</span></button>
+            <button id="replay" class="replay" type="button" aria-label={ui.replay} hidden><span class="replay-arrow" aria-hidden="true">↻</span><span>{ui.replayLabel}</span></button>
           </div>
           <div id="console" class="console">
             <div id="console-sr" class="sr-only">{CONSOLE_LINES.map(l => <div>{l.prefix}{l.text}{l.note}</div>)}</div>

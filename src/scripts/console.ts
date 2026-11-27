@@ -55,11 +55,31 @@ export async function typeConsole(el: HTMLElement, lines: ConsoleLine[], opts: O
   el.lastElementChild?.append(caret); // the caret stays, blinking, after the last line
 }
 
+/** The transcript reserves its full layout height. Measure the portion that has been typed for the painted frame. */
+function trackFrame(typed: HTMLElement): void {
+  const term = typed.closest<HTMLElement>('.term');
+  const bar = term?.querySelector<HTMLElement>('.term-bar');
+  const body = typed.parentElement;
+  if (!term || !bar || !body || typeof ResizeObserver !== 'function') return;
+
+  const measure = () => {
+    const css = getComputedStyle(body);
+    const transcriptHeight = Math.max(parseFloat(css.lineHeight), typed.offsetHeight);
+    const padding = parseFloat(css.paddingTop) + parseFloat(css.paddingBottom);
+    const height = Math.min(term.offsetHeight, Math.ceil(term.clientTop * 2 + bar.offsetHeight + padding + transcriptHeight));
+    term.style.setProperty('--console-frame-height', `${height}px`);
+  };
+  measure();
+  term.setAttribute('data-console-frame', '');
+  const resize = new ResizeObserver(measure);
+  for (const element of [term, bar, typed]) resize.observe(element);
+}
+
 export function initConsole(doc: Document): void {
   const win = doc.defaultView as Window;
   const hero = doc.getElementById('hero');
   const typedEl = doc.getElementById('console-typed');
-  const replay = doc.getElementById('replay');
+  const replay = doc.getElementById('replay') as HTMLButtonElement | null;
   if (!hero || !typedEl) return;
 
   // While the 3D scene is live it owns data-phase; the console only types.
@@ -119,4 +139,6 @@ export function initConsole(doc: Document): void {
     const reduced = win.matchMedia('(prefers-reduced-motion: reduce)').matches;
     void play(reduced);
   });
+  if (replay) replay.hidden = false;
+  trackFrame(typedEl);
 }

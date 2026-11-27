@@ -55,10 +55,12 @@ test('the now and next cards follow the current milestone: GitHub title, milesto
   else expect(await card(page, 'next')).toBeNull();
 });
 
-test('the links: ADR 0004, the repository and the issues page', async ({ page }) => {
+test('the status card links to the milestones, ADR 0004, the repository and the issues page', async ({ page }) => {
   const hrefs = await page.evaluate(() => [...document.querySelectorAll('#status a')].map(a => a.href));
   for (const href of [adr0004, repo, `${repo}/issues`]) expect(hrefs, href).toContain(href);
-  await expect(page.locator('#status [data-card="follow"] a')).toHaveText(story.statusSection.follow.links.map(link => link.label));
+  const follow = page.locator('#status [data-card="follow"]');
+  await expect(follow.getByRole('link', { name: 'Follow development' })).toHaveAttribute('href', story.statusSection.follow.href);
+  await expect(follow.locator('.nn-body a')).toHaveText(story.statusSection.follow.links.map(link => link.label));
   // the calls to action are consolidated in #follow: #status has no button row of its own
   await expect(page.locator('#status .cta')).toHaveCount(0);
 });

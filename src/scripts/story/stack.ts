@@ -5,8 +5,7 @@
 // it when that card's top reaches T + the card's height. Between those two points the card is pinned and alone:
 // its beats ([data-step]) play there, one after another. While the next card slides from the viewport's bottom
 // to its own pin, the card sinks back. Every range is written as `cover A% cover B%` of the stack's timeline into
-// the element's --r, and the dim hold before it (from the stack's arrival to the beat) into --d (style.setProperty;
-// cost.css reads them as animation ranges), and recomputed whenever the
+// the element's --r (cost.css reads it as the animation range), and recomputed whenever the
 // stack's size or the viewport changes. Nothing here runs when the enhancement is off: the base layer is static.
 import { storyEnhanced, onModeChange, TABLET_STORY_QUERY } from './mode';
 
@@ -62,8 +61,6 @@ export function phaseStack(stack: HTMLElement): void {
       const k = Number(el.dataset.step);
       const span = Number(el.dataset.span ?? 1);
       el.style.setProperty('--r', range(from + k * each, from + (k + span) * each));
-      // the dim hold before it: from the stack's arrival to the beat's start (cost.css: .on)
-      el.style.setProperty('--d', range(0, from + k * each));
     }
   });
 }
@@ -75,15 +72,16 @@ function bottomIn(el: HTMLElement, card: HTMLElement): number {
   return y;
 }
 
-/** Whether every card, stuck at its own top, lies below the header and ends inside the viewport. */
+/** Whether every card fits below the header and above the consent notice. */
 function stackFits(stack: HTMLElement, cards: HTMLElement[], vh: number): boolean {
   const header = document.getElementById('site-header')?.getBoundingClientRect().bottom ?? 0;
+  const clearance = parseFloat(getComputedStyle(stack).getPropertyValue('--analytics-clearance')) || 0;
   return cards.every(card => {
     const cs = getComputedStyle(card);
     const top = parseFloat(cs.top) || 0;
     const content = Math.max(0, ...[...card.querySelectorAll<HTMLElement>('.copy, .vis, .vis > *, .vis > * > *')]
       .map(el => bottomIn(el, card))) + parseFloat(cs.paddingBottom);
-    return top >= header && Math.max(card.offsetHeight, content) <= vh - top;
+    return top >= header && Math.max(card.offsetHeight, content) <= vh - clearance - top;
   });
 }
 
@@ -106,6 +104,7 @@ export function initStacks(root: ParentNode = document): void {
   const observer = new ResizeObserver(schedule);
   for (const stack of stacks) observer.observe(stack);
   addEventListener('resize', schedule);
+  addEventListener('analytics-clearance-change', schedule);
   tablet.addEventListener('change', schedule);
   onModeChange(schedule);
 

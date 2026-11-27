@@ -1,92 +1,133 @@
 ---
-// Rust (#rust): the word, the claim, and two phases (bars, density), each its text and its panel.
-// Base (phones, reduced motion, no scroll-driven animation, html.static): word, claim, then each phase's text above
-// its panel, everything at its final state. Enhancement (rust.css): pinned for 440vh, the word, claim and phase text
-// on the left, one panel on the right; the bars rise and the readout flips through the real values, then the density
-// phase replaces them. The DOM order (text, panel, text, panel) is the reading order in both layers. A window too
-// short for both phases pinned (fit.ts) gets the base layer instead (.story--flow).
-//
-// The word: `.rust-word[data-3d-host]` is where the 3D word (src/scripts/rustword) mounts its canvas, adding .has-3d. Inside it, the text "Rust" for assistive
-// technology (.sr-only) and the CSS word (aria-hidden): the steel gradient, a sheen, and rust spreading through a
-// radial mask over rust-only's WebP (its URL set through the CSSOM by rust-fill.ts: no style= attribute).
-import { getImage } from 'astro:assets';
 import Section from './Section.astro';
-import Art from './Art.astro';
 import Text from './Text.astro';
-import PhoneBeat from './PhoneBeat.astro';
+import { rust } from '../../content/rust';
 import '../../styles/story/rust.css';
-import rustArt from '../../assets/story/rust.png';
-import rustOnly from '../../assets/story/rust-only.png';
-import { story } from '../../content/story';
 
-const { rust } = story;
-const { share, density, chips } = rust;
-const fill = await getImage({ src: rustOnly, format: 'webp', width: 800, quality: 70 });
+const { heading, fixture, ownership, evidence, share, density, engineering } = rust;
 ---
-<Section id="rust" pinned height={440} eyebrow={rust.eyebrow} labelledby="rust-h">
-  <div class="rustart" aria-hidden="true">
-    <Art src={rustArt} widths={[640, 1280, 1920]} sizes="100vw" />
-  </div>
-  <div class="panel" aria-hidden="true"></div>
-
-  <div class="rust-word" data-3d-host data-fill={fill.src}>
-    <span class="sr-only">{rust.word}</span>
-    <span class="rw-css" aria-hidden="true">{rust.word}</span>
-  </div>
-  <div class="rw-intro">
-    <p class="rwname">{rust.name}</p>
-    <p class="rwclaim">{rust.claim.before}<b>{rust.claim.highlight}</b><Text text={rust.claim.after} /></p>
-  </div>
-
-  <div class="rphase t1">
-    <h2 id="rust-h" tabindex="-1">{rust.heading}</h2>
-    <p class="lede">{share.lede}</p>
-  </div>
-  <PhoneBeat>
-  <div class="ph ph1" data-stat={share.id}>
-    <div class="readout" aria-hidden="true">
-      <span class="num">{share.bars.map((bar, i) => <span class={`rv rv${i + 1}`}>{bar.value}</span>)}</span>
-      <span class="yr">{share.bars.map((bar, i) => <span class={`y${i + 1}`}>{bar.year}</span>)}</span>
+<Section id="rust" labelledby="rust-h">
+  <div data-rust-track="project">
+    <div class="rust-project">
+      <div class="rust-intro">
+        <h2 id="rust-h" tabindex="-1">{heading.before}<span class="heading-accent">{heading.accent}</span>{heading.after}<span class="heading-tail">{heading.tail}</span></h2>
+        <p>{rust.rationale}</p>
+        <p><strong>{rust.safety.lead}</strong> {rust.safety.rest}</p>
+        <p>{rust.example}</p>
+      </div>
+      <div data-rust-track="fixture">
+        <figure class="xdr-fixture" aria-labelledby="xdr-title">
+          <figcaption>
+            <p class="xdr-label">{fixture.label}</p>
+            <h3 id="xdr-title">{fixture.heading}</h3>
+          </figcaption>
+          <div class="xdr-readout">
+            <div><strong>{fixture.declared.value}</strong><span>{fixture.declared.label}</span></div>
+            <div data-xdr-reveal="2"><strong>{fixture.available.value}</strong><span>{fixture.available.label}</span></div>
+          </div>
+          <div class="xdr-wire">
+            <div class="xdr-group">
+              <span>{fixture.lengthPrefix.label}</span>
+              <code>{fixture.lengthPrefix.start} <b>{fixture.lengthPrefix.end}</b></code>
+            </div>
+            <div class="xdr-group">
+              <span>{fixture.field.label}</span>
+              <div class="xdr-bytes" role="img" aria-label={fixture.field.description}>
+                {fixture.field.bytes.map((byte, index) => <code data-xdr-reveal={index + 1} aria-hidden="true">{byte}</code>)}
+                {Array.from({ length: fixture.field.missing }, () => <span data-xdr-reveal="3" aria-hidden="true"></span>)}
+              </div>
+            </div>
+          </div>
+          <div class="xdr-result">
+            <p data-xdr-reveal="4"><Text text={fixture.result} /></p>
+            <div class="rust-links">
+              {fixture.sources.map(source => <a class="source" href={source.href}>{source.label} <span aria-hidden="true">↗</span></a>)}
+            </div>
+          </div>
+        </figure>
+      </div>
+      <div class="rust-notes">
+        <details class="rust-disclosure">
+          <summary>{ownership.summary}</summary>
+          <p>{ownership.text}</p>
+          <div class="rust-links">
+            {ownership.sources.map(source => <a class="source" href={source.href}>{source.label} <span aria-hidden="true">↗</span></a>)}
+          </div>
+        </details>
+        <p>{rust.platformDetail}</p>
+        <p class="rust-name">{rust.name}</p>
+      </div>
     </div>
-    <ol class="chart">
-      {share.bars.map(bar => (
-        <li class="col"><span class="track"><span class:list={['b', `h-${bar.height}`, { threshold: bar.threshold }]}><em class="bv">{bar.value}</em></span></span><span class="yr">{bar.year}</span></li>
-      ))}
-    </ol>
-    <p class="cap">{share.what} · {share.sourcesLead}{share.sources.map((link, i) => <>{i > 0 ? ',' : ''} <a class="source" href={link.href}>{link.label}</a></>)}</p>
   </div>
-  </PhoneBeat>
 
-  <div class="rphase t2">
-    <h3 class="phase-h">{density.heading}</h3>
-    <p class="lede"><Text text={density.lede} /></p>
-  </div>
-  <div class="ph ph2">
-    <div class="dblock" data-stat={density.id}>
-      <p class="lbl">{density.what}</p>
-      <PhoneBeat>
-      <figure class="dens" data-illustrative="dots">
-        <div class="side"><span class="who">{density.cLabel}</span><div class="field" aria-hidden="true"></div><span class="val cval">{density.cValue}</span></div>
-        <div class="side"><span class="who">{density.rustLabel}</span><div class="onedot" aria-hidden="true"><i></i></div><span class="val rustval">{density.value}</span></div>
-        <figcaption class="cap dkey">{density.illustration}</figcaption>
-      </figure>
-      </PhoneBeat>
-      <p class="cap">{density.sourceLead} · <a class="source" href={density.source.href}>{density.source.label}</a> · {density.note}</p>
+  <section class="android-evidence" aria-labelledby="android-heading">
+    <div class="android-intro">
+      <h3 id="android-heading">{evidence.heading}</h3>
+      <p>{evidence.lede}</p>
     </div>
-    <ul class="chips">
-      {chips.map(chip => <li data-stat={chip.id}>{chip.what} · <a class="source" href={chip.source.href}>{chip.source.label}</a></li>)}
-    </ul>
-  </div>
+    <div data-rust-track="android">
+      <div class="android-panels">
+        <div data-rust-track="share">
+          <article class="android-card" data-stat={share.id} aria-labelledby="android-share-title">
+            <p class="android-label">{evidence.label}</p>
+            <h4 id="android-share-title">{share.heading}</h4>
+            <p class="android-unit">{share.unit}</p>
+            <div class="chart-plot">
+              <div class="chart-guides" aria-hidden="true">
+                {share.ticks.map(tick => <span>{tick}</span>)}
+              </div>
+              <ol class="chart-bars" role="list" aria-label={share.chartLabel}>
+                {share.points.map(point => (
+                  <li class={`chart-column chart-h${point.height}`}>
+                    <span class="sr-only">{point.year}, {point.upperBound ?? point.value}</span>
+                    <div class="chart-bar" aria-hidden="true">
+                      <span class="chart-point"><strong>{point.value}</strong><span>{point.year}</span></span>
+                      <span class="chart-fill"></span>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <p class="chart-bound"><span aria-hidden="true"></span>{share.bound}</p>
+            <div class="android-sources">
+              <span>{share.sourceLabel}</span>
+              {share.sources.map(source => <a class="source" href={source.href} aria-label={source.name}>{source.label} <span aria-hidden="true">↗</span></a>)}
+            </div>
+          </article>
+        </div>
+        <div data-rust-track="density">
+          <p class="android-transition">{density.transition}</p>
+          <article class="android-card" data-stat={density.id} aria-labelledby="android-density-title">
+            <p class="android-label">{evidence.label}</p>
+            <h4 id="android-density-title">{density.heading}</h4>
+            <p class="android-unit">{density.unit}</p>
+            <figure class="density-scale" data-illustrative="dots" aria-label={density.illustration}>
+              <div class="density-side">
+                <span>{density.cLabel}</span><strong>{density.cValue}</strong>
+                <div class="density-field" aria-hidden="true"></div>
+              </div>
+              <div class="density-side">
+                <span>{density.rustLabel}</span><strong>{density.rustValue}</strong>
+                <div class="density-dot" aria-hidden="true"><i></i></div>
+              </div>
+            </figure>
+            <p class="density-caveat"><strong>{density.limit}</strong> {density.methodology}</p>
+            <div class="android-sources">
+              <a class="source" href={density.source.href}>{density.source.label} <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+    <details class="rust-disclosure" id="android-engineering">
+      <summary>{engineering.summary}</summary>
+      <p>{engineering.text}</p>
+      <a class="source" href={engineering.source.href}>{engineering.source.label} <span aria-hidden="true">↗</span></a>
+    </details>
+  </section>
 </Section>
 
 <script>
-  import { initRustFill } from '../../scripts/story/rust-fill';
-  import { startRustWordWhenNear } from '../../scripts/rustword/loader';
-  import { guardFit, rustFits } from '../../scripts/story/fit';
-  initRustFill();
-  // pinned only while the word, the claim and both phases fit the stage (fit.ts), set snug if they need it; otherwise
-  // the base layer, where the CSS word stands at its final state: the 3D word runs only while pinned
-  const section = document.getElementById('rust');
-  const guard = section ? guardFit(section, rustFits, { snug: true }) : undefined;
-  for (const host of document.querySelectorAll<HTMLElement>('#rust .rust-word[data-3d-host]')) startRustWordWhenNear(host, guard);
+  import { initRustMotion } from '../../scripts/story/rust-motion';
+  initRustMotion();
 </script>

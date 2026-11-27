@@ -92,7 +92,7 @@ test('the art loads lazily as AVIF and WebP pictures, decorative', async ({ page
     alt: img.getAttribute('alt'),
     types: [...img.closest('picture').querySelectorAll('source')].map(s => s.type),
   })));
-  // chip (#numbers), rust (#rust), forge (#status); drops and rust-only arrive with their sections (Tasks 7, 5).
+  // The drops, chip and forge accompany the crash examples, numbers and status.
   expect(art.length).toBeGreaterThanOrEqual(3);
   for (const a of art) {
     expect(a.loading).toBe('lazy');
@@ -109,22 +109,21 @@ test.describe('enhancement layer', () => {
     const enhanced = await page.evaluate(() => CSS.supports('animation-timeline: view()')
       && matchMedia('(scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 620px)').matches);
     test.skip(!enhanced, 'the enhancement is off here: the base-layer tests are the contract');
-    const measure = () => page.evaluate(() => Object.fromEntries(['why', 'numbers', 'design', 'rust', 'platforms', 'status'].map(id => {
+    const measure = () => page.evaluate(() => Object.fromEntries(['why', 'numbers', 'design', 'platforms', 'status'].map(id => {
       const s = document.getElementById(id);
       return [id, { vh: Math.round(10 * s.getBoundingClientRect().height / innerHeight) / 10, position: getComputedStyle(s.querySelector(':scope > .stage')).position }];
     })));
     const on = await measure();
     expect(on).toMatchObject({
-      why: { vh: 1.6, position: 'sticky' },
+      why: { vh: 2.2, position: 'sticky' },
       numbers: { vh: 1.9, position: 'sticky' },
       design: { vh: 5.6, position: 'sticky' },
-      rust: { vh: 4.4, position: 'sticky' },
       platforms: { vh: 3, position: 'sticky' },
     });
     expect(on.status.position).not.toBe('sticky');
     await page.evaluate(() => document.documentElement.classList.add('static'));
     const off = await measure();
-    for (const id of ['why', 'numbers', 'design', 'rust', 'platforms']) {
+    for (const id of ['why', 'numbers', 'design', 'platforms']) {
       expect(off[id].position, id).not.toBe('sticky');
       expect(off[id].vh, id).toBeLessThan(on[id].vh);
     }

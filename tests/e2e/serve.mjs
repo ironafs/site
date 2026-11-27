@@ -2,7 +2,9 @@ import { createServer } from 'node:http';
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
+import { pipeline } from 'node:stream';
 import { fileURLToPath } from 'node:url';
+import { createGzip } from 'node:zlib';
 
 const root = fileURLToPath(new URL('../../dist/', import.meta.url));
 const csp = "default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; img-src 'self' data: https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com; font-src 'self'; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
@@ -31,6 +33,20 @@ const types = {
   '.json': 'application/json; charset=utf-8',
 };
 
+// Caddy encodes text responses in production. The network budgets should see comparable transfer sizes.
+const compressible = new Set(['.html', '.js', '.css', '.svg', '.xml', '.txt', '.json']);
+
+function acceptsGzip(header = '') {
+  const codings = new Map();
+  for (const value of header.toLowerCase().split(',')) {
+    const [coding, parameter] = value.split(';');
+    const quality = parameter === undefined ? 1 : Number(/^\s*q\s*=\s*(\d+(?:\.\d*)?)\s*$/.exec(parameter)?.[1]);
+    codings.set(coding.trim(), quality);
+  }
+  const quality = codings.get('gzip') ?? codings.get('*') ?? 0;
+  return quality > 0 && quality <= 1;
+}
+
 createServer(async (request, response) => {
   for (const [name, value] of Object.entries(headers)) response.setHeader(name, value);
 
@@ -54,8 +70,11 @@ createServer(async (request, response) => {
       response.statusCode = 404;
     }
 
-    response.setHeader('Content-Type', types[extname(file)] || 'application/octet-stream');
+    const extension = extname(file);
+    const canEncode = compressible.has(extension) && info.size >= 512;
+    response.setHeader('Content-Type', types[extension] || 'application/octet-stream');
     response.setHeader('Accept-Ranges', 'bytes');
+    if (canEncode) response.setHeader('Vary', 'Accept-Encoding');
     let start = 0;
     let end = info.size - 1;
       if (request.headers.range && response.statusCode === 200) {
@@ -72,13 +91,17 @@ createServer(async (request, response) => {
       response.statusCode = 206;
       response.setHeader('Content-Range', `bytes ${start}-${end}/${info.size}`);
     }
-    response.setHeader('Content-Length', Math.max(0, end - start + 1));
+    const gzip = canEncode && !request.headers.range && acceptsGzip(request.headers['accept-encoding']);
+    if (gzip) {
+      response.setHeader('Content-Encoding', 'gzip');
+      response.removeHeader('Accept-Ranges');
+    } else {
+      response.setHeader('Content-Length', Math.max(0, end - start + 1));
+    }
     if (request.method === 'HEAD' || info.size === 0) response.end();
     else {
       const stream = createReadStream(file, { start, end });
-      stream.on('error', () => response.destroy());
-      response.on('close', () => stream.destroy());
-      stream.pipe(response);
+      pipeline(gzip ? [stream, createGzip(), response] : [stream, response], () => {});
     }
   } catch (error) {
     response.writeHead(error instanceof URIError ? 400 : 500, { 'Content-Type': types['.txt'] });

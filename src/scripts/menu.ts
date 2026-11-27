@@ -15,6 +15,54 @@ export function goToSection(doc: Document, id: string, { focus = true }: { focus
   if (focus) doc.getElementById(`${id}-h`)?.focus({ preventScroll: true });
 }
 
+function alignInitialStoryFragment(doc: Document, win: Window, header: HTMLElement): void {
+  const hash = win.location.hash;
+  const target = doc.getElementById(hash.slice(1));
+  const heading = target?.querySelector('h2');
+  const navigation = win.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+  if (navigation?.type !== 'navigate' || !target?.matches('main > .story') || !heading) return;
+
+  const pending = new AbortController();
+  const cancel = () => pending.abort();
+  for (const event of ['pointerdown', 'touchstart', 'wheel', 'keydown', 'hashchange', 'popstate', 'pagehide']) {
+    win.addEventListener(event, cancel, { capture: true, passive: true, signal: pending.signal });
+  }
+
+  let frame = 0;
+  const schedule = () => {
+    if (frame || pending.signal.aborted) return;
+    frame = win.requestAnimationFrame(() => {
+      frame = 0;
+      if (win.location.hash !== hash) return;
+      const bounds = heading.getBoundingClientRect();
+      if (bounds.top < header.getBoundingClientRect().bottom - 1 || bounds.top >= win.innerHeight) {
+        target.scrollIntoView({ behavior: 'instant' });
+      }
+    });
+  };
+
+  const watchLayout = async () => {
+    await doc.fonts.ready;
+    if (pending.signal.aborted) return;
+    const observer = 'ResizeObserver' in win ? new win.ResizeObserver(schedule) : undefined;
+    observer?.observe(header);
+    observer?.observe(heading);
+    observer?.observe(target);
+    // Compact scenes above the destination can change height after native fragment scrolling.
+    for (let section = target.previousElementSibling; section; section = section.previousElementSibling) {
+      if (section.matches('section')) observer?.observe(section, { box: 'border-box' });
+    }
+    pending.signal.addEventListener('abort', () => {
+      observer?.disconnect();
+      win.cancelAnimationFrame(frame);
+    }, { once: true });
+    schedule();
+  };
+
+  if (doc.readyState === 'complete') void watchLayout();
+  else win.addEventListener('load', watchLayout, { once: true, signal: pending.signal });
+}
+
 export function initMenu(doc: Document): void {
   const win = doc.defaultView as Window;
   const root = doc.documentElement;
@@ -35,6 +83,7 @@ export function initMenu(doc: Document): void {
       new win.ResizeObserver(measure).observe(header);
       measure();
     }
+    alignInitialStoryFragment(doc, win, header);
   }
 
   // The visible section marks its link: a thin band across the middle of the viewport.

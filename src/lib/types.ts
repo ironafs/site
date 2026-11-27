@@ -16,39 +16,68 @@ export type Site = {
 };
 type NamedSection = { eyebrow: string; heading: string };
 export type Built = NamedSection & {
-  intro: string;
-  families: { head: [string, string, string]; rows: [string, string, string][] };
-  classes: { heading: string; lead: string; head: [string, string, string, string]; rows: [string, string, string, string][] };
-  waits: string;
-  provenance: string;
-  human: string;
-  humanBody: string;
-  links: Link[];
+  approval: string;
+  approvalDetail: string;
+  independence: string;
+  risk: string;
+  example: {
+    kicker: string;
+    heading: string;
+    steps: { heading: string; body: string; link: Link }[];
+  };
+  classes: {
+    heading: string;
+    lead: string;
+    change: string;
+    gates: string;
+    rows: { code: string; name: string; criterion: string; example: string; gates: string[] }[];
+    link: Link;
+  };
+  families: {
+    heading: string;
+    lead: string;
+    familyRole: string;
+    mainModels: string;
+    rows: { family: string; role: string; models: { name: string; detail?: string }[] }[];
+    links: Link[];
+  };
+  provenance: {
+    heading: string;
+    code: { heading: string; body: string; links: Link[] };
+    attribution: {
+      heading: string;
+      body: string;
+      dco: string;
+      caption: string;
+      trailers: { name: string; value: string }[];
+      link: Link;
+    };
+  };
 };
 export type Footer = {
+  onPage: string;
+  homepage: string;
+  policies: string;
   copyright: string;
-  licence: string;
-  siteLicence: { before: string; label: string; after: string };
+  author: Link;
+  software: string;
+  licences: Link[];
+  sharedLicence: string;
+  reserved: string;
   ownership: string;
-  built: string;
   notice: string;
-  site: string;
-  project: string;
-  author: Link[];
 };
 
-export type StatId = 'crowdstrike' | 'stop-errors' | 'android-share' | 'android-density' | 'android-rollback' | 'android-review';
+export type StatId = 'crowdstrike' | 'stop-errors' | 'android-share' | 'android-density';
 export type Stat = { id: StatId; value: string; what: string; source: Link; note?: string };
 export type IllustrationId = 'debian' | 'dots';
 export type Side = 't' | 'b' | 'l' | 'r';
 /** [from box id, side, to box id, side, label on the line, '' or 'net' (the green line to the cells)]. */
 export type Wire = [from: string, fromSide: Side, to: string, toSide: Side, label: string, kind: '' | 'net'];
 export type SectionHead = { eyebrow: string; heading: string };
-/** A sourced example in the Rust panel. */
-export type FactCard = { kicker: string; text: string; source: Link };
 
 /** A #cost card's text column. */
-export type CostCard = { os: string; heading: string; lede: string; foot: string };
+export type CostCard = { os: string; heading: string; lede: string; context?: string; sources: Link[] };
 
 /** A #platforms lane: the three platforms; IronAFS closes the timeline on its own. */
 export type Lane = 'linux' | 'macos' | 'windows' | 'ironafs';
@@ -76,6 +105,7 @@ export type OsHow = {
   details: string[];
   /** The ADR references (and qualifications) that open the cite line. */
   cite: string;
+  evidence?: Link;
   /** The status shown beside the cite and in the diagram. */
   status: string;
   /** Box ids, stable: the `.nd` ids the wires name. */
@@ -121,55 +151,19 @@ export type Story = {
     };
     os: OsHow[];
   };
-  rust: SectionHead & {
-    /** The large word (the CSS word, and 3D word); also its text for assistive technology. */
-    word: string;
-    /** The line on the name under the word: iron, its oxide, and the language. */
-    name: string;
-    /** The claim under the word; `highlight` is set in rust orange. Future tense: there is no client yet. */
-    claim: { before: string; highlight: string; after: string };
-    /** Phase 1 (bars): the section heading is its heading. `bars` in the chart's order; `height` is the bar's
-     *  height in percent (a class `h-<height>` in rust.css). The caption names its sources after `sourcesLead`. */
-    share: {
-      id: Extract<StatId, 'android-share'>;
-      lede: string;
-      bars: { year: string; value: string; height: number; threshold?: boolean }[];
-      what: string;
-      sourcesLead: string;
-      sources: Link[];
-    };
-    /** Phase 2 (density): `value` is Rust's figure, `what` the panel's label, `note` closes the source line. */
-    density: Stat & {
-      heading: string;
-      lede: string;
-      cLabel: string;
-      cValue: string;
-      rustLabel: string;
-      illustration: string;
-      sourceLead: string;
-    };
-    /** The two chips. `what` is the chip's text; `value` is the figure it states (not shown on its own). */
-    chips: Stat[];
-  };
-  cards: SectionHead & {
-    mountpoint: FactCard;
-    unsafeCard: FactCard;
-  };
   cost: SectionHead & {
-    /** The four stacked cards, in order. Each card's `os` label, heading, lede and source line (`foot`). */
     windows: CostCard & {
-      /** The signing steps, lit in turn, with an alternate branch and the 2026 warning. */
-      steps: { mark?: string; text: string; branch?: boolean; warn?: boolean }[];
+      signing: string;
+      steps: string[];
+      testing: { title: string; before: string; link: Link; after: string };
     };
     macos: CostCard & {
-      /** The security-policy schematic: Full switches to Reduced, then the box ticks. */
-      dialog: { title: string; full: string; reduced: string; allow: string; cancel: string; ok: string };
-      /** The steps under it, in the order they are taken (the dialog switches between the second and third). */
+      platform: string;
+      dialog: { title: string; label: string; full: string; reduced: string; allow: string };
       steps: string[];
     };
     linux: CostCard & {
-      /** The Debian workflow: the numbered steps and the unnumbered failure branch. */
-      workflow: { label: string; lines: { n?: string; text: string; tone?: 'error' | 'dim' }[] };
+      workflow: { title: string; label: string; lines: { text: string; note?: boolean }[]; failure: string };
     };
     ironafs: CostCard & {
       /** `$ afs status` types itself, then the status output appears. */
@@ -210,7 +204,6 @@ export type Story = {
     lede: string;
     nowLabel: string;
     nextLabel: string;
-    follow: { label: string; title: string; links: Link[] };
-    buttons: Link[];
+    follow: { label: string; title: string; href: string; links: Link[] };
   };
 };

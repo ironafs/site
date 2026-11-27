@@ -72,13 +72,11 @@ test('at 360 px and 200% zoom nothing in #console, #site-header or #site-footer 
   await expectNoHorizontalOverflow(page);
 });
 
-// The footer: the groups stack on a phone, every link a 44 px target, and sit side by side from 761 px.
-// : at 390 px every link and summary in main is a 44 px target too.
-test('the footer groups stack at 390 px, every link and summary in main and the footer is a 44 px target, and the groups are columns at 1440 px', async ({ page }) => {
+// The two footer navigation groups stack on a phone and sit side by side on a wide screen.
+test('the compact footer stacks on phones and keeps 44 px targets', async ({ page }) => {
   const measure = () => page.evaluate(() => {
     const footer = document.getElementById('site-footer');
     const navs = [...footer.querySelectorAll('nav')].map(n => n.getBoundingClientRect());
-    // every footer link, the inline licence link included; each line of a wrapped link is measured on its own
     const rows = [...footer.querySelectorAll('a, button')].flatMap(el => [...el.getClientRects()].map(r => r.height));
     // every link and summary in main, inline links in sentences included, each line on its own (a hidden one has none)
     const targets = [...document.querySelectorAll('main :is(a[href], summary)')].flatMap(el => [...el.getClientRects()]
@@ -89,11 +87,10 @@ test('the footer groups stack at 390 px, every link and summary in main and the 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   const phone = await measure();
-  expect(phone.tops).toHaveLength(3);
+  expect(phone.tops).toHaveLength(2);
   expect(phone.tops[1]).toBeGreaterThanOrEqual(phone.bottoms[0]);
-  expect(phone.tops[2]).toBeGreaterThanOrEqual(phone.bottoms[1]);
-  expect(await page.locator('#site-footer a').count()).toBe(16);
-  expect(phone.rows.length).toBeGreaterThanOrEqual(16);
+  await expect(page.locator('#site-footer a')).toHaveCount(11);
+  expect(phone.rows.length).toBeGreaterThanOrEqual(11);
   for (const h of phone.rows) expect(h).toBeGreaterThanOrEqual(44);
   expect(phone.targets.length, 'the story\'s links, the summaries, the milestones').toBeGreaterThanOrEqual(50);
   expect(phone.targets.filter(t => t.h < 44).map(t => `${t.what}: ${t.h.toFixed(1)} px`)).toEqual([]);
@@ -101,7 +98,6 @@ test('the footer groups stack at 390 px, every link and summary in main and the 
   const desktop = await measure();
   expect(Math.max(...desktop.tops) - Math.min(...desktop.tops)).toBeLessThanOrEqual(1);
   expect(desktop.lefts[0]).toBeLessThan(desktop.lefts[1]);
-  expect(desktop.lefts[1]).toBeLessThan(desktop.lefts[2]);
   expect(desktop.legal).toBeGreaterThanOrEqual(Math.max(...desktop.bottoms));
 });
 
@@ -131,6 +127,31 @@ for (const path of ['/', '/privacy/']) {
 
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
+  test('the built disclosures open by keyboard and expose their reference links without JavaScript', async ({ page, browserName }) => {
+    await page.setViewportSize({ width: 320, height: 660 });
+    await page.goto('/#built');
+    const panels = page.locator('#built details');
+    await expect(panels).toHaveCount(3);
+
+    for (const panel of await panels.all()) {
+      const summary = panel.locator('summary');
+      const link = panel.getByRole('link').first();
+      await expect(link).toBeHidden();
+      await summary.focus();
+      await page.keyboard.press('Enter');
+      await expect(panel).toHaveAttribute('open', '');
+      await expect(link).toBeVisible();
+      // WebKit follows Safari’s default keyboard setting, which uses Option-Tab to reach links.
+      await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
+      await expect(link).toBeFocused();
+      await expect(link).toHaveCSS('outline-style', 'solid');
+      expect(await panel.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+      await summary.focus();
+      await page.keyboard.press('Enter');
+      await expect(link).toBeHidden();
+    }
+  });
+
   // The static wordmark (no canvas) and a status pill whose label fits on one line are still 44 px targets.
   test('at 390 px the Home link and a one-line status pill are 44 x 44 px', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });

@@ -48,7 +48,7 @@
     html:not(.static) #why:not(.story--flow) .bsod {
       position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 0 6vw 8vh;
-      animation-name: bsodOut; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 46% contain 57%;
+      animation-name: bsodOut; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 55% contain 63%;
     }
     html:not(.static) #why:not(.story--flow) .msg { margin-block-end: 3vh; }
     html:not(.static) #why:not(.story--flow) .pct { margin: 0; }
@@ -57,8 +57,9 @@
       position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
     }
     html:not(.static) #why:not(.story--flow) .pct-n {
+      display: inline-block; min-width: 3ch; text-align: end; font-variant-numeric: tabular-nums;
       counter-reset: p var(--p);
-      animation-name: pct; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 0% contain 33.333%;
+      animation-name: pct; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 6% contain 44%;
     }
     html:not(.static) #why:not(.story--flow) .pct-n::before { content: counter(p) / ""; }
     html:not(.static) #why:not(.story--flow) .scan {
@@ -68,11 +69,11 @@
     html:not(.static) #why:not(.story--flow) .crt-line {
       display: block; position: absolute; inset: calc(50% - 1px) 6vw auto; height: 2px; pointer-events: none;
       background: #fff; border-radius: 100%; box-shadow: 0 0 8px #fff;
-      animation-name: crtOff; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 53% contain 72%;
+      animation-name: crtOff; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 62% contain 80%;
     }
     html:not(.static) #why:not(.story--flow) .crash-point {
       margin: 0;
-      animation-name: crashPointIn; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 74% contain 87%;
+      animation-name: crashPointIn; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --why; animation-range: contain 82% contain 89%;
     }
     /* The open analytics notice covers the stage's bottom: keep the stop code above it. */
     html:not(.static) #why:not(.story--flow):is(.analytics-notice-visible *) .code { bottom: calc(7vh + var(--analytics-clearance, 0px)); }
@@ -130,7 +131,7 @@
       height: calc(var(--phone-story-height) + var(--phone-story-travel));
       view-timeline-inset: var(--phone-story-top) max(0px, calc(100% - 100svh));
     }
-    html:not(.static) #why:not(.story--flow) { --phone-story-travel: clamp(240px, 36svh, 360px); }
+    html:not(.static) #why:not(.story--flow) { --phone-story-travel: clamp(495px, 68svh, 645px); }
     html:not(.static) #numbers:not(.story--flow) { --phone-story-travel: clamp(340px, 52svh, 480px); }
     html:not(.static) :is(#why, #numbers):not(.story--flow) > .stage {
       position: sticky;
@@ -191,9 +192,9 @@
 }
 @keyframes crtOff {
   0% { opacity: 0; transform: scaleX(1); }
-  25% { opacity: 1; transform: scaleX(1); }
-  85% { opacity: 1; transform: scaleX(0.003); }
-  100% { opacity: 0; transform: scaleX(0.003); }
+  16%, 37% { opacity: 0.9; transform: scaleX(1); }
+  84% { opacity: 0.75; transform: scaleX(0.008); }
+  100% { opacity: 0; transform: scaleX(0.004); }
 }
 @keyframes crashPointIn { from { opacity: 0; } to { opacity: 1; } }
 /* The two statistics share one place: a statistic takes pointer input only while it is shown (opacity 0.9 and

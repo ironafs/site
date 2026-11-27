@@ -333,10 +333,10 @@ test('notice, footer and preference controls stay usable on short and enlarged s
   expect(external).toEqual([]);
 });
 
-test('footer settings remain in the final legal area and open preferences', async ({ page }) => {
+test('footer settings appear with site policies and open preferences', async ({ page }) => {
   await page.goto('/');
   await expect(settings(page)).toBeVisible();
-  await expect(page.locator('.footer-legal').getByRole('button', { name: consent.settings })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Site policies' }).getByRole('button', { name: consent.settings })).toBeVisible();
   await settings(page).click();
   await expect(dialog(page)).toBeVisible();
 });

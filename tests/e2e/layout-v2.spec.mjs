@@ -137,19 +137,33 @@ for (const width of [360, 390, 1024, 1440, 1728]) {
         await expect(page.locator(selector)).toBeVisible();
         expect(await page.locator(selector).evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
       }
-      if (width === 360 || width >= 1024) {
-        const table = page.getByRole('table', { name: 'Every change gets a class' });
-        await expect(table).toBeVisible();
-        const rows = table.locator('tbody tr');
-        await expect(rows).toHaveCount(5);
-        for (const row of await rows.all()) {
-          await expect(row).toHaveCSS('display', width === 360 ? 'grid' : 'table-row');
-          expect(await row.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
-        }
-        expect(await table.evaluate(el => el.getBoundingClientRect().right)).toBeLessThanOrEqual(width);
+      const panels = page.locator('#built details');
+      await expect(panels).toHaveCount(3);
+      for (const panel of await panels.all()) {
+        const summary = panel.locator('summary');
+        await summary.click();
+        await expect(panel).toHaveAttribute('open', '');
+
+        const { overflows, smallTargets } = await panel.evaluate(el => {
+          const boxes = [el, ...el.querySelectorAll('.built-reference-list > li, .built-provenance > div, .built-trailer-example')];
+          const overflows = boxes.filter(box => {
+            const bounds = box.getBoundingClientRect();
+            return box.scrollWidth > box.clientWidth || bounds.left < 0 || bounds.right > innerWidth;
+          }).map(box => box.className || box.tagName);
+          const smallTargets = [...el.querySelectorAll('summary, a[href]')].filter(target => {
+            const { width, height } = target.getBoundingClientRect();
+            return width < 44 || height < 44;
+          }).map(target => target.textContent.trim());
+          return { overflows, smallTargets };
+        });
+        const name = await summary.innerText();
+        expect(overflows, name).toEqual([]);
+        expect(smallTargets, name).toEqual([]);
       }
+      await expect(page.locator('#built .built-class-list > li')).toHaveCount(5);
+      await expect(panels.nth(1).locator('.built-reference-list > li')).toHaveCount(5);
       if (width >= 1024) {
-        for (const selector of ['#what h2', '#speed h2', '#built h2', '#follow h2']) {
+        for (const selector of ['#what h2', '#speed h2', '#follow h2']) {
           expect(await page.locator(selector).evaluate(el => {
             const range = document.createRange();
             range.selectNodeContents(el);
@@ -170,16 +184,12 @@ for (const width of [360, 390, 1024, 1440, 1728]) {
           .map(selector => [selector, document.querySelector(selector).getBoundingClientRect().left]));
         for (const [selector, left] of starts) expect(Math.abs(left - edges[0]), selector).toBeLessThan(1);
       }
-      const footerDetails = await page.locator('#site-footer').evaluate(el => {
-        const groups = el.querySelector('.footer-groups').getBoundingClientRect();
-        const notice = el.querySelector('.footer-legal .notice');
-        return { noticeWidth: notice.getBoundingClientRect().width,
-          legalWidth: el.querySelector('.footer-legal').getBoundingClientRect().width,
-          linkSize: parseFloat(getComputedStyle(el.querySelector('.footer-groups a')).fontSize) };
-      });
-      expect(footerDetails.noticeWidth).toBeCloseTo(footerDetails.legalWidth, 0);
-      expect(footerDetails.linkSize).toBeGreaterThanOrEqual(18);
-      expect(footerDetails.linkSize).toBeLessThanOrEqual(20);
+      const legalLinks = page.locator('.footer-legal a');
+      await expect(legalLinks).toHaveCount(3);
+      for (const link of await legalLinks.all()) {
+        await expect(link).toHaveCSS('text-decoration-line', 'none');
+        await expect(link.locator('[aria-hidden="true"]')).toHaveText('↗');
+      }
       const order = await page.locator('#site-footer').evaluate(el => {
         const groups = el.querySelector('.footer-groups').getBoundingClientRect();
         const legal = el.querySelector('.footer-legal').getBoundingClientRect();

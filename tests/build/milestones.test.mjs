@@ -165,7 +165,7 @@ test('no milestones: no now or next card, the follow card stays', () => {
   assert.equal(run.status, 0, run.stderr);
   assert.equal(card(html, 'now'), null);
   assert.equal(card(html, 'next'), null);
-  assert.equal(card(html, 'follow')?.title, 'Read, watch, ask');
+  assert.match(card(html, 'follow')?.title ?? '', /^Follow development/);
 });
 
 // Malformed data fails validation: a state other than open or closed would otherwise read as closed (a false
