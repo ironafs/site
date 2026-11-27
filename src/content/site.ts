@@ -74,22 +74,25 @@ export const built: Built = {
   classes: {
     heading: 'Review requirements by change class',
     lead: 'A change takes the class that matches the most serious plausible mistake. It waits if the required independent reviewers are unavailable.',
-    change: 'Change',
+    change: 'Criteria and examples',
     gates: 'Before merge',
     rows: [
       {
         code: 'E', name: 'Editorial',
-        example: 'Fix a typo or broken link while preserving the project’s claims and behaviour.',
+        criterion: 'A mistake leaves the project’s claims and behaviour intact.',
+        example: 'Fix a typo or a broken link.',
         gates: ['The maintainer re-reads the change.', 'Check that the links resolve.'],
       },
       {
         code: 'I', name: 'Internal',
-        example: 'Refactor code or add tests while preserving inputs, outputs and stored data.',
+        criterion: 'A mistake affects only the internals. Inputs, outputs and stored data stay the same.',
+        example: 'Refactor code or add tests.',
         gates: ['Get one independent code review.', 'Run tests and lints.'],
       },
       {
         code: 'P', name: 'Public',
-        example: 'Add an `afs` command or change an error message that users see.',
+        criterion: 'A mistake changes what users, admins or servers see.',
+        example: 'Add an `afs` command or change an error message.',
         gates: [
           'Have an independent family review the written contract before coding.',
           'Get an independent code review and pass tests and lints.',
@@ -97,6 +100,7 @@ export const built: Built = {
       },
       {
         code: 'S', name: 'Safety',
+        criterion: 'A mistake compromises security, data, consistency or concurrency.',
         example: 'Change how the client parses fileserver replies, stores tokens, or invalidates cached data.',
         gates: [
           'Have an independent family review the design before coding.',
@@ -107,7 +111,8 @@ export const built: Built = {
       },
       {
         code: 'R', name: 'Irreversible',
-        example: 'Make a first public release, change the licence, or promise to keep reading an on-disk format.',
+        criterion: 'A mistake cannot be undone.',
+        example: 'Make a release, change the licence, or promise to keep reading an on-disk format.',
         gates: ['Meet all Safety requirements.', 'Get the owner’s decision on the commitment.'],
       },
     ],
@@ -174,7 +179,6 @@ export const built: Built = {
       body: 'Human contributors are the authors. Commit trailers record which models contributed text or code and which reviews covered the change.',
       dco: 'A human’s `Signed-off-by` certifies their right to contribute under the Developer Certificate of Origin (DCO).',
       caption: `From the file-read commit \`${fileReadCommit.slice(0, 7)}\``,
-      trailerLabel: 'Commit trailer excerpt',
       trailers: [
         { name: 'Class', value: 'P' },
         { name: 'Assisted-by', value: 'codex:gpt-6.2-sol' },
@@ -188,7 +192,7 @@ export const built: Built = {
 export const follow = {
   eyebrow: 'follow',
   heading: 'Follow IronAFS',
-  intro: 'The first read-only Linux client is in development. Use',
+  intro: 'The first planned client is read-only on Linux. Use',
   watch: 'Watch',
   watchDetail: 'on the GitHub repository to get updates.',
   primary: { label: 'Open on GitHub', href: links.github },

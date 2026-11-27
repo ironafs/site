@@ -137,17 +137,31 @@ for (const width of [360, 390, 1024, 1440, 1728]) {
         await expect(page.locator(selector)).toBeVisible();
         expect(await page.locator(selector).evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
       }
-      if (width === 360 || width >= 1024) {
-        const classes = page.locator('#built details').filter({ hasText: 'Review requirements by change class' });
-        await classes.locator('summary').click();
-        const rows = classes.locator('.built-class-list > li');
-        await expect(rows).toHaveCount(5);
-        for (const row of await rows.all()) {
-          await expect(row).toBeVisible();
-          expect(await row.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
-        }
-        await classes.locator('summary').click();
+      const panels = page.locator('#built details');
+      await expect(panels).toHaveCount(3);
+      for (const panel of await panels.all()) {
+        const summary = panel.locator('summary');
+        await summary.click();
+        await expect(panel).toHaveAttribute('open', '');
+
+        const { overflows, smallTargets } = await panel.evaluate(el => {
+          const boxes = [el, ...el.querySelectorAll('.built-reference-list > li, .built-provenance > div, .built-trailer-example')];
+          const overflows = boxes.filter(box => {
+            const bounds = box.getBoundingClientRect();
+            return box.scrollWidth > box.clientWidth || bounds.left < 0 || bounds.right > innerWidth;
+          }).map(box => box.className || box.tagName);
+          const smallTargets = [...el.querySelectorAll('summary, a[href]')].filter(target => {
+            const { width, height } = target.getBoundingClientRect();
+            return width < 44 || height < 44;
+          }).map(target => target.textContent.trim());
+          return { overflows, smallTargets };
+        });
+        const name = await summary.innerText();
+        expect(overflows, name).toEqual([]);
+        expect(smallTargets, name).toEqual([]);
       }
+      await expect(page.locator('#built .built-class-list > li')).toHaveCount(5);
+      await expect(panels.nth(1).locator('.built-reference-list > li')).toHaveCount(5);
       if (width >= 1024) {
         for (const selector of ['#what h2', '#speed h2', '#follow h2']) {
           expect(await page.locator(selector).evaluate(el => {

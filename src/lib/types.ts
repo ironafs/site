@@ -30,7 +30,7 @@ export type Built = NamedSection & {
     lead: string;
     change: string;
     gates: string;
-    rows: { code: string; name: string; example: string; gates: string[] }[];
+    rows: { code: string; name: string; criterion: string; example: string; gates: string[] }[];
     link: Link;
   };
   families: {
@@ -49,7 +49,6 @@ export type Built = NamedSection & {
       body: string;
       dco: string;
       caption: string;
-      trailerLabel: string;
       trailers: { name: string; value: string }[];
       link: Link;
     };

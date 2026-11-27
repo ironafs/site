@@ -89,6 +89,7 @@ test('the compact footer stacks on phones and keeps 44 px targets', async ({ pag
   const phone = await measure();
   expect(phone.tops).toHaveLength(2);
   expect(phone.tops[1]).toBeGreaterThanOrEqual(phone.bottoms[0]);
+  await expect(page.locator('#site-footer a')).toHaveCount(11);
   expect(phone.rows.length).toBeGreaterThanOrEqual(11);
   for (const h of phone.rows) expect(h).toBeGreaterThanOrEqual(44);
   expect(phone.targets.length, 'the story\'s links, the summaries, the milestones').toBeGreaterThanOrEqual(50);

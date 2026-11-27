@@ -4,7 +4,7 @@ const sections = ['hero', 'why', 'numbers', 'cost', 'platforms', 'design'];
 // Desktop fixed-stage layout. At 1280x600 the enhancement is off entirely.
 const flowAt = {
   '1280x600': [],
-  '1366x657': ['design'], // The longer Windows evidence needs flow.
+  '1366x657': [],
   '1536x730': [],
   '1440x789': [],
   '1470x838': [],

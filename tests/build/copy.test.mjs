@@ -139,8 +139,18 @@ test('#built keeps the workflow, model roles and commit attribution in native di
     'AI models and their roles',
     'Code provenance and commit attribution',
   ]);
-  const names = panels[0].matchAll(/<h4\b[^>]*>([\s\S]*?)<\/h4>/g);
-  assert.deepEqual([...names].map(([, name]) => visibleText(name)), ['E Editorial', 'I Internal', 'P Public', 'S Safety', 'R Irreversible']);
+  const headings = panel => [...panel.matchAll(/<h4\b[^>]*>([\s\S]*?)<\/h4>/g)].map(([, name]) => visibleText(name));
+  assert.deepEqual(headings(panels[0]), ['E Editorial', 'I Internal', 'P Public', 'S Safety', 'R Irreversible']);
+  const classCopy = visibleText(panels[0]);
+  for (const criterion of [
+    'leaves the project’s claims and behaviour intact',
+    'affects only the internals',
+    'changes what users, admins or servers see',
+    'compromises security, data, consistency or concurrency',
+    'cannot be undone',
+  ]) assert.ok(classCopy.includes(criterion), criterion);
+  assert.match(classCopy, /Make a release/);
+  assert.deepEqual(headings(panels[1]), ['Anthropic', 'OpenAI', 'Zhipu', 'Google', 'DeepSeek']);
   assert.ok(anchorLinks(panels[0]).some(([href]) => href === links.workflow));
   assert.ok(anchorLinks(panels[1]).some(([href]) => href === links.ai));
   assert.ok(anchorLinks(panels[1]).some(([href]) => href === links.reviews));
@@ -150,8 +160,17 @@ test('#built keeps the workflow, model roles and commit attribution in native di
   assert.match(visibleText(panels[2]), /AI-Reviewed-by/);
 });
 
+test('#built preserves native semantics for the model and trailer description lists', () => {
+  const raw = sectionMarkup('built');
+  const lists = [...raw.matchAll(/<dl\b([^>]*)>/g)];
+  assert.ok(lists.length > 1);
+  for (const [, attributes] of lists) assert.doesNotMatch(attributes, /\baria-(?:label|labelledby)=/);
+});
+
 test('honest status, and courtesy', () => {
-  assert.ok(section('status').includes(story.statusSection.lede));
+  assert.match(section('status'), /The architecture is public and the protocol codec is written\./);
+  assert.match(section('status'), /the first client, planned for read-only use on Linux\./);
+  assert.match(section('status'), /There’s no working client or release yet\./);
   assert.doesNotMatch(withoutApproved(html(), [windowsDesignAlternative, timelineCloudFiles]), /Cloud Files|AFSRedir/);
   assert.doesNotMatch(section('status'), /issues/i);
 });

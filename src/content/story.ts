@@ -322,7 +322,7 @@ export const story = {
   statusSection: {
     eyebrow: '/status',
     heading: 'What’s ready and what’s next',
-    lede: 'The architecture is public and the protocol codec is written. The first read-only Linux client is in development. There’s no working client or release yet.',
+    lede: 'The architecture is public and the protocol codec is written. Work is underway on the first client, planned for read-only use on Linux. There’s no working client or release yet.',
     nowLabel: 'In progress',
     nextLabel: 'Planned',
     follow: {

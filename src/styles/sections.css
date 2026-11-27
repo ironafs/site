@@ -203,6 +203,7 @@
   font: 650 0.81rem/1 var(--font-mono);
 }
 #built .built-reference-list p { margin: 0; color: var(--muted); font-size: 0.96rem; }
+#built .built-class-list .built-class-example { margin-block-start: 0.35rem; }
 #built .built-class-gates { margin: 0; padding-inline-start: 1.18rem; color: var(--fg); font-size: 0.95rem; line-height: 1.5; }
 #built .built-class-gates li + li { margin-block-start: 0.3rem; }
 #built .built-class-gates li::marker { color: var(--built-accent); }

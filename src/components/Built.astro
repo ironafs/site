@@ -41,7 +41,8 @@ const { code, attribution } = provenance;
               <li>
                 <div>
                   <h4><span>{row.code}</span> {row.name}</h4>
-                  <p><Text text={row.example} /></p>
+                  <p>{row.criterion}</p>
+                  <p class="built-class-example"><Text text={row.example} /></p>
                 </div>
                 <ul class="built-class-gates" aria-label={classes.gates}>
                   {row.gates.map(gate => <li>{gate}</li>)}
@@ -70,7 +71,7 @@ const { code, attribution } = provenance;
                 {models.length === 1 && !models[0].detail ? (
                   <p class="built-model-single">{models[0].name}</p>
                 ) : (
-                  <dl class="built-model-picks" aria-label={families.mainModels}>
+                  <dl class="built-model-picks">
                     {models.map(model => (
                       <div><dt>{model.name}</dt><dd>{model.detail}</dd></div>
                     ))}
@@ -101,7 +102,7 @@ const { code, attribution } = provenance;
             <p><Text text={attribution.dco} /></p>
             <figure class="built-trailer-example">
               <figcaption><Text text={attribution.caption} /></figcaption>
-              <dl aria-label={attribution.trailerLabel}>
+              <dl>
                 {attribution.trailers.map(({ name, value }) => (
                   <div><dt><code>{name}</code></dt><dd><code>{value}</code></dd></div>
                 ))}
