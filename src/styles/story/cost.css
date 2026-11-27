@@ -137,6 +137,8 @@
       /* snug cards (stack.ts: the text wraps to more lines than a card holds): less room above and below the text */
       html:not(.static) #cost .stack--snug > .scard { padding-block: 2.5vh; }
       html:not(.static) #cost .stack--snug .scard h3 { margin-block: 6px 12px; }
+      html:not(.static) #cost .stack--snug .iron .lede { line-height: 1.4; }
+      html:not(.static) #cost .stack--snug .iron .foot { margin-top: 0; }
       html:not(.static) #cost .stack--snug .afs { margin-top: 1.5vh; }
       html:not(.static) #cost .scard h3 { font-size: clamp(28px, 3.2vw, 50px); }
       html:not(.static) #cost .scard .lede { font-size: clamp(16px, 1.3vw, 19px); }
