@@ -102,6 +102,7 @@ test.describe('the shell (desktop)', () => {
     await input(page).type('a/b');
     await expect(input(page)).toHaveValue('a/b');
     await page.keyboard.press('Escape');
+    await expect(page.locator('#shell-key')).toHaveAttribute('aria-expanded', 'false');
     // a field outside the shell
     await page.evaluate(() => {
       const field = document.createElement('input');
