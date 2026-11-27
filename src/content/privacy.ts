@@ -1,4 +1,4 @@
-import { cookieDays, grantDays, measurementId } from '../data/analytics.ts';
+import { analyticsCookieNames, cookieDays, grantDays } from '../data/analytics.ts';
 import { links } from '../data/links.ts';
 
 export const consent = {
@@ -38,9 +38,10 @@ export const consent = {
   cookieTable: {
     caption: 'Google Analytics cookies',
     columns: ['Cookie', 'Lifetime'],
-    names: ['_ga', `_ga_${measurementId.slice(2)}`],
+    names: analyticsCookieNames,
     lifetime: `Up to ${cookieDays} days`,
   },
+  cookieRenewal: 'Starting a new analytics session can set a fresh session cookie.',
   status: {
     inactive: 'Google Analytics is inactive on this site.',
     gpc: 'Analytics is off. This browser sends a Global Privacy Control signal.',
@@ -71,7 +72,7 @@ export const privacy = {
     paragraphs: [
       'Google Analytics 4 measures page visits, whether you reach 90% of a page, clicks to other websites and clicks on links to downloadable files. Google also measures sessions and engagement. For visits identified as coming from the United States, analytics starts by default after the regional policy is checked; you can turn it off in one click. Elsewhere, or when the region cannot be determined, analytics stays off until you allow it.',
       'Google receives the page address with the query string and fragment removed, the referring website’s origin, the general type of browser and device (not the model or exact version), and cookie identifiers. Click and download events can include public link addresses, link text and file names and types. Google receives your IP address when your browser connects to its servers.',
-      "Google signals and advertising personalization are off. Site search, form interactions, video interactions and browser-history page views are off. Google’s user and event data retention is set to two months. New activity restarts that period for the browser's identifier. Turning analytics off stops new collection; it does not delete data already sent. Standard aggregated reports can persist longer.",
+      'Google signals and advertising personalization are off. Site search, form interactions, video interactions and browser-history page views are off. Google’s retention for user and event data is set to two months. New activity restarts Google’s retention period for user data associated with that browser. Turning analytics off stops new collection. Previously collected data follows Google’s retention settings. Standard aggregated reports can persist longer.',
     ],
     google: [
       { label: 'How Google uses information from sites that use its services', href: 'https://policies.google.com/technologies/partner-sites' },
@@ -81,7 +82,7 @@ export const privacy = {
   storage: {
     heading: 'Cookies and browser storage',
     paragraphs: [
-      `When analytics is on, the site sets cookies to distinguish browsers and sessions. They last up to ${cookieDays} days and visits do not renew them. Declining removes this site’s analytics cookies. A Global Privacy Control signal turns analytics off and saves an opt-out.`,
+      `When analytics is on, Google Analytics sets cookies to distinguish browsers and sessions. Each cookie is set to expire within ${cookieDays} days. ${consent.cookieRenewal} Declining removes this site’s analytics cookies. A Global Privacy Control signal turns analytics off and saves an opt-out.`,
       `The site saves permission in your browser for up to ${grantDays} days. An opt-out stays until you change it or clear browser storage. Close dismisses the notice for the tab’s session. Close does not give consent or change the current setting. You can change your choice in Cookie settings.`,
       'The site also remembers on this device whether you have seen the intro and whether you turned off the keyboard shortcut with `keys off`. Clearing the site’s browser storage resets these preferences.',
     ],

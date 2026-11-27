@@ -48,6 +48,7 @@ const { cookieTable } = consent;
         <thead><tr>{cookieTable.columns.map(heading => <th scope="col">{heading}</th>)}</tr></thead>
         <tbody>{cookieTable.names.map(name => <tr><th scope="row"><code>{name}</code></th><td>{cookieTable.lifetime}</td></tr>)}</tbody>
       </table>
+      <p>{consent.cookieRenewal}</p>
     </details>
     <a class="analytics-policy-link" href={policy}>{consent.policyLink}</a>
   </div>

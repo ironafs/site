@@ -1,5 +1,5 @@
 import { consent } from '../content/privacy';
-import { choiceKey, cookieDays, grantDays, noticeKey } from '../data/analytics';
+import { analyticsCookieNames, choiceKey, cookieDays, cookiePrefix, grantDays, legacyCookieNames, noticeKey } from '../data/analytics';
 
 type Choice = { value: 'denied' } | { value: 'granted'; expires: number };
 type AnalyticsWindow = Window & { dataLayer?: IArguments[] } & Partial<Record<`ga-disable-${string}`, boolean>>;
@@ -21,13 +21,13 @@ function saveChoice(choice: Choice): void {
   } catch { /* keep the choice in this document when storage is blocked */ }
 }
 
-function clearCookies(): void {
-  // The tag uses Path=/ and can set cookies on this host or its parent domain.
+function clearCookies(matches: (name: string) => boolean): void {
+  // Clear both host-only cookies and cookies scoped to a domain ancestor.
   const labels = location.hostname.split('.');
   const domains = labels.map((_, i) => labels.slice(i).join('.')).slice(0, -1);
   for (const entry of document.cookie.split(';')) {
     const name = entry.split('=')[0].trim();
-    if (name !== '_ga' && !name.startsWith('_ga_')) continue;
+    if (!matches(name)) continue;
     const expired = `${name}=; Max-Age=0; Path=/; SameSite=Lax`;
     document.cookie = expired;
     for (const domain of domains) document.cookie = `${expired}; Domain=${domain}`;
@@ -42,6 +42,14 @@ function command(win: AnalyticsWindow): (...command: unknown[]) => void {
 function loadTag(doc: Document, win: AnalyticsWindow, id: string): HTMLScriptElement {
   const gtag = command(win);
   win[`ga-disable-${id}`] = false;
+  const cookies = {
+    cookie_expires: cookieDays * 86400,
+    cookie_update: false,
+    cookie_path: '/',
+    cookie_prefix: cookiePrefix,
+  };
+  // The tag can write cookies during initialization, before it applies the stream config.
+  gtag('set', cookies);
   gtag('consent', 'default', {
     analytics_storage: 'denied',
     ad_storage: 'denied',
@@ -59,9 +67,7 @@ function loadTag(doc: Document, win: AnalyticsWindow, id: string): HTMLScriptEle
     send_page_view: false,
     allow_google_signals: false,
     allow_ad_personalization_signals: false,
-    cookie_expires: cookieDays * 24 * 60 * 60,
-    cookie_update: false,
-    cookie_path: '/',
+    ...cookies,
   });
   // The stream measures scroll, outbound links and downloads. Send one sanitized view for this page load.
   gtag('event', 'page_view', { ...page, page_title: doc.title });
@@ -94,6 +100,7 @@ export function initAnalyticsConsent(doc: Document): void {
     return;
   }
 
+  clearCookies(name => legacyCookieNames.includes(name));
   let choice = readChoice();
   let dismissed = false;
   try { dismissed = sessionStorage.getItem(noticeKey) === '1'; } catch { /* storage blocked */ }
@@ -160,7 +167,7 @@ export function initAnalyticsConsent(doc: Document): void {
       return;
     }
     win[`ga-disable-${id}`] = true;
-    clearCookies();
+    clearCookies(name => name === '_ga' || name.startsWith('_ga_') || analyticsCookieNames.includes(name));
     if (tag?.isConnected) {
       tag.remove();
       command(win)('consent', 'update', { analytics_storage: 'denied' });

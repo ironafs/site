@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import { consent, privacy } from '../../src/content/privacy.ts';
-import { choiceKey, cookieDays, grantDays, measurementId, noticeKey } from '../../src/data/analytics.ts';
+import { analyticsCookieNames, choiceKey, cookieDays, cookiePrefix, grantDays, legacyCookieNames, measurementId, noticeKey } from '../../src/data/analytics.ts';
 
 for (const [width, height] of [[390, 844], [360, 740], [430, 900], [1440, 900], [1728, 1000]]) {
   test(`notice stays at the viewport bottom and clears the footer at ${width}x${height}`, async ({ page }) => {
@@ -188,15 +188,18 @@ test('Allow loads the configured GA stream and queues one sanitized view with ad
   await expect.poll(() => external).toEqual([tagUrl]);
   expect(external.every(url => analyticsOrigins.includes(new URL(url).origin))).toBe(true);
   const commands = await page.evaluate(() => window.dataLayer.map(args => Array.from(args)));
-  expect(commands.slice(0, 2)).toEqual([
+  const cookieSettings = { cookie_expires: cookieDays * 86400, cookie_update: false, cookie_path: '/', cookie_prefix: cookiePrefix };
+  expect(commands.slice(0, 4)).toEqual([
+    ['set', cookieSettings],
     ['consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' }],
     ['consent', 'update', { analytics_storage: 'granted' }],
+    ['js', expect.anything()],
   ]);
   const config = commands.find(command => command[0] === 'config');
   expect(config[1]).toBe(measurementId);
   expect(config[2]).toMatchObject({
     send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false,
-    cookie_expires: cookieDays * 86400, cookie_update: false, cookie_path: '/',
+    ...cookieSettings,
     page_location: `${baseURL}/privacy/`,
   });
   expect(commands.filter(command => command[0] === 'event').map(([, name, params]) => [name, params.page_location]))
@@ -212,13 +215,42 @@ test('Allow loads the configured GA stream and queues one sanitized view with ad
   await expect(banner(page)).toBeHidden();
 });
 
+for (const choice of ['granted', 'denied', 'undecided', 'gpc']) {
+  test(`startup removes legacy cookies while ${choice}`, async ({ page, context, baseURL }) => {
+    const external = await watchRequests(page, baseURL);
+    const existing = choice === 'granted' ? [...analyticsCookieNames, 'unrelated'] : ['unrelated'];
+    await context.addCookies([...legacyCookieNames, ...analyticsCookieNames, 'unrelated'].map(name => ({
+      name, value: 'test', url: baseURL,
+      expires: Math.floor(Date.now() / 1000) + (legacyCookieNames.includes(name) ? 390 : 29) * 86400,
+    })));
+    await page.addInitScript(({ choice, choiceKey }) => {
+      if (choice === 'gpc') Object.defineProperty(navigator, 'globalPrivacyControl', { value: true });
+      if (choice !== 'undecided') {
+        const value = choice === 'denied' ? 'denied' : 'granted';
+        localStorage.setItem(choiceKey, JSON.stringify({ value, expires: Date.now() + 86400000 }));
+      }
+    }, { choice, choiceKey });
+    await page.goto('/privacy/');
+    const names = async () => (await context.cookies(baseURL)).map(cookie => cookie.name).sort();
+    await expect.poll(names).toEqual(existing.sort());
+    if (choice === 'granted') {
+      await expect.poll(() => external).toEqual([tagUrl]);
+      await page.reload();
+      await expect.poll(() => external).toEqual([tagUrl, tagUrl]);
+      await expect.poll(names).toEqual(existing);
+    } else {
+      expect(external).toEqual([]);
+    }
+  });
+}
+
 test('withdrawing removes GA cookies and unloads the tag', async ({ page, context, baseURL }) => {
   const external = await watchRequests(page, baseURL);
   await page.goto('/privacy/');
   await openNotice(page);
   await choose(page, consent.allow);
   await expect.poll(() => external).toEqual([tagUrl]);
-  await context.addCookies([...consent.cookieTable.names, 'unrelated'].map(name => ({ name, value: 'test', url: baseURL })));
+  await context.addCookies([...legacyCookieNames, ...analyticsCookieNames, 'unrelated'].map(name => ({ name, value: 'test', url: baseURL })));
   await settings(page).click();
   await Promise.all([page.waitForEvent('load'), choose(page, consent.decline)]);
   expect(external).toEqual([tagUrl]);
