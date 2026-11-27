@@ -93,7 +93,7 @@ function splitList(list) {
 }
 
 // Check every enhanced sheet, not just motion.css (the hero's hand-off block is in hero.css).
-const ENHANCED = ['story/motion.css', 'story/crash.css', 'story/how.css', 'story/rust.css', 'story/cost.css', 'story/platforms.css', 'story/phone-beats.css', 'hero.css'];
+const ENHANCED = ['story/motion.css', 'story/crash.css', 'story/how.css', 'story/cost.css', 'story/platforms.css', 'story/phone-beats.css', 'hero.css'];
 
 for (const sheet of ENHANCED) {
   test(`${sheet}: every enhanced block opens with the selector verbatim, and every rule in it is under html:not(.static)`, () => {

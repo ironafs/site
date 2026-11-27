@@ -2,22 +2,22 @@ import { test, expect } from '@playwright/test';
 import { unseenLines } from './util.mjs';
 
 // Short windows never cut text. The enhancement needs a window at least 620 px tall (the selector
-// in motion.css, mode.ts), and #design, #rust, #cost, #platforms and the hero's hand-off pin only when everything they hold
+// in motion.css, mode.ts), and #design, #cost, #platforms and the hero's hand-off pin only when everything they hold
 // fits their pinned stage (src/scripts/story/fit.ts, stack.ts, platforms.ts); otherwise they are in normal flow (the hero:
 // the plain layout). At every size, every text line of the
 // pinned sections is seen whole, opaque and on top at some scroll position.
 
-const SECTIONS = ['hero', 'why', 'numbers', 'cost', 'platforms', 'design', 'rust'];
+const SECTIONS = ['hero', 'why', 'numbers', 'cost', 'platforms', 'design'];
 const ALL = layout => Object.fromEntries(SECTIONS.map(id => [id, layout]));
 // The expected layout of each section at each size, measured in Chromium and WebKit (both have scroll-driven
 // animation in this suite and agree at every size). An engine without scroll-driven animation is all base instead.
-// 1280x620: #rust's density panel, #design's text and diagram and #platforms' longest card (its lane's row) do not fit
+// 1280x620: #design's text and diagram and #platforms' longest card (its lane's row) do not fit
 // a 620 px stage, snug or not; #cost's cards fit snug (stack.ts), and the hero's headline block fits (below the risen
 // word).
 const EXPECTED = {
   '844x390': ALL('base'),
   '1280x360': ALL('base'),
-  '1280x620': { hero: 'pinned', why: 'pinned', numbers: 'pinned', cost: 'pinned', platforms: 'flow', design: 'flow', rust: 'flow' },
+  '1280x620': { hero: 'pinned', why: 'pinned', numbers: 'pinned', cost: 'pinned', platforms: 'flow', design: 'flow' },
   '1280x720': ALL('pinned'),
   '1280x800': ALL('pinned'),
   '1366x768': ALL('pinned'),
@@ -107,7 +107,7 @@ for (const [width, height] of SIZES) {
     expect(names).toEqual(scrollDriven ? EXPECTED[`${width}x${height}`] : ALL('base'));
 
     const unseen = {};
-    for (const id of SECTIONS) unseen[id] = await unseenLines(page, id === 'hero' ? '.hero-pin' : `#${id}`, { skip: '.sr-only, .rw-css' });
+    for (const id of SECTIONS) unseen[id] = await unseenLines(page, id === 'hero' ? '.hero-pin' : `#${id}`);
     expect(unseen).toEqual(Object.fromEntries(SECTIONS.map(id => [id, []])));
   });
 }
@@ -143,31 +143,6 @@ test.describe('the fit guards', () => {
     await expect(design.locator('[role="tablist"]')).toBeHidden();
     await expect(design.locator('.osp[aria-hidden], .osp[inert], .osp[role]')).toHaveCount(0);
     await expect(design.locator('.wires, .wl, .request-dot')).toHaveCount(0);
-  });
-
-  test('#rust in flow shows both phases at their final state, with every link visible', async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 620 });
-    await page.goto('/');
-    test.skip(!(await enhanced(page)), 'the enhancement is off here');
-    const rust = page.locator('#rust');
-    await expect(rust).toHaveClass(/story--flow/);
-    for (const f of [0, 0.5, 1]) {
-      await page.evaluate(f => {
-        const s = document.getElementById('rust');
-        scrollTo({ top: s.getBoundingClientRect().top + scrollY + f * Math.max(0, s.offsetHeight - innerHeight), behavior: 'instant' });
-      }, f);
-      await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
-      const hidden = await rust.locator('.ph, .rphase, .chips li, .bv, .cval, .rustval, a').evaluateAll(els => els.filter(el => {
-        let o = 1;
-        for (let a = el; a && a !== document.documentElement; a = a.parentElement) {
-          const cs = getComputedStyle(a);
-          if (cs.display === 'none' || cs.visibility === 'hidden') return true;
-          o *= Number(cs.opacity);
-        }
-        return o < 0.99;
-      }).map(el => el.textContent.trim().slice(0, 30)));
-      expect(hidden, `at ${f}`).toEqual([]);
-    }
   });
 
   test('#platforms in flow is the vertical list: no slide, every event link visible', async ({ page }) => {

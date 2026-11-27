@@ -40,7 +40,10 @@ const { how } = story;
             <summary>{how.detailsLabel}</summary>
             <ul>{os.details.map(detail => <li><Text text={detail} /></li>)}</ul>
           </details>
-          <p class="cite">{os.cite} · <span>{os.status}</span></p>
+          <p class="cite">
+            {os.cite} · <span>{os.status}</span>
+            {'evidence' in os && os.evidence && <> · <a href={os.evidence.href}>{os.evidence.label}</a></>}
+          </p>
         </div>
         <PhoneBeat><OsDiagram os={os} index={i} /></PhoneBeat>
       </div>

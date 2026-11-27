@@ -1,4 +1,4 @@
-import { adr0004, googleRust2025, links, repo } from '../data/links.ts';
+import { adr0004, links, repo } from '../data/links.ts';
 import type { Story } from '../lib/types';
 
 export const pill = {
@@ -18,11 +18,11 @@ export const pill = {
  */
 export const milestoneCopy: Record<string, { body: string }> = {
   M1: { body: 'Accepted on 20 November 2026 as ADR 0004.' },
-  M2a: { body: "The core and a read-only Linux client over FUSE. It's tested in a simulator and against a real OpenAFS cell, reading without signing in. A small Windows test of SMB user identity runs alongside." },
+  M2a: { body: 'The goal is a read-only Linux client over FUSE that can read files without signing in. Testing is planned in a simulator and against a real OpenAFS cell. A small Windows prototype will test SMB sessions and user identity alongside it.' },
   M2b: { body: 'Signing in on Linux with rxkad tokens and aklog, tested across users and for revoked access. It depends on a written description of rxkad to build from, because no public specification has been found.' },
   M3: { body: "File writes on Linux, along with ACLs, mount points, locks and quotas. afs pending lists writes that haven't reached the server yet." },
   M4: { body: 'The FSKit tests come first, then a mount for each user and a signed, notarised installer. Writing follows only if tests show that failed saves are reported and recoverable.' },
-  M5: { body: 'The rest of the Windows tests come first. Then an SMB server reachable only from the same machine, and an MSI installer, for Windows setups that pass.' },
+  M5: { body: 'A local SMB server and MSI installer. The Windows tests cover signing, user identity and coexistence with Windows file sharing.' },
   M6: { body: 'rxgk, a newer AFS security protocol, after the Windows layer, tested against an independently written simulator.' },
   M7: { body: 'Ideas recorded in the architecture. Each is scheduled only if its issue is approved.' },
 };
@@ -145,12 +145,12 @@ export const story = {
         os: 'windows',
         tab: 'Windows',
         headline: 'On Windows, IronAFS answers over SMB on the same PC.',
-        lede: 'Windows already has an SMB client. If testing passes, it will talk to a small SMB 3.1.1 server from IronAFS on the same machine, with no driver added.',
+        lede: 'The Windows design pairs the built-in SMB client with an IronAFS SMB 3.1.1 server on the same PC. There’s no IronAFS driver to install.',
         subhead: 'Windows · a local SMB server of its own',
         points: [
           { lead: 'The traffic stays on the PC.', text: "IronAFS uses `\\\\afs` only where tests show a sign-in under that name can't leave the machine; elsewhere it uses `\\\\127.0.0.1` through a mapped drive or shortcut." },
           { lead: 'Your Windows sign-in decides.', text: 'The same IronAFS core as on Linux checks access for the account and logon session that SMB authenticated.' },
-          { lead: 'First packet only, so far.', text: "On Windows 10 22H2, Windows 11 24H2 and 26H2, the built-in client sent its first packet to a local listener. A full SMB session hasn't been tested yet." },
+          { lead: 'Local connection tested.', text: 'On Windows 10 22H2 and Windows 11 24H2 and 26H2, the built-in client reached a local listener while Windows file sharing kept working. The probe captured the first packet on each build. Full SMB sessions, including signing and per-user access, are next to test.' },
         ],
         details: [
           "The server is written from Microsoft's open specifications and captures from target Windows builds. It accepts only authenticated, signed SMB 3.1.1 sessions; guest, anonymous and unsigned sessions are refused.",
@@ -159,7 +159,8 @@ export const story = {
           "Tests check that no other program can take the ports, that Windows file sharing still works, and that applications see fresh data. Where local SMB doesn't qualify, it doesn't ship; a Cloud Files route is the gated alternative.",
         ],
         cite: 'ADR 0004 L15, L17–L20, L22, L41',
-        status: 'Planned · M5 · SMB where it qualifies',
+        evidence: { label: 'Windows test results', href: `${repo}/blob/main/docs/research/2026-11-19-windows-unc-without-a-driver.md#3-route-3-measured` },
+        status: 'Planned · M5 · Local SMB',
         ids: { programs: 'sc-w-prog', kernel: 'sc-w-os', layer: 'sc-w-layer', daemon: 'sc-w-daemon', cells: 'sc-w-cells' },
         programs: 'File Explorer · Office · Visual Studio',
         kernel: { title: "Windows' own SMB client", sub: 'reaches IronAFS on the same PC', chips: [] },
@@ -174,124 +175,77 @@ export const story = {
     ],
   },
 
-  // The Rust section has no eyebrow.
-  rust: {
-    eyebrow: '',
-    heading: 'Why Rust for a network file system?',
-    word: 'Rust',
-    name: 'Iron and the rust it forms give IronAFS its name.',
-    claim: {
-      before: 'IronAFS is being written in ',
-      highlight: 'Rust',
-      after: ", from the core to the `afs` command. On macOS the file-system extension is planned in Swift, and the daemon will use one C file for system logging. A file-system client can't assume server replies are well formed, and safe Rust keeps a parser from reading outside its buffers.",
-    },
-    share: {
-      id: 'android-share',
-      lede: "Google reports that memory-safety bugs made up 76% of Android's reported vulnerabilities in 2019 and less than 20% in 2025.",
-      bars: [
-        { year: '2019', value: '76%', height: 76 },
-        { year: '2022', value: '35%', height: 35 },
-        { year: '2024', value: '24%', height: 24 },
-        { year: '2025', value: '<20%', height: 20, threshold: true },
-      ],
-      what: 'Memory-safety bugs, share of all Android vulnerabilities',
-      sourcesLead: 'Google',
-      sources: [
-        { label: '2022', href: 'https://security.googleblog.com/2022/12/memory-safe-languages-in-android-13.html' },
-        { label: '2024', href: 'https://security.googleblog.com/2024/09/eliminating-memory-safety-vulnerabilities-Android.html' },
-        { label: '2025 ("below 20%")', href: googleRust2025 },
-      ],
-    },
-    density: {
-      id: 'android-density',
-      heading: 'Memory-safety bugs per million lines',
-      lede: "Google estimates about 0.2 memory-safety vulnerabilities per million lines of Android Rust, against roughly 1,000 in its historical C and C++. The code differs in age and role: these figures don't measure IronAFS. IronAFS's own unsafe code is confined to a few named sites in one crate, and any change to them needs a security review.",
-      what: 'memory-safety vulnerabilities per million lines of code · Android',
-      cLabel: 'C and C++',
-      cValue: '≈ 1,000',
-      rustLabel: 'Rust',
-      value: '0.2',
-      illustration: 'Illustration: about 1,000 dots against a fifth of one.',
-      sourceLead: 'Android code · estimated Rust density against historical C and C++ density',
-      source: { label: 'Google, 2025', href: googleRust2025 },
-      note: 'a conservative estimate: about 5 million lines of Rust, one potential vulnerability, found and fixed before release',
-    },
-    chips: [
-      { id: 'android-rollback', value: '4×', what: 'Android Rust changes were rolled back about a quarter as often as C and C++ changes.', source: { label: 'Google, 2025', href: googleRust2025 } },
-      { id: 'android-review', value: '25%', what: 'Android Rust changes took 25% less time to review.', source: { label: 'Google, 2025', href: googleRust2025 } },
-    ],
-  },
-  cards: {
-    eyebrow: '',
-    heading: "What Rust can and can't do for a file client",
-    mountpoint: {
-      kicker: 'Another file client',
-      text: "Amazon's Mountpoint for S3 is a file client written in Rust that uses FUSE.",
-      source: { label: 'github.com/awslabs/mountpoint-s3', href: 'https://github.com/awslabs/mountpoint-s3' },
-    },
-    unsafeCard: {
-      kicker: 'Still needs care',
-      text: "A race in unsafe code in the Linux kernel's Rust Binder driver could cause a crash. Even in safe Rust, a file client still has to check that a server's reply makes sense.",
-      source: { label: 'CVE-2025-68260', href: 'https://www.cve.org/CVERecord?id=CVE-2025-68260' },
-    },
-  },
   cost: {
     eyebrow: '/why · shipping kernel code',
     heading: 'Kernel code is hard to ship, and harder to run from your own build.',
     windows: {
-      os: 'WINDOWS',
-      heading: "A driver you build yourself won't load.",
-      lede: "Windows loads a new kernel driver once Microsoft has signed it, which takes a company account in Microsoft's hardware program and an EV certificate. The only other way to run your own build is Test Mode: sign it with your own certificate, switch Secure Boot off and live with the watermark.",
-      foot: 'Microsoft Learn · Windows release notes',
-      steps: [
-        { mark: '01', text: 'your build' },
-        { mark: '02', text: 'company account + EV certificate' },
-        { mark: '03', text: 'Microsoft signs it' },
-        { text: 'or: your own certificate + Test Mode (Secure Boot off)', branch: true },
-        { mark: '!', text: 'April 2026: old cross-signed drivers lose default trust (allow list)', warn: true },
+      os: 'Windows',
+      heading: 'New kernel drivers need Microsoft signing.',
+      lede: 'To submit a driver for standard Windows installations, publishers need a Hardware Developer Program account backed by an extended validation (EV) code-signing certificate.',
+      context: 'Each rebuilt production driver package needs a fresh Microsoft signature.',
+      sources: [
+        { label: 'Signing policy', href: 'https://learn.microsoft.com/en-us/windows-hardware/drivers/install/kernel-mode-code-signing-policy--windows-vista-and-later-' },
+        { label: 'Rebuilt packages', href: 'https://learn.microsoft.com/en-us/windows-hardware/drivers/install/deprecation-of-software-publisher-certificates-and-commercial-release-certificates' },
+        { label: 'April 2026 trust update', href: 'https://techcommunity.microsoft.com/blog/windows-itpro-blog/advancing-windows-driver-security-removing-trust-for-the-cross-signed-driver-pro/4504818' },
       ],
+      signing: 'Release signing',
+      steps: ['Build the driver', 'Submit through the hardware program', 'Microsoft signs the release'],
+      testing: {
+        title: 'Local testing',
+        before: 'A ',
+        link: { label: 'test-signed build', href: 'https://learn.microsoft.com/en-us/windows-hardware/drivers/install/introduction-to-test-signing' },
+        after: ' can load on a development machine in Windows Test Mode.',
+      },
     },
     macos: {
-      os: 'MACOS · APPLE SILICON',
+      os: 'macOS',
+      platform: 'Apple silicon',
       heading: 'Third-party kexts need Reduced Security.',
-      lede: "Before a kext can load, you start up in Recovery, lower the Mac to Reduced Security and enter an administrator password. Kexts run with the kernel's privileges, and Apple advises choosing software that doesn't need them.",
-      foot: 'Apple Platform Deployment',
+      lede: 'On Apple silicon, you change the startup disk’s security policy in Recovery. Once you approve a third-party kernel extension, the Mac needs a restart to load it.',
+      context: 'A loaded extension runs with kernel privileges.',
+      sources: [
+        { label: 'Apple’s kernel extension guide', href: 'https://support.apple.com/guide/security/securely-extending-the-kernel-sec8e454101b/web' },
+      ],
       dialog: {
-        title: 'Security policy',
+        title: 'Startup security policy',
+        label: 'Illustrative settings',
         full: 'Full Security',
         reduced: 'Reduced Security',
-        allow: 'Allow user management of kernel extensions from identified developers',
-        cancel: 'Cancel',
-        ok: 'OK',
+        allow: 'Allow management of kernel extensions from identified developers',
       },
-      steps: ['shut down', 'Recovery', 'admin password', 'restart'],
+      steps: ['Recovery', 'Policy change', 'Restart'],
     },
     linux: {
-      os: 'LINUX',
+      os: 'Linux',
       heading: 'A kernel update can mean a rebuild.',
-      lede: 'Linux keeps no stable interface inside the kernel, so the functions a module relies on can change between releases. A module built outside the kernel tree may then need updating and retesting for each new kernel. With Secure Boot it must also be signed with a key the system trusts, which you enrol once at boot.',
-      foot: 'Debian wiki · kernel docs',
+      lede: 'A new kernel can change interfaces that a separately maintained module uses. DKMS can automate the rebuild, and compatibility fixes may still be needed.',
+      context: 'On systems that enforce module signing, the rebuilt module needs a signature from a trusted key.',
+      sources: [
+        { label: 'Kernel interfaces', href: 'https://docs.kernel.org/process/stable-api-nonsense.html' },
+        { label: 'Debian Secure Boot', href: 'https://wiki.debian.org/SecureBoot' },
+      ],
       workflow: {
-        label: 'Debian, DKMS and Secure Boot',
+        title: 'DKMS and Secure Boot',
+        label: 'Illustrative Debian workflow',
         lines: [
-          { n: '1', text: 'a kernel update arrives' },
-          { n: '2', text: 'DKMS rebuilds the module for the new kernel' },
-          { text: 'if the module no longer builds, it waits for a fix', tone: 'error' },
-          { n: '3', text: 'with Secure Boot: sign it with a trusted key' },
-          { n: '4', text: 'a new key: reboot and confirm MOK enrolment', tone: 'dim' },
+          { text: 'Install a new kernel' },
+          { text: 'DKMS rebuilds the module' },
+          { text: 'If the build fails', note: true },
+          { text: 'Kernel verifies the module’s signature' },
         ],
+        failure: 'The module may need a source change.',
       },
     },
     ironafs: {
-      os: 'IRONAFS',
+      os: 'IronAFS',
       heading: 'IronAFS ships no kernel code.',
-      lede: "There's nothing of IronAFS's to sign as a driver, allow in Recovery or rebuild for a new kernel. On Linux its file system reaches the kernel through FUSE, which the kernel keeps backward compatible for programs, so a new kernel rarely means IronAFS changes. On a Mac you'll still switch on its FSKit extension in System Settings and approve it.",
-      foot: '',
+      lede: 'IronAFS is designed to run in user space. The planned Linux client uses FUSE, and on macOS you’ll still enable and approve the FSKit extension in System Settings. The Windows design uses the built-in SMB client and runs the IronAFS server in user space.',
+      sources: [{ label: 'Platform architecture', href: `${repo}/blob/main/docs/adr/0004-architecture-2-os-layers.md` }],
       prompt: '$',
       command: 'afs status',
       output: {
         ok: 'ironafsd: not running yet · M2a in progress',
-        design: 'planned: Linux first (FUSE), then macOS (FSKit), then Windows (SMB, if testing passes)',
+        design: 'planned: Linux first (FUSE), then macOS (FSKit), then Windows (local SMB)',
       },
     },
   },
@@ -366,23 +320,19 @@ export const story = {
 
   statusSection: {
     eyebrow: '/status',
-    heading: 'Building in the open.',
-    lede: "The architecture is accepted and public, and the protocol codec is written. Rx and the cache are at an early stage, and the first client, read-only on Linux, is being built now. There's no working client or release yet, and no promised dates. The GitHub milestones show the current work.",
+    heading: 'What’s ready and what’s next',
+    lede: 'The architecture is public and the protocol codec is written. The first read-only Linux client is in development. There’s no working client or release yet.',
     nowLabel: 'In progress',
     nextLabel: 'Planned',
     follow: {
       label: 'follow or help',
-      title: 'Read, watch, ask',
+      title: 'Follow development',
+      href: links.milestones,
       links: [
         { label: 'Review ADR 0004', href: adr0004 },
         { label: 'watch the repository', href: repo },
         { label: 'open an issue', href: `${repo}/issues` },
       ],
     },
-    buttons: [
-      { label: 'View source', href: repo },
-      { label: 'Read the design', href: links.docs },
-      { label: 'Follow development', href: links.milestones },
-    ],
   },
 } satisfies Story;

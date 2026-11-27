@@ -12,6 +12,8 @@
 #status .nn { border-radius: 20px; border: 1px solid var(--story-card-border); background: var(--story-card-glass); padding: 22px 24px; }
 #status .nn .k { font: 0.78125rem/1.4 var(--font-mono); color: var(--story-cite); margin: 0; }
 #status .nn-title { font: 700 clamp(1.125rem, 1.5vw, 1.5rem)/1.2 var(--font-display); letter-spacing: normal; text-transform: none; color: #fff; margin: 8px 0; }
+#status .nn-title a { display: inline-flex; min-height: 44px; align-items: center; gap: 0.4em; }
+#status .nn-title a span { font-size: 0.75em; }
 #status .nn-body { margin: 0; font-size: 0.9375rem; line-height: 1.5; color: var(--story-text); max-width: none; }
 #status .nn.now { border-color: #8a4422; box-shadow: 0 0 40px #d8662a22; }
 #status .nn.now .k { color: var(--story-peach); }

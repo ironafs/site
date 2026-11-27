@@ -267,8 +267,8 @@ test('1440 profile: after scrolling the whole page, the story pictures transferr
     .map(r => ({ file: new URL(r.name).pathname, bytes: r.transferSize })), STORY_ART.source);
   const total = art.reduce((sum, a) => sum + a.bytes, 0);
   console.log(`story pictures at 1440: ${(total / 1024).toFixed(1)} KB (${art.map(a => `${a.file.replace('/_astro/', '')} ${(a.bytes / 1024).toFixed(1)}`).join(', ')})`);
-  // every master is drawn somewhere on the page
-  for (const name of ['chip', 'forge', 'drops', 'rust', 'rust-only']) expect(art.some(a => a.file.startsWith(`/_astro/${name}.`)), name).toBe(true);
+  for (const name of ['chip', 'forge', 'drops']) expect(art.some(a => a.file.startsWith(`/_astro/${name}.`)), name).toBe(true);
+  expect(art.filter(a => /\/_astro\/rust(?:-only)?\./.test(a.file))).toEqual([]);
   for (const a of art) expect(a.bytes, `${a.file} was transferred (not 0 bytes)`).toBeGreaterThan(0);
   expect(total).toBeLessThanOrEqual(300 * 1024);
 });

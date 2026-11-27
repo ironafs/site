@@ -1,49 +1,118 @@
 ---
 import { built } from '../content/site';
+import Text from './story/Text.astro';
 
-const tables = [
-  { ...built.families, label: 'built-h', heading: '', lead: '' },
-  { ...built.classes, label: 'built-classes-h' },
-];
+const { example, classes, families, provenance } = built;
+const { code, attribution } = provenance;
 ---
 <section id="built" class="section" aria-labelledby="built-h">
   <div class="container">
-    <div class="section-intro">
-      <div class="section-title">
+    <div class="built-overview">
+      <div class="built-copy">
         <p class="eyebrow"><span class="slash" aria-hidden="true">/</span>{built.eyebrow}</p>
         <h2 id="built-h" tabindex="-1">{built.heading}</h2>
+        <p class="lead"><strong>{built.approval}</strong> <Text text={built.approvalDetail} /></p>
+        <p>{built.independence}</p>
+        <p>{built.risk}</p>
       </div>
-      <p class="lead">{built.intro}</p>
+      <article class="built-example" aria-labelledby="built-example-h">
+        <p class="built-kicker">{example.kicker}</p>
+        <h3 id="built-example-h">{example.heading}</h3>
+        <ol class="built-steps" role="list">
+          {example.steps.map(({ heading, body, link }) => (
+            <li>
+              <h4>{heading}</h4>
+              <p>{body}</p>
+              <a href={link.href}>{link.label} <span aria-hidden="true">↗</span></a>
+            </li>
+          ))}
+        </ol>
+      </article>
     </div>
-    {tables.map(({ head, rows, label, heading, lead }) => (
-      <>
-        {heading && <h3 id={label} class="built-class-heading">{heading}</h3>}
-        {lead && <p class="lead">{lead}</p>}
-        <div class="table-wrap">
-          <table class="built-table" role="table" aria-labelledby={label}>
-            <thead role="rowgroup">
-              <tr role="row">{head.map(cell => <th scope="col" role="columnheader">{cell}</th>)}</tr>
-            </thead>
-            <tbody role="rowgroup">
-              {rows.map(([name, ...cells]) => (
-                <tr role="row">
-                  <th scope="row" role="rowheader">{name}</th>
-                  {cells.map((cell, i) => <td role="cell" data-label={head[i + 1]}>{cell}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+    <div class="built-details">
+      <details>
+        <summary id="built-classes-h">{classes.heading} <span aria-hidden="true"></span></summary>
+        <div class="built-detail">
+          <p>{classes.lead}</p>
+          <div class="built-reference-columns" aria-hidden="true"><span>{classes.change}</span><span>{classes.gates}</span></div>
+          <ul class="built-reference-list built-class-list" role="list">
+            {classes.rows.map(row => (
+              <li>
+                <div>
+                  <h4><span>{row.code}</span> {row.name}</h4>
+                  <p><Text text={row.example} /></p>
+                </div>
+                <ul class="built-class-gates" aria-label={classes.gates}>
+                  {row.gates.map(gate => <li>{gate}</li>)}
+                </ul>
+              </li>
+            ))}
+          </ul>
+          <ul class="built-links" role="list">
+            <li><a href={classes.link.href}>{classes.link.label}</a></li>
+          </ul>
         </div>
-      </>
-    ))}
-    <p class="lead">{built.waits}</p>
-    <p class="lead">{built.provenance}</p>
-    <div class="built-human">
-      <h3>{built.human}</h3>
-      <p class="lead">{built.humanBody}</p>
+      </details>
+
+      <details>
+        <summary id="built-models-h">{families.heading} <span aria-hidden="true"></span></summary>
+        <div class="built-detail">
+          <p>{families.lead}</p>
+          <div class="built-reference-columns" aria-hidden="true"><span>{families.familyRole}</span><span>{families.mainModels}</span></div>
+          <ul class="built-reference-list" role="list">
+            {families.rows.map(({ family, role, models }) => (
+              <li>
+                <div>
+                  <h4>{family}</h4>
+                  <p>{role}</p>
+                </div>
+                {models.length === 1 && !models[0].detail ? (
+                  <p class="built-model-single">{models[0].name}</p>
+                ) : (
+                  <dl class="built-model-picks" aria-label={families.mainModels}>
+                    {models.map(model => (
+                      <div><dt>{model.name}</dt><dd>{model.detail}</dd></div>
+                    ))}
+                  </dl>
+                )}
+              </li>
+            ))}
+          </ul>
+          <ul class="built-links" role="list">
+            {families.links.map(link => <li><a href={link.href}>{link.label}</a></li>)}
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary id="built-provenance-h">{provenance.heading} <span aria-hidden="true"></span></summary>
+        <div class="built-detail built-provenance">
+          <div>
+            <h4>{code.heading}</h4>
+            <p>{code.body}</p>
+            <ul class="built-links" role="list">
+              {code.links.map(link => <li><a href={link.href}>{link.label}</a></li>)}
+            </ul>
+          </div>
+          <div>
+            <h4>{attribution.heading}</h4>
+            <p>{attribution.body}</p>
+            <p><Text text={attribution.dco} /></p>
+            <figure class="built-trailer-example">
+              <figcaption><Text text={attribution.caption} /></figcaption>
+              <dl aria-label={attribution.trailerLabel}>
+                {attribution.trailers.map(({ name, value }) => (
+                  <div><dt><code>{name}</code></dt><dd><code>{value}</code></dd></div>
+                ))}
+              </dl>
+            </figure>
+            <ul class="built-links" role="list">
+              <li><a href={attribution.link.href}>{attribution.link.label} <span aria-hidden="true">↗</span></a></li>
+            </ul>
+          </div>
+        </div>
+      </details>
     </div>
-    <ul class="built-links" role="list">
-      {built.links.map(({ label, href }) => <li><a href={href}>{label}</a></li>)}
-    </ul>
   </div>
 </section>

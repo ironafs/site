@@ -1,19 +1,37 @@
 ---
 import Section from './Section.astro';
 import Text from './Text.astro';
+import { rustCards } from '../../content/rust';
 import '../../styles/story/rust.css';
-import { story } from '../../content/story';
 
-const { cards } = story;
+const { mountpoint, unsafe } = rustCards;
 ---
-<Section id="rust-cards" eyebrow={cards.eyebrow} heading={cards.heading}>
-  <div class="facts">
-    {[cards.mountpoint, cards.unsafeCard].map(card => (
-      <article class="fact">
-        <h3>{card.kicker}</h3>
-        <p><Text text={card.text} /></p>
-        <span class="s"><a class="source" href={card.source.href}>{card.source.label}</a></span>
-      </article>
-    ))}
+<Section id="rust-cards" labelledby="rust-cards-h">
+  <div class="rust-context">
+    <div class="client-rules">
+      <h2 id="rust-cards-h" tabindex="-1">{rustCards.heading}</h2>
+      <p class="lede">{rustCards.lede}</p>
+      <dl>
+        {rustCards.rules.map(rule => <div><dt>{rule.term}</dt><dd>{rule.description}</dd></div>)}
+      </dl>
+      <a class="source" href={rustCards.source.href}>{rustCards.source.label} <span aria-hidden="true">↗</span></a>
+    </div>
+    <aside class="client-reference" aria-label={rustCards.referenceLabel}>
+      <div>
+        <h3>{mountpoint.heading}</h3>
+        <p>{mountpoint.text}</p>
+        <a class="source" href={mountpoint.source.href}>{mountpoint.source.label} <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="unsafe-note">
+        <h3>{unsafe.heading}</h3>
+        <p><Text text={unsafe.text} /></p>
+        <a class="source" href={unsafe.source.href}>{unsafe.source.label} <span aria-hidden="true">↗</span></a>
+        <details class="rust-disclosure">
+          <summary>{unsafe.example.summary}</summary>
+          <p>{unsafe.example.text}</p>
+          <a class="source" href={unsafe.example.source.href}>{unsafe.example.source.label} <span aria-hidden="true">↗</span></a>
+        </details>
+      </div>
+    </aside>
   </div>
 </Section>

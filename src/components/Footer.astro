@@ -2,50 +2,46 @@
 import { ui } from '../content/ui';
 import { trademarks } from '../content/trademarks';
 import { consent, privacy } from '../content/privacy';
-import { footer, menu, site } from '../content/site';
+import { footer, menu } from '../content/site';
 import { links } from '../data/links';
-// Three link groups, each a nav named by its visible label, so no heading is added.
-// The paths and links are the menu's own data; the external rows open the way the menu's rows do.
+
+const onHomepage = Astro.url.pathname === '/';
+const paths = menu.paths.filter(item => item.href !== '/#follow');
 ---
 <footer id="site-footer" class="site-footer">
   <div class="container">
     <div class="footer-groups">
       <nav aria-labelledby="footer-site">
-        <p id="footer-site" class="footer-label">{footer.site}</p>
-        <ul>
-          {menu.paths.map(item => (
-            <li><a href={item.href}><span class="footer-path"><span class="slash" aria-hidden="true">/</span>{item.label}</span></a></li>
+        <p id="footer-site" class="footer-label">{onHomepage ? footer.onPage : footer.homepage}</p>
+        <ul role="list">
+          {paths.map(item => (
+            <li><a href={onHomepage ? item.href.slice(1) : item.href}><span class="slash" aria-hidden="true">/</span>{item.label}</a></li>
           ))}
         </ul>
       </nav>
-      <nav aria-labelledby="footer-project">
-        <p id="footer-project" class="footer-label">{footer.project}</p>
-        <ul>
-          {menu.links.map(item => (
-            <li><a href={item.href} target="_blank" rel="noopener">{item.label} <span aria-hidden="true">↗</span></a></li>
-          ))}
-        </ul>
-      </nav>
-      <nav aria-labelledby="footer-author">
-        <p id="footer-author" class="footer-label">{footer.built}</p>
-        <ul>
-          {footer.author.map(item => (
-            <li><a href={item.href} target="_blank" rel="noopener">{item.label} <span aria-hidden="true">↗</span></a></li>
-          ))}
+      <nav aria-labelledby="footer-policies">
+        <p id="footer-policies" class="footer-label">{footer.policies}</p>
+        <ul role="list">
+          <li><a href={links.privacy}>{privacy.title}</a></li>
+          <li><button type="button" data-analytics-settings aria-haspopup="dialog" hidden>{consent.settings}</button></li>
+          <li><a href={links.trademarks}>{trademarks.title}</a></li>
+          <li><a href={links.notices}>{ui.footerNotices}</a></li>
         </ul>
       </nav>
     </div>
     <div class="footer-legal">
-      <p class="ownership">{footer.ownership}</p>
-      <p class="notice">{footer.notice}</p>
-      <p class="footer-licences"><span>{footer.copyright}.</span> <a class="licence" href={links.licence}>{footer.licence} <span class="licence-id">{site.ironafsLicence}</span></a></p>
-      <p class="footer-site-licence">{footer.siteLicence.before}<a href={links.siteLicensing}>{footer.siteLicence.label}</a>{footer.siteLicence.after}</p>
-      <p class="legal-links">
-        <a class="licence" href={links.trademarks}>{trademarks.title}</a>
-        <a class="licence" href={links.notices}>{ui.footerNotices}</a>
-        <a class="licence" href={links.privacy}>{privacy.title}</a>
-        <button type="button" data-analytics-settings aria-haspopup="dialog" hidden>{consent.settings}</button>
-      </p>
+      <p class="footer-credit">{footer.copyright} <a href={footer.author.href}>{footer.author.label} <span class="footer-arrow" aria-hidden="true">↗</span></a></p>
+      <div class="footer-software">
+        <p class="footer-label">{footer.software}</p>
+        <ul role="list">
+          {footer.licences.map(link => <li><a href={link.href}>{link.label} <span class="footer-arrow" aria-hidden="true">↗</span></a></li>)}
+        </ul>
+        <p>{footer.sharedLicence}</p>
+      </div>
+      <div class="footer-notices">
+        <p>{footer.reserved}</p>
+        <p class="notice">{footer.ownership} {footer.notice}</p>
+      </div>
     </div>
   </div>
 </footer>

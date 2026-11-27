@@ -40,72 +40,177 @@ export const menu = {
   close: 'Close menu',
 };
 
-export const built = {
+const fileReadCommit = '2f059608ebce7cbf3a4794437e2dd16420c6f00c';
+const fileReadCommitUrl = `https://github.com/ironafs/site/commit/${fileReadCommit}`;
+
+export const built: Built = {
   eyebrow: 'built',
   heading: 'How IronAFS is built',
-  intro: "One maintainer builds IronAFS with AI models from five families. A family that wrote any part of a change, or the design it was based on, can't do a required review of it. In the reviews of the project's first commit, GPT, GLM, Gemini and Claude Mythos each found defects the others missed.",
-  families: {
-    head: ['Family', 'Main models', 'Role'],
-    rows: [
-      ['Anthropic', 'Claude Mythos 5.2 for the hardest design, judgement and security reviews; Claude Opus 5.5 by default', 'Plans and assigns the work, checks findings, writes most of the code, reviews.'],
-      ['OpenAI', 'GPT-6.2 Astra for the hardest design, judgement and security reviews; GPT-6.2 Sol, via codex, by default', 'Extra implementation capacity; read-only design, research, rulings and reviews.'],
-      ['Zhipu', 'GLM 5.3', 'The usual first code reviewer; security reviews.'],
-      ['Google', 'Gemini 4 Carbon, via Antigravity', 'Implements when codex is out of quota; second-family and security reviews.'],
-      ['DeepSeek', 'DeepSeek V4.1 Flash', 'Research; second-family reviews.'],
+  approval: 'One maintainer approves every change.',
+  approvalDetail: 'Adrian Ana reviews the diff and the exact commit message before it goes into `main`.',
+  independence: 'AI models help write and review changes. Required AI reviews come from model families independent of both the design and the implementation.',
+  risk: 'The review and testing requirements depend on what could go wrong.',
+  example: {
+    kicker: 'A change to this website',
+    heading: 'Where a file read spends time',
+    steps: [
+      {
+        heading: 'Write the contract',
+        body: 'Define the two read paths and when the diagram holds during scrolling.',
+        link: { label: 'Read the contract', href: 'https://github.com/ironafs/site/issues/3' },
+      },
+      {
+        heading: 'Review the design and code',
+        body: 'Claude flagged an ambiguous viewport cutoff and later reviewed Codex’s implementation.',
+        link: { label: 'See the pull request', href: 'https://github.com/ironafs/site/pull/4' },
+      },
+      {
+        heading: 'Approve and merge',
+        body: 'The maintainer signed off. The merged commit records the model contributions and review.',
+        link: { label: 'View the merged commit', href: fileReadCommitUrl },
+      },
     ],
   },
   classes: {
-    heading: 'Every change gets a class',
-    lead: 'Each change is classed by asking: if it has a plausible mistake, what goes wrong? When in doubt, the higher class wins.',
-    head: ['Class', 'A plausible mistake…', 'Example', 'Before it can merge'],
+    heading: 'Review requirements by change class',
+    lead: 'A change takes the class that matches the most serious plausible mistake. It waits if the required independent reviewers are unavailable.',
+    change: 'Change',
+    gates: 'Before merge',
     rows: [
-      ['E Editorial', 'changes nothing the project claims or does', 'a typo, a broken link', 'the owner re-reads it; links must resolve'],
-      ['I Internal', 'changes internals only; no input, output or stored byte differs', 'a refactor, new tests', 'one review from another family; tests and lints pass'],
-      ['P Public', 'changes what users, admins or servers see', 'a new afs subcommand, an error message', 'the written contract is reviewed before any code, then one review'],
-      ['S Safety', 'breaks security, data, consistency or concurrency', 'parsing fileserver replies, token storage, cache invalidation', "the design is reviewed before code; a code review, and a second family's when tokens, the wire or cache coherency are involved; a separate security review; a test that reproduces the failure"],
-      ['R Irreversible', "can't be taken back", 'an on-disk format promised to be readable forever, a release, a licence change', "everything Safety needs, plus the owner's decision"],
+      {
+        code: 'E', name: 'Editorial',
+        example: 'Fix a typo or broken link while preserving the project’s claims and behaviour.',
+        gates: ['The maintainer re-reads the change.', 'Check that the links resolve.'],
+      },
+      {
+        code: 'I', name: 'Internal',
+        example: 'Refactor code or add tests while preserving inputs, outputs and stored data.',
+        gates: ['Get one independent code review.', 'Run tests and lints.'],
+      },
+      {
+        code: 'P', name: 'Public',
+        example: 'Add an `afs` command or change an error message that users see.',
+        gates: [
+          'Have an independent family review the written contract before coding.',
+          'Get an independent code review and pass tests and lints.',
+        ],
+      },
+      {
+        code: 'S', name: 'Safety',
+        example: 'Change how the client parses fileserver replies, stores tokens, or invalidates cached data.',
+        gates: [
+          'Have an independent family review the design before coding.',
+          'Get a code review. Tokens, protocol traffic, and cache coherency also require a second family.',
+          'Get a separate security review and reproduce the failure in a test.',
+          'Pass tests and lints.',
+        ],
+      },
+      {
+        code: 'R', name: 'Irreversible',
+        example: 'Make a first public release, change the licence, or promise to keep reading an on-disk format.',
+        gates: ['Meet all Safety requirements.', 'Get the owner’s decision on the commitment.'],
+      },
+    ],
+    link: { label: 'Read the full workflow', href: links.workflow },
+  },
+  families: {
+    heading: 'AI models and their roles',
+    lead: 'In reviews of the project’s first commit, GPT, GLM, Gemini and Claude Mythos each found issues the others missed.',
+    familyRole: 'Family and role',
+    mainModels: 'Main models',
+    rows: [
+      {
+        family: 'Anthropic',
+        role: 'Plans the work, checks findings, writes most of the code, and reviews changes.',
+        models: [
+          { name: 'Claude Opus 5.5', detail: 'Default' },
+          { name: 'Claude Mythos 5.2', detail: 'Most demanding design, judgement, and security reviews' },
+        ],
+      },
+      {
+        family: 'OpenAI',
+        role: 'Helps implement changes. Also handles read-only design, research, judgements, and reviews.',
+        models: [
+          { name: 'GPT-6.2 Sol', detail: 'Default via Codex' },
+          { name: 'GPT-6.2 Astra', detail: 'Most demanding design, judgement, and security reviews' },
+        ],
+      },
+      {
+        family: 'Zhipu',
+        role: 'Usually does the first code review.',
+        models: [
+          { name: 'GLM 5.4', detail: 'High- and max-effort reviews' },
+          { name: 'GLM 5.3 Flash', detail: 'Small helper steps' },
+        ],
+      },
+      {
+        family: 'Google',
+        role: 'Provides second-family and security reviews. Implements changes when Codex is out of quota.',
+        models: [{ name: 'Gemini 4 Carbon', detail: 'Via Antigravity' }],
+      },
+      {
+        family: 'DeepSeek',
+        role: 'Research and second-family reviews.',
+        models: [{ name: 'DeepSeek V4.1 Flash' }],
+      },
+    ],
+    links: [
+      { label: 'Model routing and attribution in AI.md', href: links.ai },
+      { label: 'Public review records', href: links.reviews },
     ],
   },
-  waits: 'If too few independent families are available, a change waits. The bar is never lowered.',
-  provenance: "No code comes from other AFS implementations or from the kernel's AFS and Rx code (ADR 0001). Permissively licensed third-party material keeps its notices and is listed in the provenance log.",
-  human: 'The human stays in charge.',
-  humanBody: 'The owner approves the diff and the exact commit message before anything lands on main. Each commit names the models whose writing remains in it (Assisted-by) and the reviews that covered it (AI-Reviewed-by); models are never listed as co-authors. The review records are public.',
-  links: [
-    { label: 'AI.md', href: links.ai },
-    { label: 'How a change is classed, made and reviewed', href: links.workflow },
-    { label: 'ADR 0001', href: links.adr0001 },
-    { label: 'Provenance log', href: links.provenance },
-    { label: 'Review records', href: links.reviews },
-  ],
-} satisfies Built;
+  provenance: {
+    heading: 'Code provenance and commit attribution',
+    code: {
+      heading: 'Where the code comes from',
+      body: 'IronAFS’s AFS and Rx code is written independently. Permissively licensed third-party material keeps its notices and gets an entry in the provenance log.',
+      links: [
+        { label: 'Source policy (ADR 0001)', href: links.adr0001 },
+        { label: 'Provenance log', href: links.provenance },
+      ],
+    },
+    attribution: {
+      heading: 'How a commit gives credit',
+      body: 'Human contributors are the authors. Commit trailers record which models contributed text or code and which reviews covered the change.',
+      dco: 'A human’s `Signed-off-by` certifies their right to contribute under the Developer Certificate of Origin (DCO).',
+      caption: `From the file-read commit \`${fileReadCommit.slice(0, 7)}\``,
+      trailerLabel: 'Commit trailer excerpt',
+      trailers: [
+        { name: 'Class', value: 'P' },
+        { name: 'Assisted-by', value: 'codex:gpt-6.2-sol' },
+        { name: 'AI-Reviewed-by', value: 'claude-code:claude-opus-5-5' },
+      ],
+      link: { label: 'View the full commit', href: fileReadCommitUrl },
+    },
+  },
+};
 
 export const follow = {
   eyebrow: 'follow',
-  heading: 'Follow along',
-  intro: 'Nothing to install yet, but plenty to read: the accepted architecture, the protocol specifications written so far, and the code as it lands. Star or watch the repository to follow along.',
-  buttons: [
-    { label: 'View source', href: links.github },
-    { label: 'Read the design', href: links.docs },
-    { label: 'Follow development', href: links.milestones },
+  heading: 'Follow IronAFS',
+  intro: 'The first read-only Linux client is in development. Use',
+  watch: 'Watch',
+  watchDetail: 'on the GitHub repository to get updates.',
+  primary: { label: 'Open on GitHub', href: links.github },
+  resources: [
+    { label: 'Track milestones', description: 'See what’s in progress and what’s planned.', href: links.milestones },
+    { label: 'Read the design docs', description: 'Explore the architecture decisions and protocol specs.', href: links.docs },
   ],
-  licence: 'IronAFS is free software under the GNU General Public License, version 3 or later (GPL-3.0-or-later).',
 };
 
 export const footer = {
-  site: 'Site',
-  project: 'Project',
-  built: 'Built by Adrian Ana',
-  author: [
-    { label: 'adrianana.com', href: links.author },
-    { label: 'LinkedIn', href: links.linkedin },
+  onPage: 'On this page',
+  homepage: 'On the homepage',
+  policies: 'Site policies',
+  copyright: '© 2026',
+  author: { label: site.author, href: links.author },
+  software: 'Software licences',
+  licences: [
+    { label: 'IronAFS code', href: links.licence },
+    { label: 'Website code', href: links.siteLicensing },
   ],
-  copyright: 'Copyright © 2026 Adrian Ana',
-  licence: 'IronAFS:',
-  siteLicence: {
-    before: 'This website\'s code is GPL-3.0-or-later (',
-    label: 'see the licence',
-    after: "). Any copyright in the site's own text and images is reserved, unless noted otherwise.",
-  },
+  sharedLicence: `Both use ${site.ironafsLicence}.`,
+  reserved: 'Any copyright in the site’s own text and images is reserved, unless noted otherwise.',
   ownership: 'IronAFS™ and the IronAFS logo are trademarks of Adrian Ana.',
   notice: 'AFS is the Andrew File System. IronAFS is an independent project, not affiliated with or endorsed by IBM or the OpenAFS Foundation. Other trademarks belong to their respective owners.',
 } satisfies Footer;

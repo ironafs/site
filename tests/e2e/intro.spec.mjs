@@ -61,6 +61,8 @@ test('JavaScript disabled: the poster is visible and the console is complete', a
   await expect(page.locator('#hero')).toHaveAttribute('data-phase', 'cooled');
   expect(await typed(page)).toEqual(LINES);
   expect(await page.locator('#console-typed').evaluate(el => getComputedStyle(el).visibility)).toBe('visible');
+  await expect(page.locator('#replay')).toBeHidden();
+  await expect(page.locator('#hero-pause')).toBeHidden();
   expect(await page.locator('.hero-poster').evaluate(el => ({ opacity: getComputedStyle(el).opacity, done: el.complete, w: el.naturalWidth }))).toEqual({ opacity: '1', done: true, w: expect.any(Number) });
   await context.close();
 });
@@ -152,6 +154,9 @@ test('#replay restarts typing, labelled for assistive tech', async ({ page }) =>
   await expect(page.locator('#hero')).toHaveAttribute('data-phase', 'cooled');
   const replay = page.locator('#replay');
   await expect(replay).toHaveAttribute('aria-label', ui.replay);
+  await expect(replay).toContainText('Replay');
+  await replay.focus();
+  await expect(replay).toHaveCSS('outline-offset', '-3px');
   const box = await replay.boundingBox();
   expect(box.width).toBeGreaterThanOrEqual(44);
   expect(box.height).toBeGreaterThanOrEqual(44);
@@ -164,6 +169,47 @@ test('#replay restarts typing, labelled for assistive tech', async ({ page }) =>
   }).toBe(true);
   await expect(page.locator('#hero')).toHaveAttribute('data-phase', 'cooled');
   expect(await typed(page)).toEqual(LINES);
+});
+
+test('on a narrow phone the painted frame grows inside the console while the art keeps its place', async ({ page }, info) => {
+  test.skip(!info.project.use.hasTouch, 'phone projects');
+  await page.setViewportSize({ width: 320, height: 660 });
+  await withoutScene(page);
+  await page.addInitScript(() => {
+    const observer = new MutationObserver(records => {
+      const replay = records.find(({ target }) => target.id === 'replay' && !target.hidden)?.target;
+      if (!replay) return;
+      const { x, y, width, height } = replay.getBoundingClientRect();
+      window.__replayReady = replay.contains(document.elementFromPoint(x + width / 2, y + height / 2));
+      observer.disconnect();
+    });
+    observer.observe(document, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
+  });
+  await page.goto('/');
+  const term = page.locator('#hero .term');
+  const measure = () => term.evaluate(el => {
+    const { top, bottom, left, width } = el.getBoundingClientRect();
+    return {
+      height: bottom - top,
+      coversReservedBottom: el.contains(document.elementFromPoint(left + width / 2, bottom - 4)),
+      artTop: document.querySelector('#hero .hero-art').getBoundingClientRect().top,
+    };
+  });
+  await expect.poll(async () => (await measure()).coversReservedBottom, { timeout: 2500 }).toBe(false);
+  expect(await page.evaluate(() => window.__replayReady)).toBe(true);
+  await expect(page.locator('#hero .term-title')).toHaveText('Kernel crash examples');
+  const early = await measure();
+  for (const selector of ['#hero-pause', '#replay']) {
+    const button = await page.locator(selector).boundingBox();
+    expect(button.width).toBeGreaterThanOrEqual(44);
+    expect(button.height).toBeGreaterThanOrEqual(44);
+    expect(button.y + button.height).toBeLessThan(early.artTop);
+  }
+  await expect(page.locator('#hero')).toHaveAttribute('data-phase', 'cooled', { timeout: 8000 });
+  await expect.poll(async () => (await measure()).coversReservedBottom).toBe(true);
+  const finished = await measure();
+  expect(finished.height).toBeCloseTo(early.height, 0);
+  expect(finished.artTop).toBeCloseTo(early.artTop, 0);
 });
 
 test('the poster carries width and height (no layout shift) and the console stays inside the viewport width', async ({ page }) => {

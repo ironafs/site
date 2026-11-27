@@ -20,6 +20,7 @@
     /* the pinned sections' scroll lengths */
     html:not(.static) .story.h-160:not(.story--flow) { height: 160vh; }
     html:not(.static) .story.h-190:not(.story--flow) { height: 190vh; }
+    html:not(.static) .story.h-220:not(.story--flow) { height: 220vh; }
     html:not(.static) .story.h-300:not(.story--flow) { height: 300vh; }
     html:not(.static) .story.h-440:not(.story--flow) { height: 440vh; }
     html:not(.static) .story.h-560:not(.story--flow) { height: 560vh; }

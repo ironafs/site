@@ -8,12 +8,12 @@ import { allowFrames, unseenLines } from './util.mjs';
 
 const costCards = [story.cost.windows, story.cost.macos, story.cost.linux, story.cost.ironafs];
 const HEADINGS = [
-  "A driver you build yourself won't load.",
+  'New kernel drivers need Microsoft signing.',
   'Third-party kexts need Reduced Security.',
   'A kernel update can mean a rebuild.',
   'IronAFS ships no kernel code.',
 ];
-const DESIGN_LINE = 'planned: Linux first (FUSE), then macOS (FSKit), then Windows (SMB, if testing passes)';
+const DESIGN_LINE = 'planned: Linux first (FUSE), then macOS (FSKit), then Windows (local SMB)';
 // the elements that play in each card (the steps), and the macOS schematic's switch and tick
 const STEPS = '.on';
 
@@ -52,6 +52,7 @@ async function sweep(page, step = 0.02) {
         s: scrollY,
         tops: cards.map(c => c.getBoundingClientRect().top),
         steps: cards.map(c => [...c.querySelectorAll('.on')].map(el => Number(getComputedStyle(el).opacity))),
+        highlights: cards.map(c => [...c.querySelectorAll('.vis .on')].map(el => getComputedStyle(el).borderColor !== 'rgb(56, 59, 71)')),
         typed: [typed.getBoundingClientRect().width, typed.scrollWidth],
         filters: cards.map(c => getComputedStyle(c).filter),
         rotate: cards.map(c => getComputedStyle(c).rotate),
@@ -85,23 +86,21 @@ for (const mode of ['static', 'default']) {
       await expect(page.locator('#cost .eyebrow')).toHaveText('/why · shipping kernel code');
       await expect(page.locator('#cost .scard')).toHaveCount(4);
       await expect(page.locator('#cost .scard h3')).toHaveText(HEADINGS);
-      await expect(page.locator('#cost .scard .os')).toHaveText(costCards.map(card => card.os));
+      await expect(page.locator('#cost .scard .os')).toHaveText(costCards.map(card => 'platform' in card ? `${card.os} ${card.platform}` : card.os));
       await expect(page.locator('#cost .scard .lede')).toHaveText(costCards.map(card => card.lede));
       const pipe = page.locator('#cost .scard').nth(0).locator('.pipe');
-      await expect(pipe.locator(':scope > *')).toHaveCount(5);
-      await expect(pipe.locator(':scope > :not(.branch, .warn)')).toHaveText(['01 your build', '02 company account + EV certificate', '03 Microsoft signs it']);
-      await expect(pipe.locator('.branch')).toHaveText('or: your own certificate + Test Mode (Secure Boot off)');
-      await expect(pipe.locator('.warn')).toContainText('April 2026: old cross-signed drivers lose default trust (allow list)');
+      await expect(pipe.locator(':scope > li')).toHaveText(story.cost.windows.steps.map((step, i) => `${i + 1} ${step}`));
+      await expect(page.getByRole('link', { name: story.cost.windows.testing.link.label })).toHaveAttribute('href', story.cost.windows.testing.link.href);
       await expect(page.locator('#cost .scard').nth(1)).toContainText(story.cost.macos.dialog.allow);
-      await expect(page.locator('#cost .scard').nth(1).locator('.steps > *')).toHaveText(story.cost.macos.steps);
+      await expect(page.locator('#cost .scard').nth(1)).toContainText(story.cost.macos.dialog.label);
     });
 
     test('the Debian workflow is labelled and afs status shows the current state', async ({ page }) => {
       const debian = page.locator('#cost [data-illustrative="debian"]');
       await expect(debian).toHaveCount(1);
-      await expect(debian.locator('.ln').first()).toHaveText('Debian, DKMS and Secure Boot');
-      await expect(debian.locator('.ln.branch.e')).toHaveText('if the module no longer builds, it waits for a fix');
-      await expect(debian).toContainText(story.cost.linux.workflow.lines[4].text);
+      await expect(page.locator('#cost-linux ~ .foot').getByRole('link', { name: 'Debian Secure Boot' })).toBeVisible();
+      await expect(debian.locator('.cost-panel-note')).toContainText(story.cost.linux.workflow.failure);
+      await expect(debian).toContainText(story.cost.linux.workflow.lines.at(-1).text);
       const status = page.locator('#cost .afs');
       await expect(status).toHaveCount(1);
       await expect(status.locator('.typed')).toHaveText(story.cost.ironafs.command);
@@ -111,10 +110,8 @@ for (const mode of ['static', 'default']) {
       await expect(status.locator('.bigout > span')).toHaveText(['ironafsd: not running yet · M2a in progress', DESIGN_LINE]);
     });
 
-    // : the hero's console frame (border, shadow, overflow: hidden) once matched this <pre class="term">
-    // too; the workflow is plain text in the card's panel.
-    test('the Debian workflow is plain text in its panel: no console frame, nothing clipped', async ({ page }) => {
-      const pre = await page.locator('#cost [data-illustrative="debian"]').evaluate(el => {
+    test('the Debian workflow fits its panel without a console frame or clipped text', async ({ page }) => {
+      const pre = await page.locator('#cost .cost-terminal').evaluate(el => {
         const cs = getComputedStyle(el);
         return { border: cs.borderTopWidth, shadow: cs.boxShadow, overflow: `${cs.overflowX} ${cs.overflowY}`, clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 };
       });
@@ -180,7 +177,7 @@ test('reduced motion: four cards in normal flow, every step at full opacity, the
   }
   await cards.nth(0).scrollIntoViewIfNeeded();
   const steps = await page.locator(`#cost ${STEPS}`).evaluateAll(els => els.map(el => Number(getComputedStyle(el).opacity)));
-  expect(steps.length).toBeGreaterThanOrEqual(15);
+  expect(steps).toHaveLength(13);
   expect(steps.every(o => o === 1)).toBe(true);
   // the macOS schematic at its final state: Reduced chosen, the box ticked
   expect(await page.locator('#cost .mac .doff').evaluate(el => Number(getComputedStyle(el).opacity))).toBe(0);
@@ -285,13 +282,17 @@ for (const size of [{ width: 844, height: 390 }, { width: 1280, height: 360 }, {
     await page.setViewportSize(size);
     await page.goto('/');
     await frame(page);
-    const count = await page.locator('#cost .stack :is(.os, h3, .lede, .foot, .pipe li, .mac p, .steps li, .term .ln, .bigcmd, .bigout span)').count();
+    const count = await page.locator('#cost .stack :is(.os, h3, .lede, .foot, .pipe li, .mac p, .cost-terminal li, .cost-panel-note, .bigcmd, .bigout span)').count();
     expect(count).toBeGreaterThanOrEqual(30);
     expect(await unseenLines(page, '#cost .stack')).toEqual([]);
     const flow = await page.locator('#cost .stack').evaluate(el => el.classList.contains('stack--flow'));
-    // the two short windows: the base layer (no pin, so no flow class either); a 1280x720 window keeps the pinned stack
-    if (size.height < 620) expect(await enhanced(page)).toBe(false);
-    expect(flow).toBe(false);
+    if (size.height < 620) {
+      expect(await enhanced(page)).toBe(false);
+      expect(flow).toBe(false);
+    } else {
+      const clearance = await page.locator('#cost .stack').evaluate(el => parseFloat(getComputedStyle(el).getPropertyValue('--analytics-clearance')) || 0);
+      expect(flow).toBe(clearance > 720 - (0.84 * 720 + 66));
+    }
   });
 }
 
@@ -299,6 +300,7 @@ test.describe('enhancement', () => {
   test.beforeEach(async ({ page }) => {
     // the sweeps take one sample per 2% of the viewport over the whole stack: room for a loaded machine
     test.setTimeout(150_000);
+    await page.addInitScript(() => localStorage.setItem('ironafs-analytics-choice-v1', '{"value":"denied"}'));
     await page.goto('/');
     test.skip(!(await enhanced(page)), 'the enhancement is off here: the base layer is the contract');
   });
@@ -322,23 +324,17 @@ test.describe('enhancement', () => {
     expect(steps.every(o => o === 1)).toBe(true);
   });
 
-  test('each card is pinned while its steps go from 0.15 to 1, and plays only while pinned', async ({ page }) => {
+  test('each platform card highlights its steps in sequence and keeps them readable', async ({ page }) => {
     const { vh, out } = await sweep(page);
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
       const run = pinnedRun(out, i);
       expect(run.at(-1).s - run[0].s, `card ${i} pinned for at least 10vh`).toBeGreaterThanOrEqual(0.1 * vh);
-      // at the start of the pin every step is still at 0.15; inside the pin, all of them reach 1
-      expect(Math.max(...run[0].steps[i]), `card ${i} steps at the pin's start`).toBeLessThanOrEqual(0.16);
-      expect(Math.min(...run[0].steps[i]), `card ${i} steps at the pin's start`).toBeGreaterThanOrEqual(0.14);
-      const lit = run.find(sample => Math.min(...sample.steps[i]) >= 0.99);
-      expect(lit, `card ${i}: every step reaches 1 while pinned`).toBeTruthy();
-      // the steps light in turn: some sample in the pin has the first step lit and the last not yet
-      expect(run.some(sample => sample.steps[i][0] >= 0.99 && sample.steps[i].at(-1) <= 0.5), `card ${i} in turn`).toBe(true);
-      // a step between 0.15 and 1 only while its card is pinned
-      const runS = new Set(run.map(sample => sample.s));
-      const playing = out.filter(sample => sample.steps[i].some(o => o > 0.16 && o < 0.99));
-      expect(playing.length, `card ${i} plays`).toBeGreaterThan(0);
-      for (const sample of playing) expect(runS.has(sample.s), `card ${i} plays at ${sample.s} outside its pin`).toBe(true);
+      expect(run.every(sample => sample.steps[i].every(opacity => opacity === 1))).toBe(true);
+      const steps = run[0].highlights[i];
+      const firstHighlights = steps.map((_, step) => run.findIndex(sample => sample.highlights[i][step]));
+      expect(firstHighlights.every(sample => sample >= 0)).toBe(true);
+      expect(new Set(firstHighlights).size).toBe(steps.length);
+      expect(firstHighlights).toEqual([...firstHighlights].sort((a, b) => a - b));
     }
   });
 

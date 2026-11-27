@@ -9,13 +9,10 @@ import { BUDGET_BYTES, heroBundleGzip } from '../../tools/bundle-size.mjs';
 
 const tool = fileURLToPath(new URL('../../tools/bundle-size.mjs', import.meta.url));
 
-test('the 3D bundle (three.js, the hero scene, the Rust word, the glyphs) is built, split from the page scripts and within 300 KB gzip', () => {
+test('the 3D bundle (three.js, the hero scene and the glyphs) is built, split from the page scripts and within 300 KB gzip', () => {
   const { chunks, total } = heroBundleGzip();
   assert.ok(chunks.some(chunk => chunk.file.startsWith('scene.')), 'the scene chunk is a dynamic import of the hero loader');
-  const rust = chunks.filter(chunk => chunk.roots.includes('rustword'));
-  assert.ok(rust.some(chunk => !chunk.roots.includes('hero')), 'the Rust word\'s own scene chunk (a dynamic import of its loader) is counted');
-  const three = chunks.filter(chunk => chunk.roots.includes('hero') && chunk.roots.includes('rustword'));
-  assert.ok(three.reduce((sum, chunk) => sum + chunk.gzip, 0) > 50 * 1024, 'three.js is one chunk the hero and the Rust word share, counted once');
+  assert.ok(chunks.every(chunk => chunk.roots.length === 1 && chunk.roots[0] === 'hero'), 'only the hero reaches the 3D bundle');
   assert.equal(new Set(chunks.map(chunk => chunk.file)).size, chunks.length, 'no chunk counted twice');
   assert.ok(total > 50 * 1024, `three.js is in it (${total} bytes gzip)`);
   assert.ok(total <= BUDGET_BYTES, `hero bundle ${total} bytes gzip is over ${BUDGET_BYTES}`);

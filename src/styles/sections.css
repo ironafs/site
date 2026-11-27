@@ -74,8 +74,7 @@
   .logo { font-size: 34.5px; }
 }
 
-/* Sections: /built and /follow, restyled to v2's type and cards. They follow the visitor's theme
-   through the site tokens; only the story before them is dark in both themes. */
+/* Sections and type shared by the closing sections and document pages. */
 .section { padding-block: clamp(3rem, 8vw, 6rem); border-block-start: 1px solid var(--line); }
 .eyebrow { font-family: var(--font-mono); font-weight: 500; font-size: 0.875rem; color: var(--muted); margin: 0 0 0.75rem; }
 .section .eyebrow { color: var(--rust); margin-bottom: 0.625rem; }
@@ -83,67 +82,323 @@
 .lead { font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem); line-height: 1.6; max-width: 46rem; }
 .note { color: var(--muted); font: 0.8125rem/1.5 var(--font-mono); }
 
-/* /built: one table card on wide containers, a card per row on narrow ones */
-.table-wrap { container-type: inline-size; margin-block: 1.75rem 1rem; }
-.built-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: start; }
-.built-table thead { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
-.built-table tr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.25rem; padding: 18px 20px; margin-block-end: 0.75rem; background: var(--bg-raised); border: 1px solid var(--line); border-radius: 20px; }
-.built-table th, .built-table td { display: block; padding: 0; text-align: start; overflow-wrap: anywhere; }
-.built-table tbody th { font: 700 1.125rem/1.3 var(--font-display); }
-.built-table td::before { content: attr(data-label) ': '; font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted); }
-@container (min-width: 40rem) {
-  .built-table { background: var(--bg-raised); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
-  .built-table thead { position: static; inline-size: auto; block-size: auto; clip-path: none; overflow: visible; }
-  .built-table tr { display: table-row; padding: 0; margin: 0; background: none; border: 0; border-radius: 0; }
-  .built-table th, .built-table td { display: table-cell; padding: 0.875rem 1.25rem; border-block-end: 1px solid var(--line); vertical-align: top; }
-  .built-table tbody tr:last-child > * { border-block-end: 0; }
-  .built-table thead th { font: 500 0.8125rem/1.4 var(--font-mono); color: var(--muted); }
-  .built-table td::before { content: none; }
-  /* a row's name breaks between words only: breaking anywhere let the table size its column to the widest letter */
-  .built-table tbody th { overflow-wrap: normal; }
-}
-.built-human { margin-block: 1.75rem 1.25rem; max-width: 46rem; padding: 22px 24px; background: var(--bg-raised); border: 1px solid color-mix(in srgb, var(--rust) 60%, var(--line)); border-radius: 20px; }
-.built-human .lead { margin: 0; }
-.built-class-heading { margin-block: 2.5rem 0.75rem; }
-.built-human h3 { margin: 0 0 0.75rem; }
-.built-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 1.25rem; }
-.built-links a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
-
-/* /follow: v2's pill buttons, the first filled */
-.buttons, .story .buttons { list-style: none; margin: 1.5rem 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .button {
   display: inline-flex; align-items: center; min-height: 44px; padding: 0.6875rem 1.25rem;
   border: 1px solid var(--line); border-radius: 99px; color: var(--fg); text-decoration: none;
   font-family: var(--font-mono); font-weight: 500; font-size: 0.9375rem;
   max-width: 100%; overflow-wrap: anywhere;
 }
-#follow .buttons li:first-child .button { background: var(--rust); border-color: var(--rust); color: var(--bg); }
 .button:hover { text-decoration: underline; }
-.buttons li { min-width: 0; max-width: 100%; }
-.clone { padding: 0.875rem 1.25rem; background: var(--bg-raised); border: 1px solid var(--line); border-radius: 14px; overflow-wrap: anywhere; max-width: 46rem; }
 
-/* Footer: v2's mono type; the menu's paths and links, the author, then the legal lines */
-.site-footer { padding-block: 2.5rem 3rem; border-block-start: 1px solid var(--line); color: var(--muted); font: 0.8125rem/1.6 var(--font-mono); }
-.site-footer a { color: var(--fg); }
-/* the groups stack on phones, and sit side by side as columns from 761 px */
-.footer-groups { display: grid; gap: 1.5rem; margin-block-end: 2rem; }
-.footer-label { margin: 0 0 0.25rem; }
-.footer-groups ul { list-style: none; margin: 0; padding: 0; }
-/* each row is a 44 px tap target, as the menu's rows are */
-.footer-groups a { display: flex; align-items: center; gap: 0.4em; min-height: 44px; font-size: 0.9375rem; font-weight: 500; text-decoration: none; }
-.footer-groups a:hover { text-decoration: underline; }
-.footer-licences { display: flex; flex-wrap: wrap; align-items: center; gap: 0 1rem; }
-.footer-licences .licence { display: inline-block; min-height: 44px; max-width: 100%; padding-block: 0.75rem; }
-.footer-site-licence a { padding-block: 14px; }
-.licence-id { white-space: nowrap; }
-@media (min-width: 761px) {
-  .footer-groups { grid-template-columns: repeat(3, max-content); column-gap: clamp(3rem, 8vw, 7rem); }
+/* Build process and its public references. */
+#built {
+  --built-accent: light-dark(#9e431f, #ffb58f);
+  padding-block: clamp(2.75rem, 6vw, 5.75rem) clamp(2.75rem, 5vw, 4.25rem);
 }
-.site-footer .notice { max-width: 46rem; margin-top: 1.25rem; font-family: var(--font-body); font-size: 0.8125rem; }
+#built .built-overview {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  border-block-start: 1px solid var(--line);
+  padding-block-start: clamp(1.1rem, 2.8vw, 2.4rem);
+}
+#built .built-copy { min-width: 0; }
+#built .built-copy h2 { margin: 0 0 0.9rem; text-wrap: balance; }
+#built .built-copy p:not(.eyebrow) { max-width: 43ch; margin: 0 0 0.78rem; }
+#built .built-copy .lead { font-size: clamp(1.12rem, 0.98rem + 0.45vw, 1.36rem); line-height: 1.45; }
+#built .built-copy p:not(.eyebrow, .lead) { color: var(--muted); }
+#built .built-copy p:last-child { margin: 0; }
+#built .built-example {
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 2.1rem);
+  border: 1px solid var(--line);
+  border-block-start: 2px solid var(--built-accent);
+  border-radius: 1.1rem;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--built-accent) 8%, var(--bg-raised)), var(--bg-raised) 61%);
+}
+#built .built-kicker {
+  color: var(--built-accent);
+  font: 500 0.8rem/1.4 var(--font-mono);
+  margin: 0 0 0.4rem;
+}
+#built .built-example h3 {
+  margin: 0 0 0.55rem;
+  font: 700 clamp(1.36rem, 1.06rem + 1.03vw, 2rem)/1.13 var(--font-display);
+  text-wrap: balance;
+}
+#built .built-steps { margin: 0; padding: 0; list-style: none; }
+#built .built-steps li {
+  border-block-start: 1px solid var(--line);
+  padding-block: 0.73rem 0.25rem;
+}
+#built .built-steps h4 { margin: 0 0 0.2rem; font: 700 1rem/1.3 var(--font-display); }
+#built .built-steps p { margin: 0; color: var(--muted); font-size: 0.94rem; line-height: 1.45; }
+#built .built-steps a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  min-height: 44px;
+  min-width: 44px;
+  color: var(--built-accent);
+  font: 550 0.78rem/1.25 var(--font-mono);
+  text-decoration: none;
+}
+#built .built-steps a:hover { color: var(--fg); }
+#built .built-details { margin-block-start: clamp(1.35rem, 3.8vw, 2.8rem); border-block-start: 1px solid var(--line); }
+#built .built-details details { border-block-end: 1px solid var(--line); }
+#built .built-details details:not([open]) > .built-detail { display: none; }
+#built .built-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 52px;
+  padding: 0.6rem 0.25rem;
+  cursor: pointer;
+  color: var(--fg);
+  font: 650 clamp(0.97rem, 0.9rem + 0.32vw, 1.12rem)/1.35 var(--font-display);
+  list-style: none;
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--built-accent) 17%, transparent);
+}
+#built .built-details summary::-webkit-details-marker { display: none; }
+#built .built-details summary:hover,
+#built .built-details details[open] summary { color: var(--built-accent); }
+#built .built-details summary span { position: relative; width: 0.85rem; height: 0.85rem; flex: none; margin-inline-end: 0.3rem; }
+#built .built-details summary span::before,
+#built .built-details summary span::after {
+  position: absolute;
+  inset: 50% 0 auto;
+  border-block-start: 1.5px solid currentColor;
+  content: '';
+}
+#built .built-details summary span::after { rotate: 90deg; }
+#built .built-details details[open] summary span::after { display: none; }
+#built .built-detail { padding: 0.2rem 0.25rem 0.8rem; }
+#built .built-detail p { max-width: 71ch; margin: 0 0 0.5rem; color: var(--muted); }
+#built .built-detail a { color: var(--built-accent); text-underline-offset: 3px; }
+#built .built-reference-columns { display: none; }
+#built .built-reference-list { margin: 0.85rem 0 0.4rem; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 1rem; background: var(--bg-raised); }
+#built .built-reference-list > li {
+  display: grid;
+  gap: 0.7rem;
+  padding: clamp(1rem, 2vw, 1.4rem) clamp(0.85rem, 2.2vw, 1.65rem);
+}
+#built .built-reference-list > li + li { border-block-start: 1px solid var(--line); }
+#built .built-reference-list h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.42rem;
+  font: 700 1.12rem/1.3 var(--font-display);
+}
+#built .built-class-list h4 span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--built-accent);
+  background: color-mix(in srgb, var(--built-accent) 12%, var(--bg-raised));
+  border-radius: 0.38rem;
+  font: 650 0.81rem/1 var(--font-mono);
+}
+#built .built-reference-list p { margin: 0; color: var(--muted); font-size: 0.96rem; }
+#built .built-class-gates { margin: 0; padding-inline-start: 1.18rem; color: var(--fg); font-size: 0.95rem; line-height: 1.5; }
+#built .built-class-gates li + li { margin-block-start: 0.3rem; }
+#built .built-class-gates li::marker { color: var(--built-accent); }
+#built .built-model-picks { display: grid; gap: 0.55rem; margin: 0; }
+#built .built-model-picks div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.08rem 0.65rem; }
+#built .built-model-picks dt,
+#built .built-reference-list .built-model-single { margin: 0; color: var(--fg); font-weight: 650; }
+#built .built-model-picks dd { margin: 0; color: var(--muted); font-size: 0.9rem; }
+#built .built-provenance { display: grid; gap: clamp(1.05rem, 3.4vw, 2.6rem); padding-block: 0.85rem 1.25rem; }
+#built .built-provenance > div { min-width: 0; }
+#built .built-provenance h4 { margin: 0 0 0.5rem; font: 700 1.15rem/1.3 var(--font-display); }
+#built .built-trailer-example {
+  margin: 0.85rem 0 0.4rem;
+  padding: 0.85rem clamp(0.7rem, 2vw, 1.15rem);
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: var(--bg-raised);
+}
+#built .built-trailer-example figcaption { margin: 0 0 0.45rem; color: var(--built-accent); font: 550 0.8rem/1.4 var(--font-mono); }
+#built .built-trailer-example dl { margin: 0; color: var(--fg); font: 500 clamp(0.75rem, 0.69rem + 0.22vw, 0.88rem)/1.5 var(--font-mono); }
+#built .built-trailer-example dl div {
+  display: grid;
+  grid-template-columns: 15ch minmax(0, 1fr);
+  gap: 0.55rem;
+  padding-block: 0.32rem;
+  border-block-start: 1px solid var(--line);
+}
+#built .built-trailer-example dt { white-space: nowrap; }
+#built .built-trailer-example dd { margin: 0; overflow-wrap: anywhere; }
+#built .built-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 1.25rem; }
+#built .built-links a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+#built .built-provenance .built-links { gap: 0.35rem 0.5rem; }
+#built .built-provenance .built-links a {
+  gap: 0.42rem;
+  padding-inline: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+#built .built-provenance .built-links a:hover { border-color: var(--built-accent); }
+@media (max-width: 359px) {
+  #built .built-trailer-example dl div { grid-template-columns: minmax(0, 1fr); gap: 0.08rem; }
+}
+@media (min-width: 760px) {
+  #built .built-reference-columns,
+  #built .built-reference-list > li { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.2fr); align-items: start; column-gap: 1.5rem; }
+  #built .built-reference-columns {
+    margin-block-start: 1rem;
+    padding-inline: clamp(0.85rem, 2.2vw, 1.65rem);
+    color: var(--muted);
+    font: 500 0.79rem/1.4 var(--font-mono);
+  }
+  #built .built-reference-list { margin-block-start: 0.45rem; }
+  #built .built-provenance { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.2fr); }
+}
+@media (min-width: 860px) {
+  #built .built-overview { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr); align-items: start; }
+}
+@media (min-width: 1100px) {
+  #built .built-steps li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 0.9rem; padding-block-end: 0.73rem; }
+  #built .built-steps :is(h4, p) { grid-column: 1; }
+  #built .built-steps a { grid-area: 1 / 2 / 3; align-self: center; }
+}
 
-/* The rusting wordmark, large (RustLogo.astro): at the end of /follow and on the 404 page; it follows the theme */
+/* Follow actions and compact site navigation. */
+#follow {
+  padding-block: 0 clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.follow-layout {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: center;
+  border-block-start: 2px solid var(--rust);
+  padding-block-start: clamp(1.5rem, 4vw, 3rem);
+}
+
+.follow-layout h2 { margin-block: 0 0.65rem; }
+.follow-lead { max-width: 40ch; margin: 0 0 1.2rem; }
+#follow .follow-primary {
+  gap: 0.75rem;
+  background: var(--rust);
+  border-color: var(--rust);
+  color: var(--bg);
+}
+
+.follow-resources {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--bg-raised);
+}
+
+.follow-resources li + li { border-block-start: 1px solid var(--line); }
+.follow-resources a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "title arrow" "description arrow";
+  gap: 0.25rem 1rem;
+  align-items: center;
+  padding: clamp(0.85rem, 2vw, 1.35rem) clamp(1rem, 2.3vw, 1.65rem);
+  color: var(--fg);
+  text-decoration: none;
+}
+.follow-resources li:first-child a { border-radius: 1rem 1rem 0 0; }
+.follow-resources li:last-child a { border-radius: 0 0 1rem 1rem; }
+.follow-resources a:hover { background: color-mix(in srgb, var(--rust) 9%, var(--bg-raised)); }
+.follow-resources a:focus-visible { outline-offset: -3px; }
+.follow-resource-title { grid-area: title; font: 700 1.15rem/1.25 var(--font-display); }
+.follow-resource-description { grid-area: description; color: var(--muted); font-size: 0.9375rem; }
+.follow-arrow { grid-area: arrow; color: var(--rust); font-family: var(--font-mono); }
+
+.site-footer {
+  padding-block: clamp(1.5rem, 4vw, 2.75rem);
+  border-block-start: 1px solid var(--line);
+  color: var(--muted);
+  background-color: var(--bg-raised);
+  background-image: linear-gradient(135deg, color-mix(in srgb, var(--rust) 4%, var(--bg-raised)), var(--bg) 70%);
+  font: 0.875rem/1.5 var(--font-body);
+}
+
+.site-footer :is(.footer-groups, .footer-legal) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem 2rem;
+}
+
+.site-footer .footer-groups { margin-block-end: 1rem; }
+
+.site-footer .footer-label {
+  margin: 0;
+  font: 500 0.8125rem/1.5 var(--font-mono);
+}
+
+.site-footer ul {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-footer li:has(> button[hidden]) { display: none; }
+.site-footer :is(a, button):not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: 600 0.875rem/1.3 var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+}
+.site-footer :is(a, button):hover {
+  color: var(--rust);
+  text-decoration: none;
+}
+
+.site-footer :is(.footer-credit, .footer-software) a { gap: 0.35em; }
+.site-footer .footer-arrow { color: var(--rust); font: 0.8em/1 var(--font-mono); }
+.site-footer .footer-legal {
+  grid-template-areas: "credit" "software" "notices";
+  border-block-start: 1px solid var(--line);
+  padding-block-start: 1rem;
+}
+.site-footer .footer-credit { grid-area: credit; margin: 0; }
+.site-footer .footer-software { grid-area: software; }
+.site-footer .footer-software p { margin: 0; }
+.site-footer .footer-notices { grid-area: notices; max-width: 73ch; }
+.site-footer .footer-notices p { margin: 0; }
+.site-footer .footer-notices p + p { margin-block-start: 0.5rem; }
+
+@media (forced-colors: active) {
+  .site-footer a:not([hidden]) { color: LinkText; }
+  .site-footer button:not([hidden]) { color: ButtonText; }
+}
+
+@media (min-width: 48rem) {
+  .follow-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+@media (min-width: 58rem) {
+  .site-footer :is(.footer-groups, .footer-legal) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .site-footer .footer-legal { grid-template-areas: "credit software" "notices software"; }
+}
+
+/* The large wordmark on the 404 page follows the theme. */
 .sign-off { margin-block: 2.5rem 0; }
-/* the wordmark is 3.886 em wide: never wider than the container at 360 px and 200% zoom */
+/* The wordmark is 3.886 em wide. */
 .logo-large { font-size: min(clamp(2.75rem, 1.6rem + 4vw, 5rem), (100vw - 2 * var(--gutter)) / 4); }
 .not-found .sign-off { margin-block: 0 2rem; }
 
@@ -155,13 +410,6 @@
   .keycap, .button { border-color: CanvasText; }
 }
 
-.site-footer .ownership { color: var(--fg); }
-.site-footer .legal-links { display: flex; flex-wrap: wrap; gap: 0 1rem; }
-.site-footer .legal-links :is(a, button:not([hidden])) { display: inline-flex; align-items: center; min-height: 44px; padding-block: 0; }
-.site-footer .legal-links button {
-  padding-inline: 0; border: 0; background: none; color: var(--fg); font: inherit; text-decoration: underline;
-  text-underline-offset: 0.2em; cursor: pointer;
-}
 .afs-context { display: grid; row-gap: 0.25rem; max-width: 48rem; margin-block: 1.5rem; }
 .afs-context dt { font-weight: 700; }
 .afs-context dd { margin: 0 0 0.75rem; color: var(--story-text); }
@@ -171,37 +419,14 @@
 }
 .trademarks :is(p, ul), .privacy :is(p, ul) { max-width: 70ch; }
 
-/* Editorial openings share the story's heading/body rhythm. */
-.section-intro { display: grid; gap: 1rem; padding-block-start: 1.5rem; border-block-start: 2px solid var(--rust); }
-.section-intro h2 { margin-bottom: 0; }
-.section-intro .lead { margin: 0; }
-#follow .section-body > :last-child { margin-bottom: 0; }
+/* Story and document headings. */
 #what .stage, #speed .stage { max-width: calc(1360px + 2 * var(--gutter)); }
-#what h2, #speed h2, .section-intro h2 { max-width: none; }
+#what h2, #speed h2 { max-width: none; }
 #what .stage { border-block-start: 2px solid var(--rust); }
 #what .what-body { min-width: 0; }
 #what .what-body > :last-child { margin-bottom: 0; }
 #what .what-body > :first-child { margin-top: 0; }
 
-/* Navigation leads; the legal material closes the footer. */
-.site-footer {
-  padding-block: clamp(3rem, 6vw, 5rem); font-size: 0.9375rem;
-  border-block-start: 3px solid var(--rust);
-  background-color: var(--bg-raised);
-  background-image: linear-gradient(135deg, color-mix(in srgb, var(--rust) 7%, var(--bg-raised)), var(--bg) 55%);
-}
-.footer-signature { margin-bottom: clamp(2.5rem, 5vw, 4rem); }
-.footer-wordmark { font-size: min(clamp(3rem, 2rem + 3vw, 4.5rem), (100vw - 2 * var(--gutter)) / 4); }
-.footer-groups { gap: 2rem; margin-block-end: clamp(3rem, 6vw, 5rem); }
-.footer-label { color: var(--muted); margin-bottom: 0.75rem; }
-.footer-groups a { font: 700 clamp(1.125rem, 1rem + 0.25vw, 1.25rem)/1.25 var(--font-display); }
-.footer-groups a span[aria-hidden='true']:not(.slash) { color: var(--rust); font-size: 0.75em; }
-.footer-legal { border-block-start: 1px solid var(--line); padding-block-start: 2rem; }
-.site-footer .notice { max-width: none; font-size: 0.9375rem; line-height: 1.6; }
-.footer-licences { margin-bottom: 0; }
-@media (min-width: 761px) {
-  .footer-groups { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; }
-}
 .trademarks h1, .privacy h1 { padding-block-start: 1.5rem; border-block-start: 2px solid var(--rust); font-size: clamp(2.25rem, 1rem + 5vw, 4rem); }
 
 /* Reading pages: an index alongside a comfortable document measure. */
@@ -230,7 +455,7 @@
   .document-toc { position: sticky; top: calc(var(--header-live, var(--header-h)) + 1.5rem); max-height: calc(100dvh - var(--header-live, var(--header-h)) - 2rem); overflow-y: auto; }
 }
 
-/* Compact document navigation and footer on phones. */
+/* Compact document navigation on phones. */
 .document-toc-mobile { display: none; }
 .section .document-body .document-summary h2 { margin: 0 0 .75rem; font: 700 .875rem/1.4 var(--font-mono); color: var(--rust); }
 @media (max-width: 760px) {
@@ -243,12 +468,6 @@
   .document-links a { display: inline-flex; align-items: center; min-height: 44px; }
   .document-body p a { padding-block: 12px; }
   .document-summary { margin-bottom: 1rem; }
-  .site-footer { padding-block: 2rem; }
-  .footer-signature { margin-bottom: 1.5rem; }
-  .footer-groups { gap: 1rem; margin-bottom: 1.5rem; }
-  .footer-label { margin-bottom: .25rem; }
-  .footer-legal { padding-top: 1rem; }
-  .site-footer .legal-links { gap: 0 1rem; }
 }
 
 /* The /what diagram and prose sit side by side when their columns fit. */
@@ -262,7 +481,6 @@
 }
 #cost > .stage { max-width: calc(1360px + 2 * var(--gutter)); }
 #cost > .stage > h2 { max-width: none; text-align: left; }
-.site-footer { padding-block-start: 2rem; }
 
 @media (min-width: 1024px) { #what h2, #speed h2, #built h2, #follow h2 { max-width: none; } }
 

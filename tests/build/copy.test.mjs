@@ -1,4 +1,4 @@
-import { built, footer, follow, menu, site } from '../../src/content/site.ts';
+import { footer, site } from '../../src/content/site.ts';
 import { links } from '../../src/data/links.ts';
 import { ui } from '../../src/content/ui.ts';
 import { consent, privacy } from '../../src/content/privacy.ts';
@@ -6,6 +6,7 @@ import { trademarks } from '../../src/content/trademarks.ts';
 import { afsContext } from '../../src/content/why.ts';
 import { consoleLines, headline } from '../content/expected.mjs';
 import { pill as pillCopy, story } from '../../src/content/story.ts';
+import { rust } from '../../src/content/rust.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -62,7 +63,7 @@ test('the hero has the licence chip', () => {
 
 test('the console: its title and its four lines, exact, spacing included', () => {
   const hero = /<section\b[^>]*\bid="hero"[\s\S]*?<\/section>/.exec(html())[0];
-  assert.equal(visibleText(/<span class="term-title">([\s\S]*?)<\/span>/.exec(hero)[1]), "when the kernel can't recover");
+  assert.equal(visibleText(/<span class="term-title">([\s\S]*?)<\/span>/.exec(hero)[1]), 'Kernel crash examples');
   assert.match(hero, /<button\b[^>]*id="replay"[^>]*aria-label="Replay console"/);
   assert.match(hero, /<button\b[^>]*id="hero-pause"[^>]*aria-label="Pause background motion"/);
   const sr = /<div id="console-sr"[^>]*>([\s\S]*?)<\/div><div id="console-typed"/.exec(hero) ?? /<div id="console-sr"[^>]*>((?:<div>[\s\S]*?<\/div>)+)<\/div>/.exec(hero);
@@ -96,61 +97,61 @@ test('the section ids and landmarks exist', () => {
   assert.ok(html().includes(`aria-label="${ui.github}"`));
 });
 
-test('the footer carries the groups, the credit and the trademark notice', () => {
-  const footerHtml = /<footer\b[\s\S]*?<\/footer>/.exec(html())[0];
-  const rendered = visibleText(footerHtml);
-  assert.ok(rendered.includes(footer.built));
-  assert.ok(!rendered.includes('AuriStor'), 'the footer does not mention AuriStor');
-  const anchors = [...footerHtml.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map(a => ({
-    attrs: a[1],
-    href: /\bhref="([^"]*)"/.exec(a[1])?.[1],
-    text: visibleText(a[2].replace(/<span\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/span>/g, '')).trim(),
-  }));
-  // The groups are navs named by their visible labels; no heading is added.
-  const groups = Object.fromEntries([...footerHtml.matchAll(/<nav\b[^>]*aria-labelledby="([^"]+)"[^>]*>([\s\S]*?)<\/nav>/g)].map(g => [g[1], g[2]]));
-  assert.deepEqual(Object.keys(groups), ['footer-site', 'footer-project', 'footer-author']);
-  assert.doesNotMatch(footerHtml, /<h[1-6]\b/);
-  const groupLinks = id => [...groups[id].matchAll(/<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)].map(a => a[1]);
-  // Site: every menu path, with its slash.
-  assert.deepEqual(groupLinks('footer-site'), menu.paths.map(link => link.href));
-  for (const label of ['/why', '/design', '/status', '/built', '/follow']) assert.ok(visibleText(groups['footer-site']).includes(label), label);
-  // Project: the menu's links; one GitHub link.
-  assert.deepEqual(groupLinks('footer-project'), menu.links.map(link => link.href));
-  const github = anchors.filter(a => a.text === menu.links[0].label);
-  assert.equal(github.length, 1, 'one GitHub link in the footer');
-  assert.equal(github[0].href, 'https://github.com/ironafs/ironafs');
-  // Author: the credit is the group's label; its links are the personal site and LinkedIn.
-  assert.ok(visibleText(groups['footer-author']).includes(footer.built));
-  assert.deepEqual(groupLinks('footer-author'), footer.author.map(link => link.href));
-  assert.deepEqual(anchors.filter(a => a.href.startsWith('https://adrianana.com') || a.href.includes('linkedin.com')).map(a => a.text), footer.author.map(link => link.label));
-  // External rows open as the menu's rows do.
-  for (const a of anchors.filter(a => a.href.startsWith('https://') && !a.href.endsWith('LICENSING.md'))) {
-    assert.match(a.attrs, /\brel="noopener"/, a.href);
-    assert.match(a.attrs, /\btarget="_blank"/, a.href);
+const footerMarkup = (page) => /<footer\b[\s\S]*?<\/footer>/.exec(page)[0];
+const anchorLinks = (markup) => [...markup.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)]
+  .map(([, href, body]) => [href, visibleText(body.replace(/<span\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/span>/g, ''))]);
+
+test('the footer links to homepage sections and site policies on every page', () => {
+  const sections = ['why', 'what', 'design', 'status', 'built'];
+  for (const file of htmlFiles()) {
+    const raw = footerMarkup(read(file));
+    const groups = Object.fromEntries([...raw.matchAll(/<nav\b[^>]*aria-labelledby="([^"]+)"[^>]*>([\s\S]*?)<\/nav>/g)]
+      .map(([, id, body]) => [id, body]));
+    assert.deepEqual(Object.keys(groups), ['footer-site', 'footer-policies'], file);
+    const prefix = file === 'index.html' ? '' : '/';
+    assert.deepEqual(anchorLinks(groups['footer-site']), sections.map(id => [`${prefix}#${id}`, id]), file);
+    for (const id of sections) assert.ok(visibleText(groups['footer-site']).includes(`/${id}`), id);
+    assert.deepEqual(anchorLinks(groups['footer-policies']), [
+      [links.privacy, privacy.title],
+      [links.trademarks, trademarks.title],
+      [links.notices, ui.footerNotices],
+    ]);
+    assert.match(groups['footer-policies'], /<button\b[^>]*data-analytics-settings[^>]*aria-haspopup="dialog"/);
   }
 });
 
-test('#built displays the review and owner rules', () => {
+test('#built leads with maintainer approval and the public record of the file-read change', () => {
   const raw = sectionMarkup('built');
-  const rendered = section('built');
-  assert.ok(rendered.includes(built.intro));
-  assert.ok(rendered.includes(built.human));
-  for (const paragraph of [built.classes.heading, built.classes.lead, built.waits, built.provenance, built.humanBody]) {
-    assert.ok(rendered.includes(paragraph), paragraph);
-  }
-  const tables = [...raw.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/g)].map(table =>
-    [...table[1].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].map(row =>
-      [...row[1].matchAll(/<t[hd]\b[^>]*>([\s\S]*?)<\/t[hd]>/g)].map(cell => visibleText(cell[1]))));
-  assert.deepEqual(tables, [[built.families.head, ...built.families.rows], [built.classes.head, ...built.classes.rows]]);
-  assert.deepEqual(tables[1].slice(1).map(row => row[0]), ['E Editorial', 'I Internal', 'P Public', 'S Safety', 'R Irreversible']);
-  const links = [...raw.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)]
-    .map(([, href, html]) => ({ label: visibleText(html), href }));
-  assert.deepEqual(links, built.links);
-  assert.equal(links.length, 5);
+  const overview = raw.slice(0, raw.indexOf('<details'));
+  assert.match(visibleText(overview), /One maintainer approves every change/);
+  assert.match(visibleText(overview), /independent of both the design and the implementation/);
+  assert.deepEqual(anchorLinks(overview), [
+    ['https://github.com/ironafs/site/issues/3', 'Read the contract'],
+    ['https://github.com/ironafs/site/pull/4', 'See the pull request'],
+    ['https://github.com/ironafs/site/commit/2f059608ebce7cbf3a4794437e2dd16420c6f00c', 'View the merged commit'],
+  ]);
+});
+
+test('#built keeps the workflow, model roles and commit attribution in native disclosures', () => {
+  const panels = [...sectionMarkup('built').matchAll(/<details>([\s\S]*?)<\/details>/g)].map(([, body]) => body);
+  assert.deepEqual(panels.map(panel => visibleText(/<summary\b[^>]*>([\s\S]*?)<\/summary>/.exec(panel)[1])), [
+    'Review requirements by change class',
+    'AI models and their roles',
+    'Code provenance and commit attribution',
+  ]);
+  const names = panels[0].matchAll(/<h4\b[^>]*>([\s\S]*?)<\/h4>/g);
+  assert.deepEqual([...names].map(([, name]) => visibleText(name)), ['E Editorial', 'I Internal', 'P Public', 'S Safety', 'R Irreversible']);
+  assert.ok(anchorLinks(panels[0]).some(([href]) => href === links.workflow));
+  assert.ok(anchorLinks(panels[1]).some(([href]) => href === links.ai));
+  assert.ok(anchorLinks(panels[1]).some(([href]) => href === links.reviews));
+  assert.ok(anchorLinks(panels[2]).some(([href]) => href === links.adr0001));
+  assert.ok(anchorLinks(panels[2]).some(([href]) => href === links.provenance));
+  assert.match(visibleText(panels[2]), /Developer Certificate of Origin/);
+  assert.match(visibleText(panels[2]), /AI-Reviewed-by/);
 });
 
 test('honest status, and courtesy', () => {
-  assert.ok(section('status').includes("The architecture is accepted and public, and the protocol codec is written. Rx and the cache are at an early stage, and the first client, read-only on Linux, is being built now. There's no working client or release yet, and no promised dates. The GitHub milestones show the current work."));
+  assert.ok(section('status').includes(story.statusSection.lede));
   assert.doesNotMatch(withoutApproved(html(), [windowsDesignAlternative, timelineCloudFiles]), /Cloud Files|AFSRedir/);
   assert.doesNotMatch(section('status'), /issues/i);
 });
@@ -188,24 +189,20 @@ test('#design is named by its first headline, and every section\'s aria-labelled
 
 test('the homepage has the status and legal notices', () => {
   assert.match(html(), /class="pill"[^>]*>[\s\S]*?IronAFS™/);
-  const raw = /<footer\b[\s\S]*?<\/footer>/.exec(html())[0];
+  const raw = footerMarkup(html());
   const rendered = visibleText(raw);
-  assert.ok(rendered.indexOf(footer.ownership) > rendered.indexOf(footer.built));
-  assert.ok(rendered.indexOf(footer.notice) > rendered.indexOf(footer.ownership));
-  assert.ok(rendered.includes("This website's code is GPL-3.0-or-later (see the licence). Any copyright in the site's own text and images is reserved, unless noted otherwise."));
+  assert.match(rendered, /© 2026 Adrian Ana/);
+  assert.ok(rendered.includes(footer.ownership));
+  assert.ok(rendered.includes(footer.notice));
+  assert.match(rendered, /Any copyright in the site’s own text and images is reserved, unless noted otherwise/);
   assert.doesNotMatch(text(), /AuriStor/);
-  const legal = [
-    [links.licence, `${footer.licence} ${site.ironafsLicence}`],
-    [links.siteLicensing, 'see the licence'],
-    [links.trademarks, trademarks.title],
-    [links.notices, ui.footerNotices],
-    [links.privacy, privacy.title],
-  ];
-  for (const [href, label] of legal) {
-    const anchor = [...raw.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)].find(a => a[1] === href);
-    assert.ok(anchor, href);
-    assert.equal(visibleText(anchor[2]), label);
-  }
+  const software = /<div\b[^>]*class="footer-software"[^>]*>[\s\S]*?<\/div>/.exec(raw)[0];
+  assert.deepEqual(anchorLinks(software), [
+    [links.licence, 'IronAFS code'],
+    [links.siteLicensing, 'Website code'],
+  ]);
+  assert.match(visibleText(software), /Both use GPL-3\.0-or-later\./);
+  assert.deepEqual(anchorLinks(raw).filter(([href]) => href === links.author || href === links.linkedin), [[links.author, 'Adrian Ana']]);
   assert.ok(rendered.includes(consent.settings));
   assert.equal((text().match(/™/g) ?? []).length, 2);
   assert.ok(section('hero').includes('IronAFS™'));
@@ -238,19 +235,25 @@ test('the protocol explainer has its own section, with the name explanation in R
   assert.ok(what.includes('Protocol references'));
   for (const phrase of [afsContext.eyebrow, afsContext.heading, afsContext.compatibility]) assert.ok(what.includes(phrase));
   for (const { term, description } of afsContext.definitions) assert.ok(what.includes(term + description) || what.includes(term + ' ' + description));
-  assert.ok(section('rust').includes(story.rust.name));
-  assert.equal(text().split(story.rust.name).length, 2);
+  assert.ok(section('rust').includes(rust.name));
+  assert.equal(text().split(rust.name).length, 2);
   assert.equal(text().split(afsContext.compatibility).length, 2);
 });
 
-test('the protocol resources and follow actions resolve in their own sections', () => {
-  for (const [id, links] of [['what', afsContext.resources], ['follow', follow.buttons]]) {
-    const raw = new RegExp(`<section\\b[^>]*\\bid="${id}"[\\s\\S]*?</section>`).exec(html())[0];
-    for (const { href, label } of links) {
-      assert.ok(raw.includes(`href="${href}"`), label);
-      assert.ok(visibleText(raw).includes(label), label);
-    }
+test('the protocol resources are linked in their own section', () => {
+  const raw = sectionMarkup('what');
+  for (const { href, label } of afsContext.resources) {
+    assert.ok(raw.includes(`href="${href}"`), label);
+    assert.ok(visibleText(raw).includes(label), label);
   }
+});
+
+test('the follow section explains Watch and gives the repository the primary action', () => {
+  const raw = sectionMarkup('follow');
+  assert.match(raw, /<strong>Watch<\/strong>/);
+  assert.match(raw, /<a\b[^>]*class="[^"]*follow-primary[^"]*"[^>]*href="https:\/\/github\.com\/ironafs\/ironafs"/);
+  const anchors = anchorLinks(raw);
+  assert.deepEqual(anchors.map(([href]) => href), [links.github, links.milestones, links.docs]);
 });
 
 test('the analytics notice presents its purpose and pending state after the prompt', () => {
