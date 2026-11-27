@@ -1,7 +1,7 @@
 import { ui } from '../../src/content/ui.ts';
 import { test, expect } from '@playwright/test';
 
-async function ready(page) {
+async function ready(page, path = '/') {
   // The header is under test, not the hero: without its 3D chunk the page keeps the poster, and a software-GL scene
   // on a 2-core CI runner no longer starves the header's CSS transitions (the GitHub flames stalled at 0.98 opacity).
   await page.route(/\/_astro\/scene\.[^/]*\.js$/, route => route.abort());
@@ -9,7 +9,7 @@ async function ready(page) {
     window.__violations = [];
     document.addEventListener('securitypolicyviolation', e => window.__violations.push(`${e.violatedDirective} ${e.blockedURI}`));
   });
-  await page.goto('/');
+  await page.goto(path);
   await page.waitForSelector('html[data-menu-ready]');
 }
 
@@ -401,14 +401,34 @@ test.describe('desktop header', () => {
     });
   }
 
-  test('scrolling 20 px makes the header solid', async ({ page }) => {
+  test('scrolling activates the homepage header blur only on wide screens', async ({ page }) => {
     await ready(page);
-    await expect(page.locator('#site-header')).not.toHaveAttribute('data-solid', /.*/);
+    const header = page.locator('#site-header');
+    await expect(header).not.toHaveAttribute('data-solid', /.*/);
     await page.evaluate(() => window.scrollTo(0, 20));
-    await expect(page.locator('#site-header')).toHaveAttribute('data-solid', '');
+    await expect(header).toHaveAttribute('data-solid', '');
+    await expect(header).toHaveCSS('backdrop-filter', 'blur(10px)');
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await expect(header).toHaveCSS('backdrop-filter', 'none');
+    await expect(header).toHaveCSS('background-color', 'rgb(14, 15, 17)');
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect(page.locator('#site-header')).not.toHaveAttribute('data-solid', /.*/);
+    await expect(header).not.toHaveAttribute('data-solid', /.*/);
   });
+
+  for (const path of ['/privacy/', '/trademarks/']) {
+    test(`the scrolled header stays opaque on ${path}`, async ({ page }) => {
+      await ready(page, path);
+      const header = page.locator('#site-header');
+      await expect(header).not.toHaveAttribute('data-solid', /.*/);
+      await page.evaluate(() => window.scrollTo(0, 20));
+      await expect(header).toHaveAttribute('data-solid', '');
+      await expect(header).toHaveCSS('backdrop-filter', 'none');
+      if (await page.evaluate(() => CSS.supports('-webkit-backdrop-filter', 'none'))) {
+        await expect(header).toHaveCSS('-webkit-backdrop-filter', 'none');
+      }
+      await expect(header).toHaveCSS('background-color', 'rgb(14, 15, 17)');
+    });
+  }
 
   test('the visible section marks its link current, and only that one', async ({ page }) => {
     await ready(page);

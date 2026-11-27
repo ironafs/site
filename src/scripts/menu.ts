@@ -1,4 +1,4 @@
-// Header behaviour: frosted glass after scroll, the current-section marker, and the mobile menu sheet.
+// Header behaviour: the scrolled surface, the current-section marker, and the mobile menu sheet.
 
 /**
  * Scrolls to a section of the home page the way a menu row does: a history entry for `/#id`, the section's heading
@@ -71,7 +71,7 @@ export function initMenu(doc: Document): void {
   const dialog = doc.getElementById('menu') as HTMLDialogElement | null;
   const closeButton = doc.getElementById('menu-close');
 
-  // Frosted glass after 10 px of scroll.
+  // Change the header surface after 10 px of scroll.
   if (header) {
     const update = () => header.toggleAttribute('data-solid', win.scrollY > 10);
     win.addEventListener('scroll', update, { passive: true });

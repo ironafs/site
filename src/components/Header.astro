@@ -13,7 +13,7 @@ import { loadMilestones, shellStatus } from '../data/milestones';
 // the shell's status replies follow the build-time milestones, as the status section does
 const { items } = await loadMilestones();
 ---
-<header id="site-header" class="site-header">
+<header id="site-header" class:list={['site-header', { 'site-header--frosted': Astro.url.pathname === '/' }]}>
   <div class="header-inner">
     <a class="brand" href="/">
       <span class="sr-only">{ui.home}</span><RustLogo id="header" class="logo" theme="dark" />
