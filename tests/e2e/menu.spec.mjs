@@ -499,9 +499,31 @@ test('fresh story fragments reach their headings after tablet layout settles', a
       const heading = document.querySelector(`#${id} h2`).getBoundingClientRect();
       const header = document.getElementById('site-header').getBoundingClientRect();
       return heading.top >= header.bottom - 1 && heading.bottom < innerHeight / 2;
-    }, id)).toBe(true);
+    }, id), { message: `The heading for #${id} is in view` }).toBe(true);
     await page.goto('/privacy/');
   }
+});
+
+test('late upstream sizing keeps a fresh tablet section link in view', async ({ page }, info) => {
+  test.skip(info.project.name !== 'webkit-phone', 'portrait WebKit tablet layout');
+  await tabletFragmentPage(page);
+  await page.goto('/#rust');
+  await settleTabletLayout(page);
+  const design = page.locator('#design');
+  const heading = page.locator('#rust-h');
+  await expect(heading).toBeInViewport();
+
+  // Reproduce a compact scene changing its scroll travel after the initial fragment scroll.
+  const resizeDesign = pixels => design.evaluate((el, pixels) => {
+    document.documentElement.style.overflowAnchor = 'none';
+    el.style.minHeight = `${el.getBoundingClientRect().height + pixels}px`;
+  }, pixels);
+  await resizeDesign(1050);
+  await expect(heading).toBeInViewport();
+
+  await page.touchscreen.tap(8, 70);
+  await resizeDesign(1050);
+  await expect(heading).not.toBeInViewport();
 });
 
 test('tablet fragment correction leaves native history and early touch scrolling alone', async ({ page }, info) => {

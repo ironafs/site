@@ -28,21 +28,39 @@ function alignInitialStoryFragment(doc: Document, win: Window, header: HTMLEleme
     win.addEventListener(event, cancel, { capture: true, passive: true, signal: pending.signal });
   }
 
-  const align = async () => {
-    await doc.fonts.ready;
-    // The pinned fit guard and compact scenes settle on successive frames after fonts load.
-    for (let frame = 0; frame < 3 && !pending.signal.aborted; frame++) {
-      await new Promise(resolve => win.requestAnimationFrame(resolve));
-    }
-    if (!pending.signal.aborted && win.location.hash === hash &&
-      heading.getBoundingClientRect().top < header.getBoundingClientRect().bottom - 1) {
-      target.scrollIntoView({ behavior: 'instant' });
-    }
-    cancel();
+  let frame = 0;
+  const schedule = () => {
+    if (frame || pending.signal.aborted) return;
+    frame = win.requestAnimationFrame(() => {
+      frame = 0;
+      if (win.location.hash !== hash) return;
+      const bounds = heading.getBoundingClientRect();
+      if (bounds.top < header.getBoundingClientRect().bottom - 1 || bounds.top >= win.innerHeight) {
+        target.scrollIntoView({ behavior: 'instant' });
+      }
+    });
   };
 
-  if (doc.readyState === 'complete') void align();
-  else win.addEventListener('load', align, { once: true, signal: pending.signal });
+  const watchLayout = async () => {
+    await doc.fonts.ready;
+    if (pending.signal.aborted) return;
+    const observer = 'ResizeObserver' in win ? new win.ResizeObserver(schedule) : undefined;
+    observer?.observe(header);
+    observer?.observe(heading);
+    observer?.observe(target);
+    // Compact scenes above the destination can change height after native fragment scrolling.
+    for (let section = target.previousElementSibling; section; section = section.previousElementSibling) {
+      if (section.matches('section')) observer?.observe(section, { box: 'border-box' });
+    }
+    pending.signal.addEventListener('abort', () => {
+      observer?.disconnect();
+      win.cancelAnimationFrame(frame);
+    }, { once: true });
+    schedule();
+  };
+
+  if (doc.readyState === 'complete') void watchLayout();
+  else win.addEventListener('load', watchLayout, { once: true, signal: pending.signal });
 }
 
 export function initMenu(doc: Document): void {
