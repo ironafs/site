@@ -406,10 +406,10 @@
   #rust [data-rust-track="android"] { --rust-travel: clamp(920px, 137svh, 1350px); }
 
   html:not(.static) #rust .xdr-fixture [data-xdr-reveal] { transition: opacity 160ms ease-out, translate 160ms ease-out; }
-  html:not(.static) #rust .xdr-fixture[data-xdr-step="0"]:not(:focus-within) [data-xdr-reveal],
-  html:not(.static) #rust .xdr-fixture[data-xdr-step="1"]:not(:focus-within) :is([data-xdr-reveal="2"], [data-xdr-reveal="3"], [data-xdr-reveal="4"]),
-  html:not(.static) #rust .xdr-fixture[data-xdr-step="2"]:not(:focus-within) :is([data-xdr-reveal="3"], [data-xdr-reveal="4"]),
-  html:not(.static) #rust .xdr-fixture[data-xdr-step="3"]:not(:focus-within) [data-xdr-reveal="4"] {
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="0"]:not(:has(:focus-visible)) [data-xdr-reveal],
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="1"]:not(:has(:focus-visible)) :is([data-xdr-reveal="2"], [data-xdr-reveal="3"], [data-xdr-reveal="4"]),
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="2"]:not(:has(:focus-visible)) :is([data-xdr-reveal="3"], [data-xdr-reveal="4"]),
+  html:not(.static) #rust .xdr-fixture[data-xdr-step="3"]:not(:has(:focus-visible)) [data-xdr-reveal="4"] {
     opacity: 0;
     translate: 0 4px;
   }
@@ -442,19 +442,19 @@
   }
   html:not(.static) #rust [data-rust-track="android"][data-sticky] .android-transition { display: none; }
   /* Keep both panels' source links in keyboard order while only one panel is painted. */
-  html:not(.static) #rust [data-android-phase="share"] .android-panels:not(:has([data-rust-track="density"]:focus-within)) > [data-rust-track="density"],
-  html:not(.static) #rust [data-android-phase="density"] .android-panels:not(:has([data-rust-track="share"]:focus-within)) > [data-rust-track="share"],
-  html:not(.static) #rust [data-android-phase] .android-panels:has([data-rust-track="share"]:focus-within) > [data-rust-track="density"],
-  html:not(.static) #rust [data-android-phase] .android-panels:has([data-rust-track="density"]:focus-within) > [data-rust-track="share"] {
+  html:not(.static) #rust [data-android-phase="share"] .android-panels:not(:has([data-rust-track="density"] :focus-visible)) > [data-rust-track="density"],
+  html:not(.static) #rust [data-android-phase="density"] .android-panels:not(:has([data-rust-track="share"] :focus-visible)) > [data-rust-track="share"],
+  html:not(.static) #rust [data-android-phase] .android-panels:has([data-rust-track="share"] :focus-visible) > [data-rust-track="density"],
+  html:not(.static) #rust [data-android-phase] .android-panels:has([data-rust-track="density"] :focus-visible) > [data-rust-track="share"] {
     opacity: 0;
     translate: 0 6px;
     pointer-events: none;
     transition: none;
   }
-  html:not(.static) #rust [data-sticky] [data-rust-track="share"]:not(:focus-within) .chart-bar {
+  html:not(.static) #rust [data-sticky] [data-rust-track="share"]:not(:has(:focus-visible)) .chart-bar {
     height: calc(var(--bar-height) * var(--bar-growth, 1));
   }
-  html:not(.static) #rust [data-rust-track="share"]:not(:focus-within) :is([data-awaiting-label] .chart-point, [data-pending] .chart-fill) {
+  html:not(.static) #rust [data-rust-track="share"]:not(:has(:focus-visible)) :is([data-awaiting-label] .chart-point, [data-pending] .chart-fill) {
     visibility: hidden;
   }
   html:not(.static) #rust .chart-column[data-active]:not(.chart-h20) .chart-fill {
@@ -463,10 +463,10 @@
   }
   html:not(.static) #rust .chart-column[data-active] .chart-point { background: #3f2a27; outline: 1px solid #e59d826e; color: #ffd4c2; }
   html:not(.static) #rust .chart-column[data-active] .chart-point strong { color: #ffd4c2; }
-  html:not(.static) #rust [data-sticky] [data-rust-track="density"]:not(:focus-within) .density-field {
+  html:not(.static) #rust [data-sticky] [data-rust-track="density"]:not(:has(:focus-visible)) .density-field {
     clip-path: inset(0 calc(100% * (1 - var(--density-progress, 1))) 0 0);
   }
-  html:not(.static) #rust [data-sticky] [data-rust-track="density"]:not(:focus-within) .density-dot i {
+  html:not(.static) #rust [data-sticky] [data-rust-track="density"]:not(:has(:focus-visible)) .density-dot i {
     opacity: clamp(0, calc((var(--density-progress, 1) - 0.35) * 3), 1);
   }
 }

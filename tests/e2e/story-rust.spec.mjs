@@ -64,6 +64,14 @@ test('Rust presents the decoder fixture, the Android units and the proposed file
     await expect(cards).toContainText('tells the operating system to discard its copy');
     await expect(cards.getByRole('link', { name: 'IronAFS architecture' })).toHaveAttribute('href', /0004-architecture-1-core/);
     await expect(cards.getByRole('link', { name: 'Mountpoint on GitHub' })).toHaveAttribute('href', /awslabs\/mountpoint-s3/);
+    await expect(cards.getByRole('heading', { name: 'Unsafe Rust at the OS boundary' })).toBeVisible();
+    await expect(cards.getByRole('link', { name: 'Unsafe-code rules' })).toHaveAttribute('href', /0005-ironafs-os/);
+    const binder = cards.locator('details').filter({ hasText: 'Linux Binder example' });
+    const cve = binder.getByRole('link', { name: 'CVE-2025-68260', includeHidden: true });
+    await expect(cve).toBeHidden();
+    await binder.locator('summary').click();
+    await expect(cve).toBeVisible();
+    await expect(cve).toHaveAttribute('href', /cve\.org\/CVERecord\?id=CVE-2025-68260$/);
   } finally {
     await context.close();
   }
@@ -85,6 +93,11 @@ test('fixture steps and Android bars read in sequence before the chart changes i
   expect(Math.max(...fixtureTops) - Math.min(...fixtureTops)).toBeLessThanOrEqual(2);
   await expect(fixture(page).getByText('Truncated', { exact: true }).locator('..')).toHaveCSS('opacity', '1');
 
+  await position(android, 0.35 * 0.55);
+  const rising = share(page).locator('[data-active][data-awaiting-label]');
+  await expect(rising.locator('.chart-fill')).toBeVisible();
+  await expect(rising.locator('.chart-point')).toBeHidden();
+
   const years = ['2019', '2022', '2024', '2025'];
   for (const [index, progress] of [0.20, 0.45, 0.70, 0.95].entries()) {
     await position(android, progress * 0.55);
@@ -97,6 +110,10 @@ test('fixture steps and Android bars read in sequence before the chart changes i
   await position(android, 0.63);
   const shell = android.locator('> :first-child');
   await expect(share(page).locator('.chart-point:visible')).toHaveCount(4);
+  const bars = share(page).locator('.chart-bar');
+  const proportions = await bars.evaluateAll(elements => elements.map(el => el.offsetHeight / el.closest('.chart-bars').offsetHeight));
+  [0.76, 0.35, 0.24, 0.20].forEach((ratio, index) => expect(Math.abs(proportions[index] - ratio)).toBeLessThan(0.01));
+  await expect(bars.last().locator('.chart-fill')).toHaveCSS('border-top-style', 'dashed');
   const start = await shell.boundingBox();
   const safe = await page.evaluate(() => {
     const notice = document.querySelector('[data-analytics-banner]');
@@ -110,6 +127,17 @@ test('fixture steps and Android bars read in sequence before the chart changes i
   await expect(track(page, 'share')).toHaveCSS('opacity', '0');
   await expect(track(page, 'density')).toHaveCSS('opacity', '1');
   expect(await shell.boundingBox()).toEqual(start);
+  const field = density(page).locator('.density-field');
+  const dot = density(page).locator('.density-dot');
+  const fieldBox = await field.boundingBox();
+  const dotBox = await dot.boundingBox();
+  expect(dotBox.y).toBeCloseTo(fieldBox.y, 0);
+  expect(dotBox.width).toBeCloseTo(fieldBox.width, 0);
+  expect(dotBox.height).toBeCloseTo(fieldBox.height, 0);
+  const part = await field.evaluate(el => getComputedStyle(el).clipPath);
+  await position(android, 0.96);
+  await expect.poll(() => field.evaluate(el => getComputedStyle(el).clipPath)).not.toBe(part);
+  await position(android, 0.78);
 
   const shareLink = share(page).getByRole('link', { name: 'Google’s 2025 Android security report' });
   const densityLink = density(page).getByRole('link', { name: 'Google, 2025' });
@@ -150,3 +178,104 @@ for (const viewport of [{ width: 1024, height: 660 }, { width: 320, height: 660 
     expect(densityBox.x + densityBox.width).toBeLessThanOrEqual(viewport.width);
   });
 }
+
+test('pointer-focused sources leave the Android and decoder reveals tied to scroll', async ({ page }, info) => {
+  await openRust(page);
+  const android = track(page, 'android');
+  const intro = track(page, info.project.name.endsWith('-phone') ? 'fixture' : 'project');
+  await expect(android).toHaveAttribute('data-sticky', '');
+  await expect(intro).toHaveAttribute('data-sticky', '');
+
+  async function clickSource(link) {
+    // Keep the same document open while retaining the focus from activating the link.
+    await link.evaluate(el => el.addEventListener('click', event => {
+      event.preventDefault();
+      el.focus({ preventScroll: true });
+    }, { once: true }));
+    await link.click();
+    await expect(link).toBeFocused();
+    expect(await link.evaluate(el => el.matches(':focus-visible'))).toBe(false);
+  }
+
+  await position(intro, 0.85);
+  await expect(fixture(page)).toHaveAttribute('data-xdr-step', '4');
+  await clickSource(fixture(page).getByRole('link', { name: 'View regression test' }));
+  await position(intro, 0.26);
+  await expect(fixture(page)).toHaveAttribute('data-xdr-step', '1');
+
+  await position(android, 0.63);
+  await expect(track(page, 'share')).toHaveCSS('opacity', '1');
+  await clickSource(share(page).getByRole('link', { name: 'Google’s 2025 Android security report' }));
+  await position(android, 0.80);
+  await expect(track(page, 'density')).toHaveCSS('opacity', '1');
+  await clickSource(density(page).getByRole('link', { name: 'Google, 2025' }));
+  await position(android, 0.63);
+  await expect(track(page, 'share')).toHaveCSS('opacity', '1');
+});
+
+test('dismissing the notice preserves reading position below Rust when the charts start to fit', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 710 });
+  await openRust(page);
+  const android = track(page, 'android');
+  const heading = page.locator('#speed h2').first();
+  await expect.poll(() => heading.evaluate(async el => {
+    scrollBy({ top: el.getBoundingClientRect().top - 150, behavior: 'instant' });
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return Math.abs(el.getBoundingClientRect().top - 150);
+  })).toBeLessThanOrEqual(1);
+  await expect(android).not.toHaveAttribute('data-sticky');
+  const readingPosition = () => heading.evaluate(el => ({
+    headingTop: el.getBoundingClientRect().top,
+    rustOffset: document.getElementById('rust').getBoundingClientRect().top + scrollY,
+  }));
+  const before = await readingPosition();
+
+  await page.locator('[data-analytics-dismiss]').click();
+  await expect(android).toHaveAttribute('data-sticky', '');
+  await expect.poll(async () => {
+    const after = await readingPosition();
+    const drift = after.headingTop - before.headingTop;
+    // Earlier scenes can remeasure on the same event, and the browser may anchor their change.
+    const upstreamShift = after.rustOffset - before.rustOffset;
+    return Math.min(Math.abs(drift), Math.abs(drift - upstreamShift));
+  }).toBeLessThanOrEqual(2);
+});
+
+test('Rust sources and disclosure controls follow reading order in both keyboard directions', async ({ page, browserName }) => {
+  await openRust(page);
+  const controls = [
+    ...await fixture(page).getByRole('link').all(),
+    section(page).getByText('Ownership and concurrent reads', { exact: true }),
+    ...await share(page).getByRole('link').all(),
+    density(page).getByRole('link', { name: 'Google, 2025' }),
+    section(page).getByText('Code review and rollbacks on Android', { exact: true }),
+  ];
+  const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+  await page.keyboard.press('Shift');
+  await controls[0].focus();
+  for (const [direction, indices] of [
+    [tab, [0, 1, 2, 3, 4, 5, 6, 7]],
+    [`Shift+${tab}`, [7, 6, 5, 4, 3, 2, 1, 0]],
+  ]) {
+    for (const [offset, index] of indices.entries()) {
+      if (offset > 0) await page.keyboard.press(direction);
+      const control = controls[index];
+      await expect(control).toBeFocused();
+      await expect.poll(() => control.evaluate(el => {
+        const box = el.getBoundingClientRect();
+        return el.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+      })).toBe(true);
+    }
+  }
+});
+
+test('the static mode presents the settled fixture and charts in reading order', async ({ page }) => {
+  await page.addInitScript(() => document.addEventListener('readystatechange', () => document.documentElement.classList.add('static')));
+  await openRust(page);
+  await expect(section(page).locator('[data-sticky]')).toHaveCount(0);
+  await expect(fixture(page).getByText('Truncated', { exact: true }).locator('..')).toHaveCSS('opacity', '1');
+  await expect(share(page).locator('.chart-point:visible')).toHaveCount(4);
+  const a = await share(page).boundingBox();
+  const b = await density(page).boundingBox();
+  expect(a.y + a.height).toBeLessThan(b.y);
+});

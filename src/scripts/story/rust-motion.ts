@@ -48,6 +48,7 @@ export function initRustMotion() {
   if (!stage || !project || !fixtureTrack || !android || !share || !density || !fixture || !shareCard || !densityCard) return;
 
   const header = document.getElementById('site-header');
+  const following = document.getElementById('rust-cards');
   const notice = document.querySelector<HTMLElement>('[data-analytics-banner]');
   const columns = [...share.querySelectorAll<HTMLElement>('.chart-column')];
   const motion = matchMedia('(prefers-reduced-motion: no-preference)');
@@ -61,8 +62,7 @@ export function initRustMotion() {
   let lastShare = -1;
   let lastDensity = -1;
 
-  const measure = () => {
-    const top = Math.ceil(header?.getBoundingClientRect().bottom ?? 0) + EDGE;
+  const measure = (top: number) => {
     const viewportBottom = Math.min(innerHeight, viewport?.height ?? innerHeight);
     const noticeTop = notice && !notice.hidden && getComputedStyle(notice).position === 'fixed'
       ? notice.getBoundingClientRect().top
@@ -87,20 +87,27 @@ export function initRustMotion() {
   const update = () => {
     frame = 0;
     const active = document.activeElement;
+    const focused = active instanceof HTMLElement && active.matches(':focus-visible') ? active : null;
     if (needsMeasure) {
       needsMeasure = false;
-      const focusedTrack = [fixtureHold, androidHold].find(hold => active && hold?.track.contains(active))?.track;
-      measure();
-      // Removing a hold or switching to reduced motion can move the focused link by several screens.
-      if (focusedTrack && !focusedTrack.hasAttribute('data-sticky') && active instanceof HTMLElement) {
-        active.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+      const top = Math.ceil(header?.getBoundingClientRect().bottom ?? 0) + EDGE;
+      const before = following?.getBoundingClientRect().top;
+      const focusedTrack = [fixtureHold, androidHold].find(hold => focused && hold?.track.contains(focused))?.track;
+      measure(top);
+      if (focusedTrack && !focusedTrack.hasAttribute('data-sticky')) {
+        // Releasing a hold can move a keyboard-focused link out of view.
+        focused?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+      } else if (following && before !== undefined && before <= top) {
+        // Keep material below Rust in place as the holds add or remove space.
+        const drift = following.getBoundingClientRect().top - before;
+        if (Math.abs(drift) > 1) scrollBy({ top: drift, behavior: 'instant' });
       }
     }
 
-    const fixtureProgress = fixtureHold && !fixture.contains(active) ? progressIn(fixtureHold) : 1;
+    const fixtureProgress = fixtureHold && !fixture.contains(focused) ? progressIn(fixtureHold) : 1;
     const androidProgress = androidHold ? progressIn(androidHold) : 1;
-    const focusShare = share.contains(active);
-    const focusDensity = density.contains(active);
+    const focusShare = share.contains(focused);
+    const focusDensity = density.contains(focused);
     const shareProgress = androidHold && !focusShare ? clamp(androidProgress / SHARE_END) : 1;
     const densityProgress = androidHold && !focusDensity ? clamp((androidProgress - DENSITY_START) / (DENSITY_END - DENSITY_START)) : 1;
 
