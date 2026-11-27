@@ -245,7 +245,9 @@ test('the privacy policy includes the regional check, choices and rights', () =>
   assert.match(rights[2], /href="mailto:adrian@adrianana\.com"/);
   assert.equal([...page.matchAll(/href="#rights">Your choices and rights<\/a>/g)].length, 2);
   assert.ok(visibleText(page).includes('the general type of browser and device (not the model or exact version)'));
-  assert.ok(visibleText(page).includes("New activity restarts that period for the browser's identifier. Turning analytics off stops new collection; it does not delete data already sent."));
+  assert.ok(visibleText(page).includes('Google’s retention for user and event data is set to two months. New activity restarts Google’s retention period for user data associated with that browser.'));
+  assert.ok(visibleText(page).includes('Turning analytics off stops new collection. Previously collected data follows Google’s retention settings.'));
+  assert.ok(visibleText(page).includes('Each cookie is set to expire within 30 days. Starting a new analytics session can set a fresh session cookie.'));
 });
 
 test('the protocol explainer has its own section, with the name explanation in Rust', () => {
